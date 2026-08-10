@@ -273,6 +273,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   const sidebarItems = document.querySelectorAll('.sidebar-item');
   const views = document.querySelectorAll('.dashboard-view');
 
+  const viewTitles = {
+    'view-dashboard': 'Dashboard - Empresas',
+    'view-companies': 'Empresas - Empresas',
+    'view-analytics': 'Analíticas - Empresas',
+    'view-users': 'Usuarios - Empresas',
+    'view-roles': 'Roles - Empresas',
+    'view-regions': 'Regiones - Empresas',
+    'view-settings': 'Ajustes - Empresas'
+  };
+
   sidebarItems.forEach((item) => {
     item.addEventListener('click', (e) => {
       const targetViewId = item.getAttribute('data-view');
@@ -285,6 +295,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       item.classList.add('bg-brand/10', 'text-brand', 'border-l-4', 'border-brand', 'dark:text-white', 'active-item');
       item.classList.remove('text-slate-600', 'dark:text-slate-400');
+
+      if (viewTitles[targetViewId]) {
+        document.title = viewTitles[targetViewId];
+      }
 
       views.forEach((view) => {
         if (view.id === targetViewId) {
