@@ -24,7 +24,21 @@ export const loadEnv = async () => {
     supabaseUrl = env['DB_SUPABASE'] || "";
     supabaseKey = env['APKEY'] || "";
   } catch (e) {
-    console.error("Error cargando variables de entorno desde .env:", e);
+    console.warn("No se pudo cargar el archivo .env, intentando usar variables de entorno de Vercel:", e);
+    try {
+      if (typeof process !== 'undefined' && process.env) {
+        supabaseUrl = process.env.DB_SUPABASE || process.env.NEXT_PUBLIC_DB_SUPABASE || "";
+        supabaseKey = process.env.APKEY || process.env.NEXT_PUBLIC_APKEY || "";
+      } else if (typeof import.meta !== 'undefined' && import.meta.env) {
+        supabaseUrl = import.meta.env.DB_SUPABASE || import.meta.env.VITE_DB_SUPABASE || "";
+        supabaseKey = import.meta.env.APKEY || import.meta.env.VITE_APKEY || "";
+      } else if (typeof window !== 'undefined' && window.process?.env) {
+        supabaseUrl = window.process.env.DB_SUPABASE || "";
+        supabaseKey = window.process.env.APKEY || "";
+      }
+    } catch (envError) {
+      console.error("Error al acceder a las variables de entorno de Vercel/System:", envError);
+    }
   }
 };
 

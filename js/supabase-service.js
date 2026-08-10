@@ -6,8 +6,19 @@ let supabase = null;
 
 // Load environment variables asynchronously from .env
 const loadEnv = async () => {
+  const setSupabaseUrl = (restUrl) => {
+    if (restUrl.endsWith('/rest/v1/')) {
+      supabaseUrl = restUrl.replace('/rest/v1/', '');
+    } else if (restUrl.endsWith('/rest/v1')) {
+      supabaseUrl = restUrl.replace('/rest/v1', '');
+    } else {
+      supabaseUrl = restUrl;
+    }
+  };
+
   try {
     const res = await fetch('.env');
+    if (!res.ok) throw new Error("No se pudo obtener el archivo .env");
     const text = await res.text();
     const env = {};
     text.split('\n').forEach(line => {
@@ -19,18 +30,29 @@ const loadEnv = async () => {
       }
     });
     
-    // Extract root URL from Rest endpoint
     let restUrl = env['DB_SUPABASE'] || "";
-    if (restUrl.endsWith('/rest/v1/')) {
-      supabaseUrl = restUrl.replace('/rest/v1/', '');
-    } else if (restUrl.endsWith('/rest/v1')) {
-      supabaseUrl = restUrl.replace('/rest/v1', '');
-    } else {
-      supabaseUrl = restUrl;
-    }
+    setSupabaseUrl(restUrl);
     supabaseKey = env['APKEY'] || "";
   } catch (e) {
-    console.error("Error loading env:", e);
+    console.warn("No se pudo cargar el archivo .env en auth, intentando usar variables de entorno de Vercel:", e);
+    try {
+      let restUrl = "";
+      if (typeof process !== 'undefined' && process.env) {
+        restUrl = process.env.DB_SUPABASE || process.env.NEXT_PUBLIC_DB_SUPABASE || "";
+        supabaseKey = process.env.APKEY || process.env.NEXT_PUBLIC_APKEY || "";
+      } else if (typeof import.meta !== 'undefined' && import.meta.env) {
+        restUrl = import.meta.env.DB_SUPABASE || import.meta.env.VITE_DB_SUPABASE || "";
+        supabaseKey = import.meta.env.APKEY || import.meta.env.VITE_APKEY || "";
+      } else if (typeof window !== 'undefined' && window.process?.env) {
+        restUrl = window.process.env.DB_SUPABASE || "";
+        supabaseKey = window.process.env.APKEY || "";
+      }
+      if (restUrl) {
+        setSupabaseUrl(restUrl);
+      }
+    } catch (envError) {
+      console.error("Error al acceder a las variables de entorno en auth:", envError);
+    }
   }
 };
 
