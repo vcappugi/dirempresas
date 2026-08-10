@@ -16,7 +16,45 @@ import { initRegionsModule, loadRegions } from './modules/regions.js';
 import { initCompaniesModule, loadCompanies } from './modules/companies.js';
 import { initDetailsModule, loadDetails, currentCompanyIdForDetails } from './modules/details.js';
 
+const loadTemplates = async () => {
+  const container = document.querySelector('main');
+  const body = document.querySelector('body');
+  
+  const templates = [
+    'templates/companies.html',
+    'templates/users.html',
+    'templates/roles.html',
+    'templates/regions.html'
+  ];
+
+  for (const url of templates) {
+    try {
+      const res = await fetch(url);
+      if (res.ok) {
+        const html = await res.text();
+        const temp = document.createElement('div');
+        temp.innerHTML = html;
+        
+        // Mover vistas al contenedor principal <main>
+        const sections = temp.querySelectorAll('section');
+        sections.forEach(sec => container.appendChild(sec));
+        
+        // Mover overlays y modales al body para posicionamiento fixed correcto
+        const overlays = temp.querySelectorAll('[id$="-overlay"]');
+        overlays.forEach(ov => body.appendChild(ov));
+      } else {
+        console.error(`Error al cargar la plantilla ${url}: estado ${res.status}`);
+      }
+    } catch (e) {
+      console.error(`Excepción al cargar la plantilla ${url}:`, e);
+    }
+  }
+};
+
 document.addEventListener('DOMContentLoaded', async () => {
+  // Cargar las plantillas HTML dinámicamente
+  await loadTemplates();
+
   // --- Session & Profile Validation ---
   const session = JSON.parse(localStorage.getItem('sb-session'));
   const profile = JSON.parse(localStorage.getItem('sb-profile'));
@@ -42,7 +80,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // --- Role-Based View Access Control ---
-  if (profile.rol && profile.rol.nombre === 'DEALER_MANAGER') {
+  // El rol admin (id=1) puede acceder a todo; otros roles (como DEALER_MANAGER) se restringen.
+  if (profile.rol && profile.rol.id !== 1 && profile.rol.nombre?.toLowerCase() !== 'admin') {
     const parentSettings = document.getElementById('btn-toggle-settings-submenu');
     if (parentSettings) parentSettings.style.display = 'none';
     const btnCompanies = document.querySelector('[data-view="view-companies"]');

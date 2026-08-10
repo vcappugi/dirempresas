@@ -81,10 +81,10 @@ export const loadDetails = async (companyId) => {
 
 export const openDetailsModal = (companyId) => {
   currentCompanyIdForDetails = companyId;
-  
+
   const comp = companiesList.find(c => c.id === companyId);
   const companyName = comp ? comp.razon : `Empresa #${companyId}`;
-  
+
   const titleEl = document.getElementById('company-details-modal-title');
   if (titleEl) titleEl.textContent = `Detalles de Empresa: ${companyName}`;
 

@@ -1,0 +1,153 @@
+<!-- View: Users (Tab panel, initially hidden) -->
+<section id="view-users" class="dashboard-view hidden space-y-6">
+  <div class="p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-4">
+    <div class="border-b border-slate-100 dark:border-slate-800/80 pb-3">
+      <h2 class="font-display font-bold text-lg text-slate-800 dark:text-white">Listado de Usuarios</h2>
+    </div>
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="relative flex-1 max-w-md">
+        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+        </span>
+        <input type="text" id="users-search" placeholder="Buscar por nombre, CI, mail o teléfono..." class="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+      </div>
+      <button id="btn-add-user" class="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-brand hover:bg-brand-light rounded-xl shadow-lg shadow-brand/10 transition-all duration-300">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4.5v15m7.5-7.5h-15"></path>
+        </svg>
+        Añadir Usuario
+      </button>
+    </div>
+    
+    <!-- Users Table -->
+    <div class="overflow-x-auto relative">
+      
+      <!-- Loading Indicator -->
+      <div id="users-loading" class="absolute inset-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm z-10 flex items-center justify-center hidden">
+        <svg class="animate-spin h-8 w-8 text-brand" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      </div>
+
+      <table class="w-full text-sm text-left text-slate-500 dark:text-slate-400">
+        <thead class="text-xs text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-950 uppercase tracking-wider">
+          <tr>
+            <th scope="col" class="px-6 py-4">Nombre</th>
+            <th scope="col" class="px-6 py-4">Cédula</th>
+            <th scope="col" class="px-6 py-4">Correo (Mail)</th>
+            <th scope="col" class="px-6 py-4">Teléfono</th>
+            <th scope="col" class="px-6 py-4">Estado (Activo)</th>
+            <th scope="col" class="px-6 py-4 text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="users-table-body" class="divide-y divide-slate-100 dark:divide-slate-800">
+          <!-- Dynamically loaded rows -->
+        </tbody>
+      </table>
+
+      <!-- Empty State -->
+      <div id="users-empty" class="py-12 text-center hidden">
+        <svg class="w-12 h-12 text-slate-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+        </svg>
+        <p class="text-slate-500">No se encontraron usuarios registrados.</p>
+      </div>
+
+      <!-- Users Pagination Controls -->
+      <div id="users-pagination" class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+        <div class="text-xs text-slate-500">
+          Mostrando <span id="users-range-start" class="font-semibold text-slate-700 dark:text-slate-350">0</span> a <span id="users-range-end" class="font-semibold text-slate-700 dark:text-slate-350">0</span> de <span id="users-total-count" class="font-semibold text-slate-700 dark:text-slate-350">0</span> registros
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="users-btn-prev" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-850 disabled:opacity-50 disabled:pointer-events-none transition-all">
+            Anterior
+          </button>
+          <span class="text-xs text-slate-500">Pág. <span id="users-current-page" class="font-semibold text-slate-700 dark:text-slate-350">1</span> de <span id="users-total-pages" class="font-semibold text-slate-700 dark:text-slate-350">1</span></span>
+          <button id="users-btn-next" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-850 disabled:opacity-50 disabled:pointer-events-none transition-all">
+            Siguiente
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- User Modal for Create/Edit -->
+<div id="user-modal-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm hidden opacity-0 transition-all duration-300">
+  <div id="user-modal-card" class="bg-white dark:bg-slate-900 w-full max-w-lg p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl relative space-y-6 scale-95 opacity-0 transition-all duration-300">
+    
+    <!-- Close Button -->
+    <button id="btn-close-modal" class="absolute top-6 right-6 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+
+    <div>
+      <h3 id="modal-title" class="font-display font-bold text-xl text-slate-900 dark:text-white">Crear Usuario</h3>
+      <p class="text-xs text-slate-500 dark:text-slate-400">Todos los campos son editables excepto el ID y la fecha de creación.</p>
+    </div>
+
+    <form id="user-form" class="space-y-5">
+      <input type="hidden" id="form-id">
+      
+      <!-- Nombre input -->
+      <div class="relative">
+        <input type="text" id="form-nombre" required placeholder=" " class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+        <label for="form-nombre" class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Nombre Completo</label>
+      </div>
+
+      <!-- Cédula input -->
+      <div class="relative">
+        <input type="text" id="form-ci" required placeholder=" " class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+        <label for="form-ci" class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Cédula (CI)</label>
+      </div>
+
+      <!-- Correo/Mail input -->
+      <div class="relative">
+        <input type="text" id="form-mail" required placeholder=" " class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+        <label for="form-mail" class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Correo (Mail)</label>
+      </div>
+
+      <!-- Teléfono input -->
+      <div class="relative">
+        <input type="text" id="form-telefono" required placeholder=" " class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+        <label for="form-telefono" class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Teléfono</label>
+      </div>
+
+      <!-- Clave input -->
+      <div class="relative">
+        <input type="password" id="form-clave" placeholder=" " class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+        <label for="form-clave" class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Contraseña (Clave)</label>
+        <p id="password-hint" class="text-[10px] text-slate-400 mt-1 hidden">Dejar en blanco para conservar la clave actual.</p>
+      </div>
+
+      <!-- Activo toggle/switch (Premium styling) -->
+      <div class="flex items-center justify-between p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40">
+        <div class="space-y-0.5">
+          <span class="text-sm font-semibold">Estado Activo</span>
+          <p class="text-xs text-slate-400">Si está inactivo, el usuario no podrá acceder al panel.</p>
+        </div>
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" id="form-activo" class="sr-only peer" checked>
+          <div class="w-11 h-6 bg-slate-200 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand"></div>
+        </label>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex gap-4 pt-3">
+        <button type="button" id="btn-cancel-modal" class="flex-1 py-3 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-350 dark:hover:bg-slate-700 rounded-xl transition-all">
+          Cancelar
+        </button>
+        <button type="submit" id="btn-save-modal" class="flex-1 py-3 text-sm font-semibold text-white bg-brand hover:bg-brand-light focus:ring-4 focus:ring-brand-200 rounded-xl transition-all shadow-lg shadow-brand/10">
+          Guardar
+        </button>
+      </div>
+    </form>
+
+  </div>
+</div>
