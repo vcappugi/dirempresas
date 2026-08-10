@@ -21,7 +21,7 @@ export const loadEnv = async () => {
       }
     });
     
-    supabaseUrl = env['DB_SUPABASE'] || "";
+    supabaseUrl = env['DBSUPABASE'] || env['DB_SUPABASE'] || "";
     supabaseKey = env['APKEY'] || "";
   } catch (e) {
     console.warn("No se pudo cargar el archivo .env, intentando obtener variables desde la API de Vercel:", e);
@@ -29,7 +29,7 @@ export const loadEnv = async () => {
       const res = await fetch('/api/config');
       if (res.ok) {
         const env = await res.json();
-        supabaseUrl = env.DB_SUPABASE || "";
+        supabaseUrl = env.DBSUPABASE || env.DB_SUPABASE || "";
         supabaseKey = env.APKEY || "";
       }
     } catch (apiError) {
@@ -40,13 +40,13 @@ export const loadEnv = async () => {
     if (!supabaseUrl || !supabaseKey) {
       try {
         if (typeof process !== 'undefined' && process.env) {
-          supabaseUrl = process.env.DB_SUPABASE || process.env.NEXT_PUBLIC_DB_SUPABASE || "";
+          supabaseUrl = process.env.DBSUPABASE || process.env.DB_SUPABASE || process.env.NEXT_PUBLIC_DB_SUPABASE || "";
           supabaseKey = process.env.APKEY || process.env.NEXT_PUBLIC_APKEY || "";
         } else if (typeof import.meta !== 'undefined' && import.meta.env) {
-          supabaseUrl = import.meta.env.DB_SUPABASE || import.meta.env.VITE_DB_SUPABASE || "";
+          supabaseUrl = import.meta.env.DBSUPABASE || import.meta.env.DB_SUPABASE || import.meta.env.VITE_DB_SUPABASE || "";
           supabaseKey = import.meta.env.APKEY || import.meta.env.VITE_APKEY || "";
         } else if (typeof window !== 'undefined' && window.process?.env) {
-          supabaseUrl = window.process.env.DB_SUPABASE || "";
+          supabaseUrl = window.process.env.DBSUPABASE || window.process.env.DB_SUPABASE || "";
           supabaseKey = window.process.env.APKEY || "";
         }
       } catch (envError) {

@@ -30,7 +30,7 @@ const loadEnv = async () => {
       }
     });
     
-    let restUrl = env['DB_SUPABASE'] || "";
+    let restUrl = env['DBSUPABASE'] || env['DB_SUPABASE'] || "";
     setSupabaseUrl(restUrl);
     supabaseKey = env['APKEY'] || "";
   } catch (e) {
@@ -40,7 +40,7 @@ const loadEnv = async () => {
       const res = await fetch('/api/config');
       if (res.ok) {
         const env = await res.json();
-        restUrl = env.DB_SUPABASE || "";
+        restUrl = env.DBSUPABASE || env.DB_SUPABASE || "";
         supabaseKey = env.APKEY || "";
       }
     } catch (apiError) {
@@ -51,13 +51,13 @@ const loadEnv = async () => {
     if (!restUrl || !supabaseKey) {
       try {
         if (typeof process !== 'undefined' && process.env) {
-          restUrl = process.env.DB_SUPABASE || process.env.NEXT_PUBLIC_DB_SUPABASE || "";
+          restUrl = process.env.DBSUPABASE || process.env.DB_SUPABASE || process.env.NEXT_PUBLIC_DB_SUPABASE || "";
           supabaseKey = process.env.APKEY || process.env.NEXT_PUBLIC_APKEY || "";
         } else if (typeof import.meta !== 'undefined' && import.meta.env) {
-          restUrl = import.meta.env.DB_SUPABASE || import.meta.env.VITE_DB_SUPABASE || "";
+          restUrl = import.meta.env.DBSUPABASE || import.meta.env.DB_SUPABASE || import.meta.env.VITE_DB_SUPABASE || "";
           supabaseKey = import.meta.env.APKEY || import.meta.env.VITE_APKEY || "";
         } else if (typeof window !== 'undefined' && window.process?.env) {
-          restUrl = window.process.env.DB_SUPABASE || "";
+          restUrl = window.process.env.DBSUPABASE || window.process.env.DB_SUPABASE || "";
           supabaseKey = window.process.env.APKEY || "";
         }
       } catch (envError) {
