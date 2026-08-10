@@ -24,20 +24,34 @@ export const loadEnv = async () => {
     supabaseUrl = env['DB_SUPABASE'] || "";
     supabaseKey = env['APKEY'] || "";
   } catch (e) {
-    console.warn("No se pudo cargar el archivo .env, intentando usar variables de entorno de Vercel:", e);
+    console.warn("No se pudo cargar el archivo .env, intentando obtener variables desde la API de Vercel:", e);
     try {
-      if (typeof process !== 'undefined' && process.env) {
-        supabaseUrl = process.env.DB_SUPABASE || process.env.NEXT_PUBLIC_DB_SUPABASE || "";
-        supabaseKey = process.env.APKEY || process.env.NEXT_PUBLIC_APKEY || "";
-      } else if (typeof import.meta !== 'undefined' && import.meta.env) {
-        supabaseUrl = import.meta.env.DB_SUPABASE || import.meta.env.VITE_DB_SUPABASE || "";
-        supabaseKey = import.meta.env.APKEY || import.meta.env.VITE_APKEY || "";
-      } else if (typeof window !== 'undefined' && window.process?.env) {
-        supabaseUrl = window.process.env.DB_SUPABASE || "";
-        supabaseKey = window.process.env.APKEY || "";
+      const res = await fetch('/api/config');
+      if (res.ok) {
+        const env = await res.json();
+        supabaseUrl = env.DB_SUPABASE || "";
+        supabaseKey = env.APKEY || "";
       }
-    } catch (envError) {
-      console.error("Error al acceder a las variables de entorno de Vercel/System:", envError);
+    } catch (apiError) {
+      console.error("Error al obtener variables de entorno desde /api/config:", apiError);
+    }
+    
+    // Fallback secundario estático
+    if (!supabaseUrl || !supabaseKey) {
+      try {
+        if (typeof process !== 'undefined' && process.env) {
+          supabaseUrl = process.env.DB_SUPABASE || process.env.NEXT_PUBLIC_DB_SUPABASE || "";
+          supabaseKey = process.env.APKEY || process.env.NEXT_PUBLIC_APKEY || "";
+        } else if (typeof import.meta !== 'undefined' && import.meta.env) {
+          supabaseUrl = import.meta.env.DB_SUPABASE || import.meta.env.VITE_DB_SUPABASE || "";
+          supabaseKey = import.meta.env.APKEY || import.meta.env.VITE_APKEY || "";
+        } else if (typeof window !== 'undefined' && window.process?.env) {
+          supabaseUrl = window.process.env.DB_SUPABASE || "";
+          supabaseKey = window.process.env.APKEY || "";
+        }
+      } catch (envError) {
+        console.error("Error al acceder a las variables de entorno de Vercel/System:", envError);
+      }
     }
   }
 };

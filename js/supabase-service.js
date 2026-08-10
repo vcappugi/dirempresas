@@ -34,24 +34,39 @@ const loadEnv = async () => {
     setSupabaseUrl(restUrl);
     supabaseKey = env['APKEY'] || "";
   } catch (e) {
-    console.warn("No se pudo cargar el archivo .env en auth, intentando usar variables de entorno de Vercel:", e);
+    console.warn("No se pudo cargar el archivo .env en auth, intentando obtener variables desde la API de Vercel:", e);
+    let restUrl = "";
     try {
-      let restUrl = "";
-      if (typeof process !== 'undefined' && process.env) {
-        restUrl = process.env.DB_SUPABASE || process.env.NEXT_PUBLIC_DB_SUPABASE || "";
-        supabaseKey = process.env.APKEY || process.env.NEXT_PUBLIC_APKEY || "";
-      } else if (typeof import.meta !== 'undefined' && import.meta.env) {
-        restUrl = import.meta.env.DB_SUPABASE || import.meta.env.VITE_DB_SUPABASE || "";
-        supabaseKey = import.meta.env.APKEY || import.meta.env.VITE_APKEY || "";
-      } else if (typeof window !== 'undefined' && window.process?.env) {
-        restUrl = window.process.env.DB_SUPABASE || "";
-        supabaseKey = window.process.env.APKEY || "";
+      const res = await fetch('/api/config');
+      if (res.ok) {
+        const env = await res.json();
+        restUrl = env.DB_SUPABASE || "";
+        supabaseKey = env.APKEY || "";
       }
-      if (restUrl) {
-        setSupabaseUrl(restUrl);
+    } catch (apiError) {
+      console.error("Error al obtener variables de entorno en auth desde /api/config:", apiError);
+    }
+    
+    // Fallback secundario estático
+    if (!restUrl || !supabaseKey) {
+      try {
+        if (typeof process !== 'undefined' && process.env) {
+          restUrl = process.env.DB_SUPABASE || process.env.NEXT_PUBLIC_DB_SUPABASE || "";
+          supabaseKey = process.env.APKEY || process.env.NEXT_PUBLIC_APKEY || "";
+        } else if (typeof import.meta !== 'undefined' && import.meta.env) {
+          restUrl = import.meta.env.DB_SUPABASE || import.meta.env.VITE_DB_SUPABASE || "";
+          supabaseKey = import.meta.env.APKEY || import.meta.env.VITE_APKEY || "";
+        } else if (typeof window !== 'undefined' && window.process?.env) {
+          restUrl = window.process.env.DB_SUPABASE || "";
+          supabaseKey = window.process.env.APKEY || "";
+        }
+      } catch (envError) {
+        console.error("Error al acceder a las variables de entorno en auth:", envError);
       }
-    } catch (envError) {
-      console.error("Error al acceder a las variables de entorno en auth:", envError);
+    }
+    
+    if (restUrl) {
+      setSupabaseUrl(restUrl);
     }
   }
 };
