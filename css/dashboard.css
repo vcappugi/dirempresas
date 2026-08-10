@@ -1,0 +1,112 @@
+/* Specific styles for the Collapsible Sidebar and Dashboard Layout */
+
+/* Transition for sidebar expansion/collapse */
+.sidebar-transition {
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.main-content-transition {
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Hide text smoothly when sidebar is collapsed */
+.sidebar-collapsed .sidebar-text {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+  margin-left: 0;
+  pointer-events: none;
+  display: none;
+}
+
+/* Adjust alignment when collapsed */
+.sidebar-collapsed .sidebar-item {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* Hover Tooltip for collapsed state items */
+.sidebar-collapsed .sidebar-item::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 80px;
+  background-color: #1e293b;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s, visibility 0.2s;
+  z-index: 50;
+  pointer-events: none;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+.sidebar-collapsed .sidebar-item:hover::after {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Dark mode overrides for tooltip */
+.dark .sidebar-collapsed .sidebar-item::after {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+/* Accent Colors Injected via theme selector */
+.accent-brand {
+  --color-accent: #355a31;
+  --color-accent-hover: #46683f;
+  --color-accent-light: #528a4c;
+}
+.accent-blue {
+  --color-accent: #1e3a8a;
+  --color-accent-hover: #1d4ed8;
+  --color-accent-light: #3b82f6;
+}
+.accent-emerald {
+  --color-accent: #065f46;
+  --color-accent-hover: #047857;
+  --color-accent-light: #10b981;
+}
+.accent-indigo {
+  --color-accent: #3730a3;
+  --color-accent-hover: #4338ca;
+  --color-accent-light: #6366f1;
+}
+
+/* Custom indicator on sidebar items */
+.sidebar-item.active-item {
+  background-color: rgba(var(--color-brand-rgb), 0.1);
+  color: var(--color-brand);
+  border-left: 4px solid var(--color-brand);
+}
+
+.dark .sidebar-item.active-item {
+  background-color: rgba(var(--color-brand-rgb), 0.15);
+  color: #f8fafc;
+  border-left: 4px solid var(--color-brand-light);
+}
+
+/* Premium Input Focus Styles & Micro-animations */
+.peer:focus ~ label,
+.peer:not(:placeholder-shown) ~ label {
+  transform: translateY(-1rem) scale(0.75) !important;
+  color: var(--color-brand) !important;
+  background-color: #ffffff;
+}
+
+.dark .peer:focus ~ label,
+.dark .peer:not(:placeholder-shown) ~ label {
+  color: var(--color-brand-light) !important;
+  background-color: #0f172a; /* Matches bg-slate-900 */
+}
+
+.peer:focus {
+  box-shadow: 0 0 0 4px rgba(var(--color-brand-rgb, 53, 90, 49), 0.15);
+  border-color: var(--color-brand-light) !important;
+}
+

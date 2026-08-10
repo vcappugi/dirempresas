@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Empresas</title>
+  
+  <!-- SEO & Fonts -->
+  <meta name="description" content="Panel de control administrativo e interactivo con tema de color personalizable.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Custom dynamic theme configuration -->
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              light: 'var(--color-brand-light, #528a4c)',
+              DEFAULT: 'var(--color-brand, #355a31)', // Fallback to corporate green
+              dark: 'var(--color-brand-dark, #223a20)',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Outfit', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  
+  <!-- bcryptjs library for client-side password hashing -->
+  <script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300 font-sans min-h-screen">
+
+  <!-- Mobile Sidebar Backdrop Overlay -->
+  <div id="sidebar-backdrop" class="fixed inset-0 z-20 bg-slate-950/50 backdrop-blur-sm hidden md:hidden"></div>
+
+  <!-- Sidebar (Left Menu) -->
+  <aside id="sidebar" class="sidebar-transition fixed inset-y-0 left-0 z-30 w-64 bg-slate-900 text-slate-100 flex flex-col justify-between border-r border-slate-800 md:translate-x-0 -translate-x-full">
+    
+    <!-- Top Brand Logo -->
+    <div class="h-20 flex items-center justify-between px-6 border-b border-slate-800">
+      <a href="index.html" class="flex items-center gap-3 group">
+        <div class="w-10 h-10 rounded-xl bg-brand flex items-center justify-center text-white shadow-lg shadow-brand/10 transition-all duration-300">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v18M3 12h18M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9-4.03-9-9-9z" />
+          </svg>
+        </div>
+        <span class="sidebar-text font-display font-bold text-lg tracking-tight transition-all duration-300">
+          Empresas<span class="text-brand">.</span>
+        </span>
+      </a>
+      
+      <!-- Desktop Sidebar Toggle Button -->
+      <button id="toggle-sidebar-btn" class="hidden md:flex items-center justify-center p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors">
+        <svg id="collapse-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Navigation Menu Items -->
+    <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+      
+      <button data-view="view-dashboard" data-tooltip="Dashboard" class="sidebar-item active-item w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 hover:bg-slate-800/50">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 00-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z"></path>
+        </svg>
+        <span class="sidebar-text">Dashboard</span>
+      </button>
+
+      <button data-view="view-companies" data-tooltip="Empresas" class="sidebar-item w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all duration-300">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+        </svg>
+        <span class="sidebar-text">Empresas</span>
+      </button>
+
+      <button data-view="view-analytics" data-tooltip="Estadísticas" class="sidebar-item w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all duration-300">>
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10a2 2 0 01-2 2h-2a2 2 0 01-2-2zm0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+        </svg>
+        <span class="sidebar-text">Analíticas</span>
+      </button>      <!-- Collapsible Configuración Menu -->
+      <div class="space-y-1">
+        <button id="btn-toggle-settings-submenu" class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all duration-300">
+          <div class="flex items-center gap-4">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+            <span class="sidebar-text">Configuración</span>
+          </div>
+          <svg id="arrow-settings-submenu" class="w-4 h-4 transition-transform duration-300 transform sidebar-text" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+
+        <div id="settings-submenu" class="hidden pl-9 space-y-1">
+          <button data-view="view-users" class="sidebar-item w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/30 transition-all duration-200">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+            </svg>
+            <span class="sidebar-text">Usuarios</span>
+          </button>
+
+          <button data-view="view-roles" class="sidebar-item w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/30 transition-all duration-200">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+            </svg>
+            <span class="sidebar-text">Roles</span>
+          </button>
+
+          <button data-view="view-regions" class="sidebar-item w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/30 transition-all duration-200">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+            <span class="sidebar-text">Regiones</span>
+          </button>
+
+          <button data-view="view-settings" class="sidebar-item w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/30 transition-all duration-200">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+            <span class="sidebar-text">Ajustes Generales</span>
+          </button>
+        </div>
+      </div>
+
+    </nav>
+
+    <!-- Bottom User Profile Summary -->
+    <div class="p-4 border-t border-slate-800 flex flex-col gap-3">
+      <div class="flex items-center gap-3">
+        <img id="user-avatar" src="https://ui-avatars.com/api/?name=Admin+Empresas&background=355a31&color=fff" alt="Avatar usuario" class="w-9 h-9 rounded-full">
+        <div class="sidebar-text flex-1 overflow-hidden transition-all duration-300">
+          <p id="user-display-name" class="text-sm font-semibold truncate">Admin Empresas</p>
+          <p id="user-display-email" class="text-xs text-slate-500 truncate">admin@empresas.com</p>
+        </div>
+      </div>
+      <button id="btn-logout" class="w-full flex items-center gap-3 px-3 py-2 text-xs font-semibold text-slate-400 hover:text-white hover:bg-red-950/20 hover:border-red-900 rounded-lg border border-transparent transition-all">
+        <svg class="w-4 h-4 text-slate-450" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+        </svg>
+        <span class="sidebar-text">Cerrar Sesión</span>
+      </button>
+    </div>
+
+  </aside>
+
+  <!-- Main Application Wrapper -->
+  <div id="main-content" class="main-content-transition md:ml-64 min-h-screen flex flex-col justify-between">
+    
+    <!-- Header -->
+    <header class="sticky top-0 z-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors duration-300">
+      <div class="h-20 px-6 flex items-center justify-between">
+        
+        <!-- Left: Search Bar & Toggle Drawer -->
+        <div class="flex items-center gap-4 flex-1">
+          <!-- Mobile Hamburger Toggle -->
+          <button id="mobile-toggle-sidebar-btn" class="md:hidden flex items-center justify-center p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+          </button>
+          
+          <!-- Desktop Search input -->
+          <div class="relative hidden sm:block w-72">
+            <input type="text" class="w-full px-4 py-2 pl-10 text-sm border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/50 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all" placeholder="Buscar reportes o clientes...">
+            <svg class="absolute left-3.5 top-3 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+          </div>
+
+          <!-- Associated Company Badge -->
+          <div class="hidden md:flex items-center gap-2 px-3 py-1.5 bg-brand/10 border border-brand/20 text-brand rounded-xl text-xs font-semibold">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+            </svg>
+            <span id="company-display-name">Cargando empresa...</span>
+          </div>
+        </div>
+
+        <!-- Right: Actions, theme toggle, notifications, and profile menu -->
+        <div class="flex items-center gap-4">
+          
+          <!-- Theme Switcher Button -->
+          <button id="theme-toggle" class="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+            <svg id="theme-toggle-light-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464a1 1 0 10-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 100 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path>
+            </svg>
+            <svg id="theme-toggle-dark-icon" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+            </svg>
+          </button>
+
+          <!-- Notifications Trigger -->
+          <div class="relative">
+            <button id="notification-button" class="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+              <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+              </svg>
+            </button>
+            
+            <!-- Notifications Dropdown Menu -->
+            <div id="notification-dropdown" class="hidden absolute right-0 mt-3 w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-50 py-2">
+              <div class="px-4 py-2 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                <span class="font-semibold text-sm">Notificaciones</span>
+                <span class="text-xs text-brand font-medium">Marcar leídas</span>
+              </div>
+              <div class="divide-y divide-slate-100 dark:divide-slate-800">
+                <a href="#" class="block px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                  <p class="text-xs font-semibold text-slate-800 dark:text-slate-200">Nuevo reporte de eficiencia disponible</p>
+                  <p class="text-[10px] text-slate-400 mt-1">Hace 10 minutos</p>
+                </a>
+                <a href="#" class="block px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                  <p class="text-xs text-slate-600 dark:text-slate-400">Cliente <span class="font-semibold">TecnoSostenible</span> actualizó su perfil.</p>
+                  <p class="text-[10px] text-slate-400 mt-1">Hace 2 horas</p>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- User Menu Dropdown Trigger -->
+          <div class="relative">
+            <button id="user-menu-button" class="flex items-center gap-2 focus:outline-none p-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+              <img class="w-8 h-8 rounded-lg" src="https://ui-avatars.com/api/?name=Admin+Empresas&background=355a31&color=fff" alt="Avatar">
+              <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </button>
+            
+            <!-- User Dropdown Menu -->
+            <div id="user-dropdown" class="hidden absolute right-0 mt-3 w-52 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-50 py-2">
+              <div class="px-4 py-2 border-b border-slate-100 dark:border-slate-800">
+                <p class="text-xs text-slate-400">Rol de usuario</p>
+                <p class="text-sm font-semibold">Administrador Principal</p>
+              </div>
+              <a href="#" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-850">Mi Perfil</a>
+              <button data-view="view-settings" class="sidebar-item w-full text-left block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-850">Ajustes</button>
+              <hr class="border-slate-100 dark:border-slate-800 my-2">
+              <a href="index.html" class="block px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 font-medium">Cerrar Sesión</a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6">
+
+      <!-- View: Dashboard (Default) -->
+      <section id="view-dashboard" class="dashboard-view space-y-6">
+        
+        <!-- Welcome Card -->
+        <div class="p-8 rounded-3xl bg-gradient-to-r from-brand-dark to-brand text-white shadow-xl shadow-brand/10 relative overflow-hidden">
+          <div class="absolute -right-20 -bottom-20 w-80 h-80 rounded-full bg-white/5 blur-2xl"></div>
+          <div class="relative z-10 space-y-2">
+            <h1 class="font-display font-bold text-2xl sm:text-3xl">¡Bienvenido de nuevo, Administrador!</h1>
+            <p class="text-slate-200 text-sm sm:text-base max-w-xl">Aquí tienes el resumen ejecutivo del día. El color corporativo y acentos globales están establecidos actualmente con las preferencias elegidas.</p>
+          </div>
+        </div>
+
+        <!-- Metrics Cards Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          
+          <!-- Stat 1 -->
+          <div class="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm flex items-center justify-between">
+            <div class="space-y-1">
+              <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Clientes Activos</p>
+              <p class="font-display font-bold text-2xl text-slate-900 dark:text-white">1,250</p>
+              <p class="text-[10px] text-green-500 font-medium">+4.8% este mes</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-brand/10 text-brand flex items-center justify-center flex-shrink-0">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Stat 2 -->
+          <div class="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm flex items-center justify-between">
+            <div class="space-y-1">
+              <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Eficiencia Energética</p>
+              <p class="font-display font-bold text-2xl text-slate-900 dark:text-white">94.2%</p>
+              <p class="text-[10px] text-green-500 font-medium">+1.5% vs semana anterior</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-brand/10 text-brand flex items-center justify-center flex-shrink-0">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Stat 3 -->
+          <div class="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm flex items-center justify-between">
+            <div class="space-y-1">
+              <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Proyectos Sostenibles</p>
+              <p class="font-display font-bold text-2xl text-slate-900 dark:text-white">48</p>
+              <p class="text-[10px] text-brand font-medium">8 listos para auditoría</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-brand/10 text-brand flex items-center justify-center flex-shrink-0">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Stat 4 -->
+          <div class="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm flex items-center justify-between">
+            <div class="space-y-1">
+              <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Reducción CO2</p>
+              <p class="font-display font-bold text-2xl text-slate-900 dark:text-white">45M TN</p>
+              <p class="text-[10px] text-green-500 font-medium">Meta anual al 85%</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-brand/10 text-brand flex items-center justify-center flex-shrink-0">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m12.728 12.728l.707-.707M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Split Grid (Chart and Table) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          
+          <!-- Column 1: SVG Graph Card -->
+          <div class="lg:col-span-8 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-4">
+            <div class="flex justify-between items-center">
+              <div>
+                <h3 class="font-display font-bold text-lg text-slate-900 dark:text-white">Historial de Impacto</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Progreso mensual de proyectos versus huella prevenida.</p>
+              </div>
+              <span class="text-xs font-semibold px-2.5 py-1 rounded bg-brand/10 text-brand">2026</span>
+            </div>
+
+            <!-- Vector Line Chart Simulation -->
+            <div class="w-full h-64 relative flex items-end">
+              
+              <!-- Background Grid Lines -->
+              <div class="absolute inset-0 flex flex-col justify-between pointer-events-none">
+                <div class="w-full border-t border-slate-100 dark:border-slate-800/80"></div>
+                <div class="w-full border-t border-slate-100 dark:border-slate-800/80"></div>
+                <div class="w-full border-t border-slate-100 dark:border-slate-800/80"></div>
+                <div class="w-full border-t border-slate-100 dark:border-slate-800/80"></div>
+              </div>
+
+              <!-- SVG Line Graph overlay -->
+              <svg viewBox="0 0 500 200" class="w-full h-full z-10 overflow-visible">
+                <defs>
+                  <linearGradient id="gradient-line" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="var(--color-brand)" stop-opacity="0.3"></stop>
+                    <stop offset="100%" stop-color="var(--color-brand)" stop-opacity="0"></stop>
+                  </linearGradient>
+                </defs>
+                
+                <!-- Area underneath path -->
+                <path d="M 0,200 L 0,160 Q 80,120 160,150 T 320,80 T 500,50 L 500,200 Z" fill="url(#gradient-line)"></path>
+                
+                <!-- Actual Line -->
+                <path d="M 0,160 Q 80,120 160,150 T 320,80 T 500,50" fill="none" stroke="var(--color-brand)" stroke-width="4" stroke-linecap="round"></path>
+                
+                <!-- Data dots -->
+                <circle cx="160" cy="150" r="5" fill="var(--color-brand-light)" stroke="#fff" stroke-width="2"></circle>
+                <circle cx="320" cy="80" r="5" fill="var(--color-brand-light)" stroke="#fff" stroke-width="2"></circle>
+                <circle cx="500" cy="50" r="5" fill="var(--color-brand-light)" stroke="#fff" stroke-width="2"></circle>
+              </svg>
+
+              <!-- X-Axis Labels -->
+              <div class="absolute bottom-[-24px] left-0 right-0 flex justify-between text-[10px] text-slate-400 px-2">
+                <span>Ene</span>
+                <span>Mar</span>
+                <span>May</span>
+                <span>Jul</span>
+                <span>Sep</span>
+                <span>Nov</span>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Column 2: Recent Alerts & System logs -->
+          <div class="lg:col-span-4 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-4">
+            <h3 class="font-display font-bold text-lg text-slate-900 dark:text-white">Últimas Acciones</h3>
+            <div class="space-y-4">
+              
+              <!-- Action Item 1 -->
+              <div class="flex items-start gap-3">
+                <div class="w-8 h-8 rounded-lg bg-green-500/10 text-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-xs font-semibold">Auditoría aprobada</p>
+                  <p class="text-[10px] text-slate-400">Proyecto Solar Madrid.</p>
+                </div>
+              </div>
+
+              <!-- Action Item 2 -->
+              <div class="flex items-start gap-3">
+                <div class="w-8 h-8 rounded-lg bg-brand/10 text-brand flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-xs font-semibold">Nuevo cliente registrado</p>
+                  <p class="text-[10px] text-slate-400">EcoTech Solutions España.</p>
+                </div>
+              </div>
+
+              <!-- Action Item 3 -->
+              <div class="flex items-start gap-3">
+                <div class="w-8 h-8 rounded-lg bg-yellow-500/10 text-yellow-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-xs font-semibold">Aviso de vencimiento</p>
+                  <p class="text-[10px] text-slate-400">Licencia de vertidos industriales.</p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- View: Empresas (Tab panel, initially hidden) -->
+      <section id="view-companies" class="dashboard-view hidden space-y-6">
+        <div class="p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="relative flex-1 max-w-md">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+              </span>
+              <input type="text" id="companies-search" placeholder="Buscar por código, razón social o RIF..." class="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+            </div>
+            <button id="btn-add-company" class="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-brand hover:bg-brand-light rounded-xl shadow-lg shadow-brand/10 transition-all duration-300">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4.5v15m7.5-7.5h-15"></path>
+              </svg>
+              Añadir Empresa
+            </button>
+          </div>
+          
+          <!-- Companies Table -->
+          <div class="overflow-x-auto relative">
+            
+            <!-- Loading Indicator -->
+            <div id="companies-loading" class="absolute inset-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm z-10 flex items-center justify-center hidden">
+              <svg class="animate-spin h-8 w-8 text-brand" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </div>
+
+            <table class="w-full text-sm text-left text-slate-500 dark:text-slate-400">
+              <thead class="text-xs text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-950 uppercase tracking-wider">
+                <tr>
+                  <th scope="col" class="px-6 py-4">Código</th>
+                  <th scope="col" class="px-6 py-4">Razón Social</th>
+                  <th scope="col" class="px-6 py-4">RIF</th>
+                  <th scope="col" class="px-6 py-4">Estado (Activo)</th>
+                  <th scope="col" class="px-6 py-4 text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="companies-table-body" class="divide-y divide-slate-100 dark:divide-slate-800">
+                <!-- Dynamically loaded rows -->
+              </tbody>
+            </table>
+
+            <!-- Empty State -->
+            <div id="companies-empty" class="py-12 text-center hidden">
+              <svg class="w-12 h-12 text-slate-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+              </svg>
+              <p class="text-slate-500">No se encontraron empresas registradas.</p>
+            </div>
+
+            <!-- Companies Pagination Controls -->
+            <div id="companies-pagination" class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <div class="text-xs text-slate-500">
+                Mostrando <span id="companies-range-start" class="font-semibold text-slate-700 dark:text-slate-350">0</span> a <span id="companies-range-end" class="font-semibold text-slate-700 dark:text-slate-350">0</span> de <span id="companies-total-count" class="font-semibold text-slate-700 dark:text-slate-350">0</span> registros
+              </div>
+              <div class="flex items-center gap-2">
+                <button id="companies-btn-prev" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-850 disabled:opacity-50 disabled:pointer-events-none transition-all">
+                  Anterior
+                </button>
+                <span class="text-xs text-slate-500">Pág. <span id="companies-current-page" class="font-semibold text-slate-700 dark:text-slate-350">1</span> de <span id="companies-total-pages" class="font-semibold text-slate-700 dark:text-slate-350">1</span></span>
+                <button id="companies-btn-next" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-850 disabled:opacity-50 disabled:pointer-events-none transition-all">
+                  Siguiente
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- View: Analytics (Tab panel, initially hidden) -->
+      <section id="view-analytics" class="dashboard-view hidden space-y-6">
+        <div class="p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-4">
+          <h2 class="font-display font-bold text-xl">Analíticas Detalladas</h2>
+          <p class="text-sm text-slate-500 dark:text-slate-400">Inspecciona el comportamiento y rendimiento ecológico de las empresas clientes.</p>
+          
+          <div class="h-64 rounded-2xl bg-slate-100 dark:bg-slate-950 flex items-center justify-center border border-dashed border-slate-200 dark:border-slate-850">
+            <div class="text-center space-y-2">
+              <svg class="w-10 h-10 text-slate-400 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 3.055A9.003 9.003 0 1020.945 13H11V3.055z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path>
+              </svg>
+              <p class="text-sm text-slate-400">Gráficos dinámicos e interactivos en desarrollo.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- View: Users (Tab panel, initially hidden) -->
+      <section id="view-users" class="dashboard-view hidden space-y-6">
+        <div class="p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="relative flex-1 max-w-md">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+              </span>
+              <input type="text" id="users-search" placeholder="Buscar por nombre, CI, mail o teléfono..." class="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+            </div>
+            <button id="btn-add-user" class="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-brand hover:bg-brand-light rounded-xl shadow-lg shadow-brand/10 transition-all duration-300">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4.5v15m7.5-7.5h-15"></path>
+              </svg>
+              Añadir Usuario
+            </button>
+          </div>
+          
+          <!-- Users Table -->
+          <div class="overflow-x-auto relative">
+            
+            <!-- Loading Indicator -->
+            <div id="users-loading" class="absolute inset-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm z-10 flex items-center justify-center hidden">
+              <svg class="animate-spin h-8 w-8 text-brand" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </div>
+
+            <table class="w-full text-sm text-left text-slate-500 dark:text-slate-400">
+              <thead class="text-xs text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-950 uppercase tracking-wider">
+                <tr>
+                  <th scope="col" class="px-6 py-4">Nombre</th>
+                  <th scope="col" class="px-6 py-4">Cédula</th>
+                  <th scope="col" class="px-6 py-4">Correo (Mail)</th>
+                  <th scope="col" class="px-6 py-4">Teléfono</th>
+                  <th scope="col" class="px-6 py-4">Estado (Activo)</th>
+                  <th scope="col" class="px-6 py-4 text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="users-table-body" class="divide-y divide-slate-100 dark:divide-slate-800">
+                <!-- Dynamically loaded rows -->
+              </tbody>
+            </table>
+
+            <!-- Empty State -->
+            <div id="users-empty" class="py-12 text-center hidden">
+              <svg class="w-12 h-12 text-slate-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+              </svg>
+              <p class="text-slate-500">No se encontraron usuarios registrados.</p>
+            </div>
+
+            <!-- Users Pagination Controls -->
+            <div id="users-pagination" class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <div class="text-xs text-slate-500">
+                Mostrando <span id="users-range-start" class="font-semibold text-slate-700 dark:text-slate-350">0</span> a <span id="users-range-end" class="font-semibold text-slate-700 dark:text-slate-350">0</span> de <span id="users-total-count" class="font-semibold text-slate-700 dark:text-slate-350">0</span> registros
+              </div>
+              <div class="flex items-center gap-2">
+                <button id="users-btn-prev" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-850 disabled:opacity-50 disabled:pointer-events-none transition-all">
+                  Anterior
+                </button>
+                <span class="text-xs text-slate-500">Pág. <span id="users-current-page" class="font-semibold text-slate-700 dark:text-slate-350">1</span> de <span id="users-total-pages" class="font-semibold text-slate-700 dark:text-slate-350">1</span></span>
+                <button id="users-btn-next" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-850 disabled:opacity-50 disabled:pointer-events-none transition-all">
+                  Siguiente
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      <!-- View: Roles (Tab panel, initially hidden) -->
+      <section id="view-roles" class="dashboard-view hidden space-y-6">
+        <div class="p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="relative flex-1 max-w-md">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+              </span>
+              <input type="text" id="roles-search" placeholder="Buscar por nombre o tipo..." class="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+            </div>
+            <button id="btn-add-role" class="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-brand hover:bg-brand-light rounded-xl shadow-lg shadow-brand/10 transition-all duration-300">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4.5v15m7.5-7.5h-15"></path>
+              </svg>
+              Añadir Rol
+            </button>
+          </div>
+          
+          <!-- Roles Table -->
+          <div class="overflow-x-auto relative">
+            
+            <!-- Loading Indicator -->
+            <div id="roles-loading" class="absolute inset-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm z-10 flex items-center justify-center hidden">
+              <svg class="animate-spin h-8 w-8 text-brand" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </div>
+
+            <table class="w-full text-sm text-left text-slate-500 dark:text-slate-400">
+              <thead class="text-xs text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-950 uppercase tracking-wider">
+                <tr>
+                  <th scope="col" class="px-6 py-4">Nombre</th>
+                  <th scope="col" class="px-6 py-4">Tipo/Descripción</th>
+                  <th scope="col" class="px-6 py-4">Estado (Activo)</th>
+                  <th scope="col" class="px-6 py-4 text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="roles-table-body" class="divide-y divide-slate-100 dark:divide-slate-800">
+                <!-- Dynamically loaded rows -->
+              </tbody>
+            </table>
+
+            <!-- Empty State -->
+            <div id="roles-empty" class="py-12 text-center hidden">
+              <svg class="w-12 h-12 text-slate-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+              </svg>
+              <p class="text-slate-500">No se encontraron roles registrados.</p>
+            </div>
+
+            <!-- Roles Pagination Controls -->
+            <div id="roles-pagination" class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <div class="text-xs text-slate-500">
+                Mostrando <span id="roles-range-start" class="font-semibold text-slate-700 dark:text-slate-300">0</span> a <span id="roles-range-end" class="font-semibold text-slate-700 dark:text-slate-300">0</span> de <span id="roles-total-count" class="font-semibold text-slate-700 dark:text-slate-300">0</span> registros
+              </div>
+              <div class="flex items-center gap-2">
+                <button id="roles-btn-prev" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 dark:text-slate-300 disabled:opacity-50 disabled:pointer-events-none transition-all">
+                  Anterior
+                </button>
+                <span class="text-xs text-slate-500">Pág. <span id="roles-current-page" class="font-semibold text-slate-700 dark:text-slate-300">1</span> de <span id="roles-total-pages" class="font-semibold text-slate-700 dark:text-slate-300">1</span></span>
+                <button id="roles-btn-next" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 dark:text-slate-300 disabled:opacity-50 disabled:pointer-events-none transition-all">
+                  Siguiente
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      <!-- View: Regiones (Tab panel, initially hidden) -->
+      <section id="view-regions" class="dashboard-view hidden space-y-6">
+        <div class="p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="relative flex-1 max-w-md">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+              </span>
+              <input type="text" id="regions-search" placeholder="Buscar por nombre..." class="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+            </div>
+            <button id="btn-add-region" class="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-brand hover:bg-brand-light rounded-xl shadow-lg shadow-brand/10 transition-all duration-300">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4.5v15m7.5-7.5h-15"></path>
+              </svg>
+              Añadir Región
+            </button>
+          </div>
+          
+          <!-- Regions Table -->
+          <div class="overflow-x-auto relative">
+            
+            <!-- Loading Indicator -->
+            <div id="regions-loading" class="absolute inset-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm z-10 flex items-center justify-center hidden">
+              <svg class="animate-spin h-8 w-8 text-brand" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </div>
+
+            <table class="w-full text-sm text-left text-slate-500 dark:text-slate-400">
+              <thead class="text-xs text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-950 uppercase tracking-wider">
+                <tr>
+                  <th scope="col" class="px-6 py-4">ID</th>
+                  <th scope="col" class="px-6 py-4">Nombre</th>
+                  <th scope="col" class="px-6 py-4">Estado (Activo)</th>
+                  <th scope="col" class="px-6 py-4 text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="regions-table-body" class="divide-y divide-slate-100 dark:divide-slate-800">
+                <!-- Dynamically loaded rows -->
+              </tbody>
+            </table>
+
+            <!-- Empty State -->
+            <div id="regions-empty" class="py-12 text-center hidden">
+              <svg class="w-12 h-12 text-slate-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              </svg>
+              <p class="text-slate-500">No se encontraron regiones registradas.</p>
+            </div>
+
+            <!-- Regions Pagination Controls -->
+            <div id="regions-pagination" class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <div class="text-xs text-slate-500">
+                Mostrando <span id="regions-range-start" class="font-semibold text-slate-700 dark:text-slate-350">0</span> a <span id="regions-range-end" class="font-semibold text-slate-700 dark:text-slate-350">0</span> de <span id="regions-total-count" class="font-semibold text-slate-700 dark:text-slate-350">0</span> registros
+              </div>
+              <div class="flex items-center gap-2">
+                <button id="regions-btn-prev" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-850 disabled:opacity-50 disabled:pointer-events-none transition-all">
+                  Anterior
+                </button>
+                <span class="text-xs text-slate-500">Pág. <span id="regions-current-page" class="font-semibold text-slate-700 dark:text-slate-350">1</span> de <span id="regions-total-pages" class="font-semibold text-slate-700 dark:text-slate-350">1</span></span>
+                <button id="regions-btn-next" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-850 disabled:opacity-50 disabled:pointer-events-none transition-all">
+                  Siguiente
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- View: Settings (Tab panel, initially hidden) -->
+      <section id="view-settings" class="dashboard-view hidden space-y-6">
+        <div class="p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-6">
+          <h2 class="font-display font-bold text-xl">Ajustes Generales del Panel</h2>
+          
+          <!-- Accent Theme Switcher Interface Section -->
+          <div class="space-y-3">
+            <h3 class="text-sm font-semibold uppercase text-slate-500 dark:text-slate-400 tracking-wider">Tema de Color Corporativo</h3>
+            <p class="text-xs text-slate-400">Selecciona el color de acento principal. El tema base siempre iniciará con el verde corporativo de la empresa.</p>
+            
+            <div class="flex flex-wrap gap-4 pt-2">
+              
+              <!-- Green button (Default) -->
+              <button data-theme="green" class="theme-selector-btn flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-sm font-semibold bg-white dark:bg-slate-950 transition-all focus:outline-none">
+                <span class="w-3.5 h-3.5 rounded-full bg-[#355a31]"></span>
+                Verde Corporativo (Base)
+              </button>
+
+              <!-- Blue button -->
+              <button data-theme="blue" class="theme-selector-btn flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-sm font-semibold bg-white dark:bg-slate-950 transition-all focus:outline-none">
+                <span class="w-3.5 h-3.5 rounded-full bg-[#1e3a8a]"></span>
+                Azul Clásico
+              </button>
+
+              <!-- Emerald button -->
+              <button data-theme="emerald" class="theme-selector-btn flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-sm font-semibold bg-white dark:bg-slate-950 transition-all focus:outline-none">
+                <span class="w-3.5 h-3.5 rounded-full bg-[#065f46]"></span>
+                Verde Esmeralda
+              </button>
+
+              <!-- Indigo button -->
+              <button data-theme="indigo" class="theme-selector-btn flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-sm font-semibold bg-white dark:bg-slate-950 transition-all focus:outline-none">
+                <span class="w-3.5 h-3.5 rounded-full bg-[#3730a3]"></span>
+                Índigo
+              </button>
+
+            </div>
+          </div>
+
+          <hr class="border-slate-200 dark:border-slate-800">
+
+          <!-- Other Settings placeholder -->
+          <div class="space-y-4">
+            <h3 class="text-sm font-semibold uppercase text-slate-500 dark:text-slate-400 tracking-wider font-display">Ajustes de Perfil</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block mb-2 text-xs font-medium text-slate-500">Nombre de la Empresa</label>
+                <input type="text" class="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950" value="Empresas S.L.">
+              </div>
+              <div>
+                <label class="block mb-2 text-xs font-medium text-slate-500">Idioma Predeterminado</label>
+                <select class="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300">
+                  <option selected>Español</option>
+                  <option>English</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-6 transition-colors duration-300">
+      <div class="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 dark:text-slate-400 gap-4">
+        <div>
+          &copy; 2026 Empresas S.L. - Panel de Control Administrativo.
+        </div>
+        <div class="flex gap-4">
+          <a href="#" class="hover:text-brand transition-colors">Terminología Legal</a>
+          <a href="#" class="hover:text-brand transition-colors">Política de Datos</a>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- User Modal for Create/Edit -->
+  <div id="user-modal-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm hidden opacity-0 transition-all duration-300">
+    <div id="user-modal-card" class="bg-white dark:bg-slate-900 w-full max-w-lg p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl relative space-y-6 scale-95 opacity-0 transition-all duration-300">
+      
+      <!-- Close Button -->
+      <button id="btn-close-modal" class="absolute top-6 right-6 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+
+      <div>
+        <h3 id="modal-title" class="font-display font-bold text-xl text-slate-900 dark:text-white">Crear Usuario</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400">Todos los campos son editables excepto el ID y la fecha de creación.</p>
+      </div>
+
+      <form id="user-form" class="space-y-5">
+        <input type="hidden" id="form-id">
+        
+        <!-- Nombre input -->
+        <div class="relative">
+          <input type="text" id="form-nombre" required placeholder=" " class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+          <label for="form-nombre" class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Nombre Completo</label>
+        </div>
+
+        <!-- Cédula input -->
+        <div class="relative">
+          <input type="text" id="form-ci" required placeholder=" " class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+          <label for="form-ci" class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Cédula (CI)</label>
+        </div>
+
+        <!-- Correo/Mail input -->
+        <div class="relative">
+          <input type="text" id="form-mail" required placeholder=" " class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+          <label for="form-mail" class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Correo (Mail)</label>
+        </div>
+
+        <!-- Teléfono input -->
+        <div class="relative">
+          <input type="text" id="form-telefono" required placeholder=" " class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+          <label for="form-telefono" class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Teléfono</label>
+        </div>
+
+        <!-- Clave input -->
+        <div class="relative">
+          <input type="password" id="form-clave" placeholder=" " class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+          <label for="form-clave" class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Contraseña (Clave)</label>
+          <p id="password-hint" class="text-[10px] text-slate-400 mt-1 hidden">Dejar en blanco para conservar la clave actual.</p>
+        </div>
+
+        <!-- Activo toggle/switch (Premium styling) -->
+        <div class="flex items-center justify-between p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40">
+          <div class="space-y-0.5">
+            <span class="text-sm font-semibold">Estado Activo</span>
+            <p class="text-xs text-slate-400">Si está inactivo, el usuario no podrá acceder al panel.</p>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="form-activo" class="sr-only peer" checked>
+            <div class="w-11 h-6 bg-slate-200 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand"></div>
+          </label>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex gap-4 pt-3">
+          <button type="button" id="btn-cancel-modal" class="flex-1 py-3 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-350 dark:hover:bg-slate-700 rounded-xl transition-all">
+            Cancelar
+          </button>
+          <button type="submit" id="btn-save-modal" class="flex-1 py-3 text-sm font-semibold text-white bg-brand hover:bg-brand-light focus:ring-4 focus:ring-brand-200 rounded-xl transition-all shadow-lg shadow-brand/10">
+            Guardar
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- Role Modal for Create/Edit -->
+  <div id="role-modal-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm hidden opacity-0 transition-all duration-300">
+    <div id="role-modal-card" class="bg-white dark:bg-slate-900 w-full max-w-lg p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl relative space-y-6 scale-95 opacity-0 transition-all duration-300">
+      
+      <!-- Close Button -->
+      <button id="btn-close-role-modal" class="absolute top-6 right-6 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+
+      <div>
+        <h3 id="role-modal-title" class="font-display font-bold text-xl text-slate-900 dark:text-white">Crear Rol</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400">Todos los campos son editables excepto el ID y la fecha de creación.</p>
+      </div>
+
+      <form id="role-form" class="space-y-5">
+        <input type="hidden" id="role-form-id">
+        
+        <!-- Nombre input -->
+        <div class="relative">
+          <input type="text" id="role-form-nombre" required placeholder=" " class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+          <label for="role-form-nombre" class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Nombre del Rol</label>
+        </div>
+
+        <!-- Tipo input -->
+        <div class="relative">
+          <input type="text" id="role-form-tipo" required placeholder=" " class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+          <label for="role-form-tipo" class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Tipo/Descripción</label>
+        </div>
+
+        <!-- Activo toggle/switch (Premium styling) -->
+        <div class="flex items-center justify-between p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40">
+          <div class="space-y-0.5">
+            <span class="text-sm font-semibold">Estado Activo</span>
+            <p class="text-xs text-slate-400">Si está inactivo, los usuarios con este rol no podrán acceder.</p>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="role-form-activo" class="sr-only peer" checked>
+            <div class="w-11 h-6 bg-slate-200 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand"></div>
+          </label>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex gap-4 pt-3">
+          <button type="button" id="btn-cancel-role-modal" class="flex-1 py-3 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-350 dark:hover:bg-slate-700 rounded-xl transition-all">
+            Cancelar
+          </button>
+          <button type="submit" id="btn-save-role-modal" class="flex-1 py-3 text-sm font-semibold text-white bg-brand hover:bg-brand-light focus:ring-4 focus:ring-brand-200 rounded-xl transition-all shadow-lg shadow-brand/10">
+            Guardar
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- Region Modal for Create/Edit -->
+  <div id="region-modal-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm hidden opacity-0 transition-all duration-300">
+    <div id="region-modal-card" class="bg-white dark:bg-slate-900 w-full max-w-lg p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl relative space-y-6 scale-95 opacity-0 transition-all duration-300">
+      
+      <!-- Close Button -->
+      <button id="btn-close-region-modal" class="absolute top-6 right-6 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+
+      <div>
+        <h3 id="region-modal-title" class="font-display font-bold text-xl text-slate-900 dark:text-white">Crear Región</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400">Todos los campos son editables excepto el ID y la fecha de creación.</p>
+      </div>
+
+      <form id="region-form" class="space-y-5">
+        <input type="hidden" id="region-form-id">
+        
+        <!-- Nombre input -->
+        <div class="relative">
+          <input type="text" id="region-form-nombre" required placeholder=" " class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+          <label for="region-form-nombre" class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Nombre de la Región</label>
+        </div>
+
+        <!-- Activo toggle/switch (Premium styling) -->
+        <div class="flex items-center justify-between p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40">
+          <div class="space-y-0.5">
+            <span class="text-sm font-semibold">Estado Activo</span>
+            <p class="text-xs text-slate-400">Si está inactiva, no se podrá asociar a nuevos registros.</p>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="region-form-activo" class="sr-only peer" checked>
+            <div class="w-11 h-6 bg-slate-200 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand"></div>
+          </label>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex gap-4 pt-3">
+          <button type="button" id="btn-cancel-region-modal" class="flex-1 py-3 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-350 dark:hover:bg-slate-700 rounded-xl transition-all">
+            Cancelar
+          </button>
+          <button type="submit" id="btn-save-region-modal" class="flex-1 py-3 text-sm font-semibold text-white bg-brand hover:bg-brand-light focus:ring-4 focus:ring-brand-200 rounded-xl transition-all shadow-lg shadow-brand/10">
+            Guardar
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- Company Modal for Create/Edit -->
+  <div id="company-modal-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm hidden opacity-0 transition-all duration-300">
+    <div id="company-modal-card" class="bg-white dark:bg-slate-900 w-full max-w-2xl p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl relative space-y-6 scale-95 opacity-0 transition-all duration-300 max-h-[90vh] overflow-y-auto">
+      
+      <!-- Close Button -->
+      <button id="btn-close-company-modal" class="absolute top-6 right-6 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+
+      <div>
+        <h3 id="company-modal-title" class="font-display font-bold text-xl text-slate-900 dark:text-white">Crear Empresa</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400">Rellene los datos de la empresa. ID y created_at se asignan automáticamente.</p>
+      </div>
+
+      <form id="company-form" class="space-y-5">
+        <input type="hidden" id="company-form-id">
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- Código -->
+          <div class="relative">
+            <input type="text" id="company-form-codigo" required placeholder=" " class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+            <label for="company-form-codigo" class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Código</label>
+          </div>
+
+          <!-- Razón Social -->
+          <div class="relative">
+            <input type="text" id="company-form-razon" required placeholder=" " class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+            <label for="company-form-razon" class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Razón Social</label>
+          </div>
+
+          <!-- RIF -->
+          <div class="relative">
+            <input type="text" id="company-form-rif" required placeholder=" " class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+            <label for="company-form-rif" class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">RIF</label>
+          </div>
+
+          <!-- Fecha Apertura -->
+          <div class="relative">
+            <input type="date" id="company-form-fecha" required placeholder=" " class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+            <label for="company-form-fecha" class="absolute left-4 -translate-y-4 scale-75 transform text-slate-500 bg-white dark:bg-slate-900 px-1.5 z-10">Fecha de Apertura</label>
+          </div>
+
+          <!-- Código Maestro -->
+          <div class="relative">
+            <input type="text" id="company-form-maestro" placeholder=" " class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+            <label for="company-form-maestro" class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Código Maestro</label>
+          </div>
+
+          <!-- Estatus Libro -->
+          <div class="relative">
+            <select id="company-form-libro" class="block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+              <option value="activo">Activo</option>
+              <option value="inactivo">Inactivo</option>
+            </select>
+            <label for="company-form-libro" class="absolute left-4 -translate-y-4 scale-75 transform text-slate-500 bg-white dark:bg-slate-900 px-1.5 z-10">Estatus Libro</label>
+          </div>
+
+          <!-- Sistema -->
+          <div class="relative">
+            <input type="text" id="company-form-sistema" placeholder=" " class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+            <label for="company-form-sistema" class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Sistema (ej: sap)</label>
+          </div>
+
+          <!-- Participación -->
+          <div class="relative">
+            <input type="text" id="company-form-participacion" placeholder=" " class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+            <label for="company-form-participacion" class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Participación (ej: 100)</label>
+          </div>
+
+          <!-- Región (Select dinámico) -->
+          <div class="relative sm:col-span-2">
+            <select id="company-form-region" required class="block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+              <!-- Carga dinámica de regiones activas -->
+            </select>
+            <label for="company-form-region" class="absolute left-4 -translate-y-4 scale-75 transform text-slate-500 bg-white dark:bg-slate-900 px-1.5 z-10">Región Asociada</label>
+          </div>
+
+          <!-- Observación -->
+          <div class="relative sm:col-span-2">
+            <textarea id="company-form-observacion" rows="2" placeholder=" " class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300"></textarea>
+            <label for="company-form-observacion" class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Observación</label>
+          </div>
+        </div>
+
+        <!-- Activo toggle/switch (Premium styling) -->
+        <div class="flex items-center justify-between p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40">
+          <div class="space-y-0.5">
+            <span class="text-sm font-semibold">Estado Activo</span>
+            <p class="text-xs text-slate-400">Si está inactiva, no se mostrará como activa en las dependencias.</p>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="company-form-activo" class="sr-only peer" checked>
+            <div class="w-11 h-6 bg-slate-200 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand"></div>
+          </label>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-wrap gap-4 pt-3">
+          <button type="button" id="btn-manage-company-details" class="flex-1 py-3 px-4 text-sm font-semibold text-brand hover:text-brand-light bg-brand/10 rounded-xl transition-all hidden">
+            Gestionar Detalles
+          </button>
+          <button type="button" id="btn-cancel-company-modal" class="flex-1 py-3 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-350 dark:hover:bg-slate-700 rounded-xl transition-all">
+            Cancelar
+          </button>
+          <button type="submit" id="btn-save-company-modal" class="flex-1 py-3 text-sm font-semibold text-white bg-brand hover:bg-brand-light focus:ring-4 focus:ring-brand-200 rounded-xl transition-all shadow-lg shadow-brand/10">
+            Guardar
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- Company Details Modal (Cards list) -->
+  <div id="company-details-modal-overlay" class="fixed inset-0 z-40 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm hidden opacity-0 transition-all duration-300">
+    <div id="company-details-modal-card" class="bg-white dark:bg-slate-900 w-full max-w-4xl p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl relative space-y-6 scale-95 opacity-0 transition-all duration-300 max-h-[90vh] overflow-y-auto">
+      
+      <!-- Close Button -->
+      <button id="btn-close-company-details-modal" class="absolute top-6 right-6 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+        <div>
+          <h3 id="company-details-modal-title" class="font-display font-bold text-xl text-slate-900 dark:text-white">Detalles de Empresa</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Administra registros de impuestos, licencias, facturación o contactos asociados.</p>
+        </div>
+        <button id="btn-add-detail" class="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-brand hover:bg-brand-light rounded-xl shadow-lg shadow-brand/10 transition-all duration-300">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4.5v15m7.5-7.5h-15"></path>
+          </svg>
+          Añadir Detalle
+        </button>
+      </div>
+
+      <!-- Loading Details Indicator -->
+      <div id="details-loading" class="py-12 flex items-center justify-center hidden">
+        <svg class="animate-spin h-8 w-8 text-brand" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      </div>
+
+      <!-- Empty State -->
+      <div id="details-empty" class="py-16 text-center space-y-3 hidden">
+        <div class="w-16 h-16 rounded-2xl bg-slate-50 dark:bg-slate-950 flex items-center justify-center mx-auto text-slate-400">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+          </svg>
+        </div>
+        <p class="text-sm font-semibold text-slate-600 dark:text-slate-350">No hay detalles registrados</p>
+        <p class="text-xs text-slate-450 max-w-sm mx-auto">Comienza agregando un nuevo detalle como un impuesto, licencia o información de contacto para esta empresa.</p>
+      </div>
+
+      <!-- Cards Grid -->
+      <div id="details-cards-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 py-2">
+        <!-- Cards loaded dynamically -->
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Detail Sub-Modal for Create/Edit -->
+  <div id="detail-modal-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm hidden opacity-0 transition-all duration-300">
+    <div id="detail-modal-card" class="bg-white dark:bg-slate-900 w-full max-w-md p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl relative space-y-6 scale-95 opacity-0 transition-all duration-300">
+      
+      <!-- Close Button -->
+      <button id="btn-close-detail-modal" class="absolute top-6 right-6 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+
+      <div>
+        <h3 id="detail-modal-title" class="font-display font-bold text-lg text-slate-900 dark:text-white">Añadir Detalle</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400">Introduce la información requerida del detalle.</p>
+      </div>
+
+      <form id="detail-form" class="space-y-5">
+        <input type="hidden" id="detail-form-id">
+        
+        <!-- Tipo dropdown -->
+        <div class="relative">
+          <select id="detail-form-tipo" required class="block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+            <option value="Impuestos">Impuestos</option>
+            <option value="Licencias">Licencias</option>
+            <option value="Contacto">Contacto</option>
+            <option value="Facturación">Facturación</option>
+            <option value="Otros">Otros</option>
+          </select>
+          <label for="detail-form-tipo" class="absolute left-4 -translate-y-4 scale-75 transform text-slate-500 bg-white dark:bg-slate-900 px-1.5 z-10">Tipo de Detalle</label>
+        </div>
+
+        <!-- Fecha picker -->
+        <div class="relative">
+          <input type="date" id="detail-form-fecha" required class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+          <label for="detail-form-fecha" class="absolute left-4 -translate-y-4 scale-75 transform text-slate-500 bg-white dark:bg-slate-900 px-1.5 z-10">Fecha de Registro</label>
+        </div>
+
+        <!-- Valor input -->
+        <div class="relative">
+          <input type="text" id="detail-form-valor" required placeholder=" " class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+          <label for="detail-form-valor" class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Valor (Código / Teléfono / Texto)</label>
+        </div>
+
+        <!-- Comentario input -->
+        <div class="relative">
+          <textarea id="detail-form-comentario" rows="2" placeholder=" " class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300"></textarea>
+          <label for="detail-form-comentario" class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Comentario / Descripción</label>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex gap-4 pt-3">
+          <button type="button" id="btn-cancel-detail-modal" class="flex-1 py-3 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-350 dark:hover:bg-slate-700 rounded-xl transition-all">
+            Cancelar
+          </button>
+          <button type="submit" id="btn-save-detail-modal" class="flex-1 py-3 text-sm font-semibold text-white bg-brand hover:bg-brand-light focus:ring-4 focus:ring-brand-200 rounded-xl transition-all shadow-lg shadow-brand/10">
+            Guardar
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="delete-confirm-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm hidden opacity-0 transition-all duration-300">
+    <div id="delete-confirm-card" class="bg-white dark:bg-slate-900 w-full max-w-md p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl relative space-y-4 scale-95 opacity-0 transition-all duration-300">
+      <h3 id="delete-confirm-title" class="font-display font-bold text-lg text-slate-900 dark:text-white">¿Eliminar Registro?</h3>
+      <p id="delete-confirm-desc" class="text-sm text-slate-500 dark:text-slate-400">Esta acción no se puede deshacer. El registro será eliminado permanentemente de la base de datos.</p>
+      
+      <div class="flex gap-4 pt-2">
+        <button id="btn-cancel-delete" class="flex-1 py-2.5 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-350 dark:hover:bg-slate-700 rounded-xl transition-all">
+          Cancelar
+        </button>
+        <button id="btn-confirm-delete" class="flex-1 py-2.5 text-sm font-semibold text-white bg-red-500 hover:bg-red-650 rounded-xl transition-all shadow-lg shadow-red-500/20">
+          Eliminar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Scripts -->
+  <script type="module" src="js/dashboard.js"></script>
+</body>
+</html>

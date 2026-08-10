@@ -1,0 +1,13 @@
+# Environment variables
+.env
+
+# OS Files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+# Temporary / IDE files
+.idea/
+.vscode/
+*.log
