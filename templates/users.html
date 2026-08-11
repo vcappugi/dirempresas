@@ -39,6 +39,7 @@
             <th scope="col" class="px-6 py-4">Cédula</th>
             <th scope="col" class="px-6 py-4">Correo (Mail)</th>
             <th scope="col" class="px-6 py-4">Teléfono</th>
+            <th scope="col" class="px-6 py-4">Rol</th>
             <th scope="col" class="px-6 py-4">Estado (Activo)</th>
             <th scope="col" class="px-6 py-4 text-right">Acciones</th>
           </tr>
@@ -124,6 +125,14 @@
         <input type="password" id="form-clave" placeholder=" " class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
         <label for="form-clave" class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Contraseña (Clave)</label>
         <p id="password-hint" class="text-[10px] text-slate-400 mt-1 hidden">Dejar en blanco para conservar la clave actual.</p>
+      </div>
+
+      <!-- Rol select input -->
+      <div class="relative">
+        <select id="form-rol" required class="block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+          <option value="" disabled selected>Seleccione un Rol</option>
+        </select>
+        <label for="form-rol" class="absolute left-4 -translate-y-4 scale-75 transform text-slate-500 bg-white dark:bg-slate-900 px-1.5 z-10">Rol del Usuario</label>
       </div>
 
       <!-- Activo toggle/switch (Premium styling) -->
