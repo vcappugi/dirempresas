@@ -4,6 +4,60 @@ import { companiesList } from './companies.js';
 export let currentCompanyIdForDetails = null;
 let detailsList = [];
 
+const loadDetailTypesSelect = async (selectedVal = null) => {
+  const selectEl = document.getElementById('detail-form-tipo');
+  if (!selectEl) return;
+
+  selectEl.innerHTML = '<option value="" disabled selected>Cargando opciones...</option>';
+
+  try {
+    const res = await fetch(`${supabaseUrl}tipo_detalle?order=nombre.asc`, {
+      method: 'GET',
+      headers: getHeaders()
+    });
+
+    if (!res.ok) throw new Error("Error al cargar tipo_detalle");
+    const data = await res.json();
+
+    selectEl.innerHTML = '<option value="" disabled>Seleccione un Tipo</option>';
+    
+    data.forEach(item => {
+      const val = item.nombre || item.tipo || item.descripcion;
+      if (val) {
+        const option = document.createElement('option');
+        option.value = val;
+        option.textContent = val;
+        if (selectedVal && selectedVal.toLowerCase() === val.toLowerCase()) {
+          option.selected = true;
+        }
+        selectEl.appendChild(option);
+      }
+    });
+
+    // Si no hay opción seleccionada, forzar placeholder
+    if (!selectedVal) {
+      const placeholder = selectEl.querySelector('option[value=""]');
+      if (placeholder) placeholder.selected = true;
+    }
+  } catch (err) {
+    console.warn("Error populating detail types select, using fallback:", err);
+    // Fallback a opciones estáticas por diseño premium robusto
+    selectEl.innerHTML = `
+      <option value="" disabled>Seleccione un Tipo</option>
+      <option value="Impuestos">Impuestos</option>
+      <option value="Licencias">Licencias</option>
+      <option value="Contacto">Contacto</option>
+      <option value="Facturación">Facturación</option>
+      <option value="Otros">Otros</option>
+    `;
+    if (selectedVal) {
+      selectEl.value = selectedVal;
+    } else {
+      selectEl.value = "";
+    }
+  }
+};
+
 export const loadDetails = async (companyId) => {
   const loadingEl = document.getElementById('details-loading');
   const cardsGrid = document.getElementById('details-cards-grid');
@@ -151,12 +205,12 @@ export const initDetailsModule = () => {
   if (btnAddDetail) {
     btnAddDetail.addEventListener('click', () => {
       document.getElementById('detail-form-id').value = '';
-      document.getElementById('detail-form-tipo').value = 'Impuestos';
       document.getElementById('detail-form-fecha').value = new Date().toISOString().split('T')[0];
       document.getElementById('detail-form-valor').value = '';
       document.getElementById('detail-form-comentario').value = '';
 
       document.getElementById('detail-modal-title').textContent = 'Añadir Detalle';
+      loadDetailTypesSelect();
       openDetailFormModal();
     });
   }
@@ -171,12 +225,12 @@ export const initDetailsModule = () => {
     if (!det) return;
 
     document.getElementById('detail-form-id').value = det.id;
-    document.getElementById('detail-form-tipo').value = det.tipo || 'Impuestos';
     document.getElementById('detail-form-fecha').value = det.fecha || '';
     document.getElementById('detail-form-valor').value = det.valor || '';
     document.getElementById('detail-form-comentario').value = det.comentario || '';
 
     document.getElementById('detail-modal-title').textContent = 'Editar Detalle';
+    loadDetailTypesSelect(det.tipo);
     openDetailFormModal();
   };
 
