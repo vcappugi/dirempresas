@@ -80,8 +80,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // --- Role-Based View Access Control ---
-  // El rol admin (id=1) puede acceder a todo; otros roles (como DEALER_MANAGER) se restringen.
-  if (profile.rol && profile.rol.id !== 1 && profile.rol.nombre?.toLowerCase() !== 'admin') {
+  // Los usuarios con rol "admin" pueden acceder a todas las opciones; otros roles (ej: "usuario") se restringen.
+  const getRoleName = () => {
+    if (!profile.rol) return '';
+    if (typeof profile.rol === 'string') return profile.rol.toLowerCase();
+    if (typeof profile.rol === 'object') {
+      return (profile.rol.nombre || '').toLowerCase();
+    }
+    return '';
+  };
+  const isAdmin = getRoleName() === 'admin' || (profile.rol && profile.rol.id === 1);
+  if (!isAdmin) {
     const parentSettings = document.getElementById('btn-toggle-settings-submenu');
     if (parentSettings) parentSettings.style.display = 'none';
     const btnCompanies = document.querySelector('[data-view="view-companies"]');
