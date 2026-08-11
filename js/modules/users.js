@@ -25,13 +25,13 @@ export const loadUsers = async () => {
   const end = start + usersPageSize - 1;
 
   try {
-    let queryUrl = `${supabaseUrl}usuario?select=*,user_roles(role_id,rol_id,roles(nombre))`;
+    let queryUrl = `${supabaseUrl}usuario`;
     
     if (usersSearchQuery) {
       const encSearch = encodeURIComponent(usersSearchQuery);
-      queryUrl += `&or=(nombre.ilike.*${encSearch}*,ci.ilike.*${encSearch}*,mail.ilike.*${encSearch}*,telefono.ilike.*${encSearch}*)&order=id.asc`;
+      queryUrl += `?or=(nombre.ilike.*${encSearch}*,ci.ilike.*${encSearch}*,mail.ilike.*${encSearch}*,telefono.ilike.*${encSearch}*)&order=id.asc`;
     } else {
-      queryUrl += `&order=id.asc`;
+      queryUrl += `?order=id.asc`;
     }
 
     const headers = getHeaders();
@@ -66,17 +66,10 @@ export const loadUsers = async () => {
           ? `<span class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-400">Activo</span>`
           : `<span class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">Inactivo</span>`;
 
-        let roleBadge = `<span class="text-xs text-slate-500 font-medium">Sin Rol</span>`;
-        if (user.user_roles && user.user_roles.length > 0) {
-          const userRole = user.user_roles[0];
-          if (userRole.roles) {
-            const rName = userRole.roles.nombre;
-            const isMainAdmin = rName.toLowerCase() === 'admin';
-            roleBadge = isMainAdmin
-              ? `<span class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-400">Admin</span>`
-              : `<span class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400">${escapeHtml(rName)}</span>`;
-          }
-        }
+        const userRole = (user.rol || 'usuario').toLowerCase();
+        const roleBadge = userRole === 'admin'
+          ? `<span class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-400">Admin</span>`
+          : `<span class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400">Usuario</span>`;
 
         const row = document.createElement('tr');
         row.className = 'hover:bg-slate-100/50 dark:hover:bg-slate-800/30 transition-colors duration-200';
@@ -132,44 +125,6 @@ const updateUsersPaginationUI = (startRange, endRange) => {
   if (btnNext) btnNext.disabled = usersPage >= totalPages;
 };
 
-const loadRolesSelect = async (selectedRoleId = null) => {
-  const selectEl = document.getElementById('form-rol');
-  if (!selectEl) return;
-
-  selectEl.innerHTML = '<option value="" disabled selected>Cargando roles...</option>';
-
-  try {
-    const res = await fetch(`${supabaseUrl}roles?activo=eq.true&order=nombre.asc`, {
-      method: 'GET',
-      headers: getHeaders()
-    });
-
-    if (!res.ok) throw new Error("Error cargando roles");
-    const roles = await res.json();
-
-    selectEl.innerHTML = '<option value="" disabled>Seleccione un Rol</option>';
-    
-    // Si no hay rol seleccionado por defecto, forzar el placeholder
-    if (!selectedRoleId) {
-      const placeholderOpt = selectEl.querySelector('option[value=""]');
-      if (placeholderOpt) placeholderOpt.selected = true;
-    }
-
-    roles.forEach(role => {
-      const option = document.createElement('option');
-      option.value = role.id;
-      option.textContent = role.nombre;
-      if (selectedRoleId && Number(selectedRoleId) === Number(role.id)) {
-        option.selected = true;
-      }
-      selectEl.appendChild(option);
-    });
-  } catch (err) {
-    console.error("Error populating roles select:", err);
-    selectEl.innerHTML = '<option value="" disabled selected>Error al cargar roles</option>';
-  }
-};
-
 export const initUsersModule = () => {
   const modalOverlay = document.getElementById('user-modal-overlay');
   const modalCard = document.getElementById('user-modal-card');
@@ -209,11 +164,11 @@ export const initUsersModule = () => {
       document.getElementById('form-clave').value = '';
       document.getElementById('form-clave').required = true;
       document.getElementById('form-activo').checked = true;
+      document.getElementById('form-rol').value = '';
 
       document.getElementById('modal-title').textContent = 'Crear Usuario';
       document.getElementById('password-hint').classList.add('hidden');
       
-      loadRolesSelect();
       openModal();
     });
   }
@@ -233,15 +188,10 @@ export const initUsersModule = () => {
     document.getElementById('form-clave').value = '';
     document.getElementById('form-clave').required = false;
     document.getElementById('form-activo').checked = user.activo === true;
+    document.getElementById('form-rol').value = user.rol || '';
 
     document.getElementById('modal-title').textContent = 'Editar Usuario';
     document.getElementById('password-hint').classList.remove('hidden');
-    
-    let currentRoleId = null;
-    if (user.user_roles && user.user_roles.length > 0) {
-      currentRoleId = user.user_roles[0].role_id || user.user_roles[0].rol_id;
-    }
-    loadRolesSelect(currentRoleId);
     
     openModal();
   };
@@ -261,9 +211,9 @@ export const initUsersModule = () => {
       const telefono = document.getElementById('form-telefono').value;
       const clave = document.getElementById('form-clave').value;
       const activo = document.getElementById('form-activo').checked;
-      const rolId = document.getElementById('form-rol').value;
+      const rol = document.getElementById('form-rol').value;
 
-      if (!rolId) {
+      if (!rol) {
         showToast("Por favor, seleccione un rol para el usuario.", false);
         return;
       }
@@ -280,7 +230,7 @@ export const initUsersModule = () => {
       `;
 
       try {
-        const userData = { nombre, ci, mail, telefono, activo };
+        const userData = { nombre, ci, mail, telefono, activo, rol };
 
         if (clave) {
           const bcryptLib = window.bcrypt || dcodeIO.bcrypt;
@@ -303,69 +253,13 @@ export const initUsersModule = () => {
           method = 'PATCH';
         }
 
-        const headers = getHeaders();
-        headers["Prefer"] = "return=representation";
-
         const res = await fetch(url, {
           method: method,
-          headers: headers,
+          headers: getHeaders(),
           body: JSON.stringify(userData)
         });
 
         if (!res.ok) throw new Error("Fallo al guardar datos del usuario en Supabase.");
-
-        const savedUser = await res.json();
-        const userId = Array.isArray(savedUser) ? savedUser[0].id : (savedUser.id || id);
-
-        if (userId && rolId) {
-          // 1. Eliminar relaciones de rol previas
-          try {
-            await fetch(`${supabaseUrl}user_roles?user_id=eq.${userId}`, {
-              method: 'DELETE',
-              headers: getHeaders()
-            });
-          } catch(e) {}
-          try {
-            await fetch(`${supabaseUrl}user_roles?usuario_id=eq.${userId}`, {
-              method: 'DELETE',
-              headers: getHeaders()
-            });
-          } catch(e) {}
-
-          // 2. Insertar relación de rol con fallback robusto
-          let roleSaved = false;
-          try {
-            const roleRes = await fetch(`${supabaseUrl}user_roles`, {
-              method: 'POST',
-              headers: {
-                ...getHeaders(),
-                'Prefer': 'return=representation'
-              },
-              body: JSON.stringify({
-                user_id: Number(userId),
-                role_id: Number(rolId)
-              })
-            });
-            if (roleRes.ok) roleSaved = true;
-          } catch (e) {
-            console.warn("Fallo inserción con user_id/role_id, intentando con usuario_id/rol_id:", e);
-          }
-
-          if (!roleSaved) {
-            try {
-              await fetch(`${supabaseUrl}user_roles`, {
-                method: 'POST',
-                headers: getHeaders(),
-                body: JSON.stringify({
-                  usuario_id: Number(userId),
-                  rol_id: Number(rolId)
-                })
-              });
-            } catch (e) {
-              console.error("Error al guardar relación de rol en user_roles:", e);
-            }
-          }
-        }
 
         showToast(id ? 'Usuario actualizado con éxito.' : 'Usuario creado con éxito.', true);
         closeModal();

@@ -121,61 +121,13 @@ export const login = async (email, password) => {
     throw new Error("Contraseña incorrecta.");
   }
 
-  // 3. Fetch Role information via 'user_roles' junction table
-  let roleData = null;
-  try {
-    // Intentar con columnas standard user_id y role_id
-    const { data: linkData, error: linkErr } = await client
-      .from('user_roles')
-      .select('role_id')
-      .eq('user_id', userData.id)
-      .limit(1)
-      .single();
-
-    if (!linkErr && linkData) {
-      const { data: fetchRole } = await client
-        .from('roles')
-        .select('*')
-        .eq('id', linkData.role_id)
-        .single();
-      roleData = fetchRole;
-    }
-  } catch (err) {
-    console.warn("Fallo consulta con user_id/role_id, intentando con usuario_id/rol_id:", err);
-    try {
-      const { data: linkData, error: linkErr } = await client
-        .from('user_roles')
-        .select('rol_id')
-        .eq('usuario_id', userData.id)
-        .limit(1)
-        .single();
-
-      if (!linkErr && linkData) {
-        const { data: fetchRole } = await client
-          .from('roles')
-          .select('*')
-          .eq('id', linkData.rol_id)
-          .single();
-        roleData = fetchRole;
-      }
-    } catch (err2) {
-      console.warn("Ambas consultas de columnas en user_roles fallaron:", err2);
-    }
-  }
-
-  // Fallback a lógica de nombres si no se encontró relación en user_roles
-  if (!roleData) {
-    let roleName = "DEALER_MANAGER";
-    if (email === 'vcappugi' || email.includes('admin') || userData.nombre.toLowerCase().includes('victor')) {
-      roleName = "admin";
-    }
-    const { data: fetchRole } = await client
-      .from('roles')
-      .select('*')
-      .eq('nombre', roleName)
-      .single();
-    roleData = fetchRole;
-  }
+  // 3. Resolve role directly from the text column "rol" in the "usuario" table
+  const userRoleString = (userData.rol || "usuario").toLowerCase();
+  const roleData = {
+    id: userRoleString === 'admin' ? 1 : 2,
+    nombre: userRoleString,
+    activo: true
+  };
 
   // 4. Fetch Empresa information (first company)
   const { data: empresaData } = await client
