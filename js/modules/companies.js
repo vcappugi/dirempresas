@@ -195,6 +195,10 @@ export const initCompaniesModule = () => {
       document.getElementById('company-form-libro').value = 'activo';
       document.getElementById('company-form-sistema').value = '';
       document.getElementById('company-form-participacion').value = '';
+      document.getElementById('company-form-capital').value = '';
+      document.getElementById('company-form-registro').value = '';
+      document.getElementById('company-form-direccion').value = '';
+      document.getElementById('company-form-objeto').value = '';
       document.getElementById('company-form-observacion').value = '';
       document.getElementById('company-form-activo').checked = true;
 
@@ -235,6 +239,10 @@ export const initCompaniesModule = () => {
     document.getElementById('company-form-libro').value = comp.estatus_libro || 'activo';
     document.getElementById('company-form-sistema').value = comp.sistema || '';
     document.getElementById('company-form-participacion').value = comp.participacion || '';
+    document.getElementById('company-form-capital').value = comp.capital_suscrito || '';
+    document.getElementById('company-form-registro').value = comp.registro_merc || '';
+    document.getElementById('company-form-direccion').value = comp.direccion_fiscal || '';
+    document.getElementById('company-form-objeto').value = comp.objeto || '';
     document.getElementById('company-form-observacion').value = comp.observacion || '';
     document.getElementById('company-form-activo').checked = comp.activo === true;
 
@@ -264,6 +272,10 @@ export const initCompaniesModule = () => {
       const estatus_libro = document.getElementById('company-form-libro').value;
       const sistema = document.getElementById('company-form-sistema').value;
       const participacion = document.getElementById('company-form-participacion').value;
+      const capital_suscrito = document.getElementById('company-form-capital').value;
+      const registro_merc = document.getElementById('company-form-registro').value;
+      const direccion_fiscal = document.getElementById('company-form-direccion').value;
+      const objeto = document.getElementById('company-form-objeto').value;
       const regionVal = document.getElementById('company-form-region').value;
       const region_id = regionVal ? parseInt(regionVal, 10) : null;
       const observacion = document.getElementById('company-form-observacion').value;
@@ -283,7 +295,8 @@ export const initCompaniesModule = () => {
       try {
         const companyData = {
           codigo, razon, rif, fecha_apertura, codigo_maestro,
-          estatus_libro, sistema, participacion, region_id, observacion, activo
+          estatus_libro, sistema, participacion, capital_suscrito, registro_merc,
+          direccion_fiscal, objeto, region_id, observacion, activo
         };
 
         let url = `${supabaseUrl}empresa`;
