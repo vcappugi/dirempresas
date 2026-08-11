@@ -119,6 +119,9 @@ export const openDeleteModal = (id, type) => {
   } else if (type === 'detail') {
     if (titleEl) titleEl.textContent = '¿Eliminar Detalle?';
     if (descEl) descEl.textContent = 'Esta acción no se puede deshacer. El detalle será eliminado permanentemente de la base de datos.';
+  } else if (type === 'detail_type') {
+    if (titleEl) titleEl.textContent = '¿Eliminar Tipo de Detalle?';
+    if (descEl) descEl.textContent = 'Esta acción no se puede deshacer. El tipo de detalle será eliminado permanentemente de la base de datos.';
   } else {
     if (titleEl) titleEl.textContent = '¿Eliminar Usuario?';
     if (descEl) descEl.textContent = 'Esta acción no se puede deshacer. El usuario será eliminado permanentemente de la base de datos.';

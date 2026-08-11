@@ -15,6 +15,7 @@ import { initRolesModule, loadRoles } from './modules/roles.js';
 import { initRegionsModule, loadRegions } from './modules/regions.js';
 import { initCompaniesModule, loadCompanies } from './modules/companies.js';
 import { initDetailsModule, loadDetails, currentCompanyIdForDetails } from './modules/details.js';
+import { initDetailTypesModule, loadDetailTypes } from './modules/detail_types.js';
 
 const loadTemplates = async () => {
   const container = document.querySelector('main');
@@ -24,7 +25,8 @@ const loadTemplates = async () => {
     'templates/companies.html',
     'templates/users.html',
     'templates/roles.html',
-    'templates/regions.html'
+    'templates/regions.html',
+    'templates/detail_types.html'
   ];
 
   for (const url of templates) {
@@ -316,6 +318,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initRegionsModule();
   initCompaniesModule();
   initDetailsModule();
+  initDetailTypesModule();
 
   // --- Tab Navigation System (Simulate Views) ---
   const sidebarItems = document.querySelectorAll('.sidebar-item');
@@ -328,6 +331,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     'view-users': 'Usuarios - Empresas',
     'view-roles': 'Roles - Empresas',
     'view-regions': 'Regiones - Empresas',
+    'view-detail-types': 'Tipos de Detalles - Empresas',
     'view-settings': 'Ajustes - Empresas'
   };
 
@@ -342,7 +346,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
       item.classList.add('bg-brand/10', 'text-brand', 'border-l-4', 'border-brand', 'dark:text-white', 'active-item');
-      item.classList.remove('text-slate-600', 'dark:text-slate-400');
+      item.classList.remove('text-slate-650', 'text-slate-600', 'dark:text-slate-400');
 
       if (viewTitles[targetViewId]) {
         document.title = viewTitles[targetViewId];
@@ -358,6 +362,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (targetViewId === 'view-roles') loadRoles();
           if (targetViewId === 'view-regions') loadRegions();
           if (targetViewId === 'view-companies') loadCompanies();
+          if (targetViewId === 'view-detail-types') loadDetailTypes();
         } else {
           view.classList.add('hidden');
         }
@@ -447,6 +452,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (e) {
           console.error(e);
           showToast('Error al eliminar el detalle.', false);
+          loadingEl?.classList.add('hidden');
+        }
+      } else if (type === 'detail_type') {
+        const loadingEl = document.getElementById('detail-types-loading');
+        loadingEl?.classList.remove('hidden');
+        try {
+          const res = await fetch(`${supabaseUrl}tipo_detalle?id=eq.${id}`, {
+            method: 'DELETE',
+            headers: getHeaders()
+          });
+          if (!res.ok) throw new Error("No se pudo eliminar el tipo de detalle.");
+          showToast('Tipo de detalle eliminado con éxito.', true);
+          loadDetailTypes();
+        } catch (e) {
+          console.error(e);
+          showToast('Error al eliminar el tipo de detalle.', false);
           loadingEl?.classList.add('hidden');
         }
       } else {
