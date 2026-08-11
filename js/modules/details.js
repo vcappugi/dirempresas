@@ -11,7 +11,7 @@ const loadDetailTypesSelect = async (selectedVal = null) => {
   selectEl.innerHTML = '<option value="" disabled selected>Cargando opciones...</option>';
 
   try {
-    const res = await fetch(`${supabaseUrl}tipo_detalle?order=nombre.asc`, {
+    const res = await fetch(`${supabaseUrl}tipo_detalle?order=tipo.asc`, {
       method: 'GET',
       headers: getHeaders()
     });
@@ -22,7 +22,7 @@ const loadDetailTypesSelect = async (selectedVal = null) => {
     selectEl.innerHTML = '<option value="" disabled>Seleccione un Tipo</option>';
     
     data.forEach(item => {
-      const val = item.nombre || item.tipo || item.descripcion;
+      const val = item.tipo;
       if (val) {
         const option = document.createElement('option');
         option.value = val;
