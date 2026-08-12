@@ -103,6 +103,16 @@ export const loadRevisions = async () => {
         const descText = item.descripcion ? escapeHtml(item.descripcion) : '-';
         const commentText = item.comentario ? escapeHtml(item.comentario) : '<span class="text-slate-400 italic">Sin comentarios</span>';
         
+        let fechaRevText = '-';
+        if (item.fecha_revision) {
+          const parts = item.fecha_revision.split('-');
+          if (parts.length === 3) {
+            fechaRevText = `${parts[2]}/${parts[1]}/${parts[0]}`;
+          } else {
+            fechaRevText = item.fecha_revision;
+          }
+        }
+
         let fechaText = '-';
         if (item.created_at) {
           const dt = new Date(item.created_at);
@@ -114,6 +124,7 @@ export const loadRevisions = async () => {
         row.innerHTML = `
           <td class="px-6 py-4 font-semibold text-slate-800 dark:text-white">${item.id}</td>
           <td class="px-6 py-4 text-slate-700 dark:text-slate-200 font-semibold">${empresaName}</td>
+          <td class="px-6 py-4 text-slate-650 dark:text-slate-200 font-mono text-xs">${fechaRevText}</td>
           <td class="px-6 py-4 text-slate-600 dark:text-slate-400 text-xs">${descText}</td>
           <td class="px-6 py-4 text-slate-600 dark:text-slate-400 text-xs">${commentText}</td>
           <td class="px-6 py-4 text-slate-500 font-mono text-[10px]">${fechaText}</td>
@@ -130,7 +141,7 @@ export const loadRevisions = async () => {
     console.error("Error loading revisions:", err);
     tableBody.innerHTML = `
       <tr>
-        <td colspan="6" class="px-6 py-10 text-center text-red-500 font-semibold">
+        <td colspan="7" class="px-6 py-10 text-center text-red-500 font-semibold">
           ${err.message || 'Error cargando revisiones.'}
         </td>
       </tr>
@@ -194,6 +205,7 @@ export const initRevisionsModule = () => {
   if (btnAddRevision) {
     btnAddRevision.addEventListener('click', async () => {
       document.getElementById('revision-form-id').value = '';
+      document.getElementById('revision-form-fecha').value = new Date().toISOString().split('T')[0];
       document.getElementById('revision-form-descripcion').value = '';
       document.getElementById('revision-form-comentario').value = '';
 
@@ -211,6 +223,7 @@ export const initRevisionsModule = () => {
     if (!item) return;
 
     document.getElementById('revision-form-id').value = item.id;
+    document.getElementById('revision-form-fecha').value = item.fecha_revision || '';
     document.getElementById('revision-form-descripcion').value = item.descripcion || '';
     document.getElementById('revision-form-comentario').value = item.comentario || '';
 
@@ -230,6 +243,7 @@ export const initRevisionsModule = () => {
       const id = document.getElementById('revision-form-id').value;
       const empresaVal = document.getElementById('revision-form-empresa').value;
       const empresa_id = empresaVal ? parseInt(empresaVal, 10) : null;
+      const fecha_revision = document.getElementById('revision-form-fecha').value;
       const descripcion = document.getElementById('revision-form-descripcion').value;
       const comentario = document.getElementById('revision-form-comentario').value;
 
@@ -245,7 +259,7 @@ export const initRevisionsModule = () => {
       `;
 
       try {
-        const payload = { empresa_id, descripcion, comentario };
+        const payload = { empresa_id, fecha_revision, descripcion, comentario };
 
         let url = `${supabaseUrl}revision`;
         let method = 'POST';

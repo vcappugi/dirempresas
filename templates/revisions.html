@@ -37,6 +37,7 @@
           <tr>
             <th scope="col" class="px-6 py-4">ID</th>
             <th scope="col" class="px-6 py-4">Empresa</th>
+            <th scope="col" class="px-6 py-4">Fecha Rev.</th>
             <th scope="col" class="px-6 py-4">Descripción</th>
             <th scope="col" class="px-6 py-4">Comentario</th>
             <th scope="col" class="px-6 py-4">Fecha Creación</th>
@@ -101,6 +102,12 @@
           <!-- Populated dynamically -->
         </select>
         <label for="revision-form-empresa" class="absolute left-4 -translate-y-4 scale-75 transform text-slate-500 bg-white dark:bg-slate-900 px-1.5 z-10">Empresa Asociada</label>
+      </div>
+
+      <!-- Fecha Revisión input -->
+      <div class="relative">
+        <input type="date" id="revision-form-fecha" required class="block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+        <label for="revision-form-fecha" class="absolute left-4 -translate-y-4 scale-75 transform text-slate-500 bg-white dark:bg-slate-900 px-1.5 z-10">Fecha de la Revisión</label>
       </div>
 
       <!-- Descripción text area -->
