@@ -95,7 +95,12 @@ const renderRevisionsCalendar = () => {
 
     dayRevisions.forEach(item => {
       const eventEl = document.createElement('div');
-      eventEl.className = "text-[9px] leading-tight p-1 rounded bg-brand/10 text-brand dark:bg-brand/20 dark:text-brand-light border-l-2 border-brand cursor-pointer hover:bg-brand/20 transition-all font-semibold truncate select-none";
+      
+      const themeClasses = item.cumplido
+        ? "bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 border-emerald-500 hover:bg-emerald-500/20"
+        : "bg-brand/10 text-brand dark:bg-brand/20 dark:text-brand-light border-brand hover:bg-brand/20";
+
+      eventEl.className = `text-[9px] leading-tight p-1 rounded border-l-2 cursor-pointer transition-all font-semibold truncate select-none ${themeClasses}`;
       
       const empName = item.empresa ? item.empresa.razon : 'Sin Empresa';
       const desc = item.descripcion || 'Sin Descripción';
