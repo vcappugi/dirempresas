@@ -16,6 +16,7 @@ import { initRegionsModule, loadRegions } from './modules/regions.js';
 import { initCompaniesModule, loadCompanies } from './modules/companies.js';
 import { initDetailsModule, loadDetails, currentCompanyIdForDetails } from './modules/details.js';
 import { initDetailTypesModule, loadDetailTypes } from './modules/detail_types.js';
+import { initRevisionsModule, loadRevisions } from './modules/revisions.js';
 
 const loadTemplates = async () => {
   const container = document.querySelector('main');
@@ -26,7 +27,8 @@ const loadTemplates = async () => {
     'templates/users.html',
     'templates/roles.html',
     'templates/regions.html',
-    'templates/detail_types.html'
+    'templates/detail_types.html',
+    'templates/revisions.html'
   ];
 
   for (const url of templates) {
@@ -97,6 +99,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (parentSettings) parentSettings.style.display = 'none';
     const btnCompanies = document.querySelector('[data-view="view-companies"]');
     if (btnCompanies) btnCompanies.style.display = 'none';
+    const btnRevisions = document.querySelector('[data-view="view-revisions"]');
+    if (btnRevisions) btnRevisions.style.display = 'none';
   }
 
   // --- Logout Event Listener ---
@@ -319,6 +323,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initCompaniesModule();
   initDetailsModule();
   initDetailTypesModule();
+  initRevisionsModule();
 
   // --- Tab Navigation System (Simulate Views) ---
   const sidebarItems = document.querySelectorAll('.sidebar-item');
@@ -327,7 +332,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const viewTitles = {
     'view-dashboard': 'Dashboard - Empresas',
     'view-companies': 'Empresas - Empresas',
-    'view-analytics': 'Analíticas - Empresas',
+    'view-revisions': 'Revisiones - Empresas',
     'view-users': 'Usuarios - Empresas',
     'view-roles': 'Roles - Empresas',
     'view-regions': 'Regiones - Empresas',
@@ -346,7 +351,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
       item.classList.add('bg-brand/10', 'text-brand', 'border-l-4', 'border-brand', 'dark:text-white', 'active-item');
-      item.classList.remove('text-slate-650', 'text-slate-600', 'dark:text-slate-400');
+      item.classList.remove('text-slate-655', 'text-slate-650', 'text-slate-600', 'dark:text-slate-400');
 
       if (viewTitles[targetViewId]) {
         document.title = viewTitles[targetViewId];
@@ -363,6 +368,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (targetViewId === 'view-regions') loadRegions();
           if (targetViewId === 'view-companies') loadCompanies();
           if (targetViewId === 'view-detail-types') loadDetailTypes();
+          if (targetViewId === 'view-revisions') loadRevisions();
         } else {
           view.classList.add('hidden');
         }
@@ -468,6 +474,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (e) {
           console.error(e);
           showToast('Error al eliminar el tipo de detalle.', false);
+          loadingEl?.classList.add('hidden');
+        }
+      } else if (type === 'revision') {
+        const loadingEl = document.getElementById('revisions-loading');
+        loadingEl?.classList.remove('hidden');
+        try {
+          const res = await fetch(`${supabaseUrl}revision?id=eq.${id}`, {
+            method: 'DELETE',
+            headers: getHeaders()
+          });
+          if (!res.ok) throw new Error("No se pudo eliminar la revisión.");
+          showToast('Revisión eliminada con éxito.', true);
+          loadRevisions();
+        } catch (e) {
+          console.error(e);
+          showToast('Error al eliminar la revisión.', false);
           loadingEl?.classList.add('hidden');
         }
       } else {
