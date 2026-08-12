@@ -39,8 +39,10 @@
             <th scope="col" class="px-6 py-4">Empresa</th>
             <th scope="col" class="px-6 py-4">Fecha Rev.</th>
             <th scope="col" class="px-6 py-4">Descripción</th>
-            <th scope="col" class="px-6 py-4">Comentario</th>
-            <th scope="col" class="px-6 py-4">Fecha Creación</th>
+            <th scope="col" class="px-6 py-4">Compromiso</th>
+            <th scope="col" class="px-6 py-4">Fecha Comp.</th>
+            <th scope="col" class="px-6 py-4 text-center">Cumplido</th>
+            <th scope="col" class="px-6 py-4 text-center">Anexo</th>
             <th scope="col" class="px-6 py-4 text-right">Acciones</th>
           </tr>
         </thead>
@@ -114,6 +116,36 @@
       <div class="relative">
         <textarea id="revision-form-descripcion" required rows="3" placeholder=" " class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300"></textarea>
         <label for="revision-form-descripcion" class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Descripción de la Revisión</label>
+      </div>
+
+      <!-- Compromiso text area -->
+      <div class="relative">
+        <textarea id="revision-form-compromiso" rows="2" placeholder=" " class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300"></textarea>
+        <label for="revision-form-compromiso" class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Compromiso / Acuerdos</label>
+      </div>
+
+      <!-- Fecha Compromiso input -->
+      <div class="relative">
+        <input type="date" id="revision-form-fecha-compromiso" class="block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+        <label for="revision-form-fecha-compromiso" class="absolute left-4 -translate-y-4 scale-75 transform text-slate-500 bg-white dark:bg-slate-900 px-1.5 z-10">Fecha Límite del Compromiso</label>
+      </div>
+
+      <!-- Anexo URL input -->
+      <div class="relative">
+        <input type="url" id="revision-form-anexo" placeholder=" " class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+        <label for="revision-form-anexo" class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Enlace del Anexo (URL)</label>
+      </div>
+
+      <!-- Cumplido toggle switch -->
+      <div class="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-955/30">
+        <div class="flex flex-col">
+          <span class="text-sm font-semibold text-slate-700 dark:text-slate-200">¿Compromiso Cumplido?</span>
+          <span class="text-xs text-slate-400">Marca esta opción si el compromiso ya fue solventado.</span>
+        </div>
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" id="revision-form-cumplido" class="sr-only peer">
+          <div class="w-11 h-6 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand"></div>
+        </label>
       </div>
 
       <!-- Comentario text area -->

@@ -101,7 +101,7 @@ export const loadRevisions = async () => {
       revisionsList.forEach(item => {
         const empresaName = item.empresa ? item.empresa.razon : `<span class="text-slate-400 italic">No asociada</span>`;
         const descText = item.descripcion ? escapeHtml(item.descripcion) : '-';
-        const commentText = item.comentario ? escapeHtml(item.comentario) : '<span class="text-slate-400 italic">Sin comentarios</span>';
+        const compromisoText = item.compromiso ? escapeHtml(item.compromiso) : '-';
         
         let fechaRevText = '-';
         if (item.fecha_revision) {
@@ -113,11 +113,23 @@ export const loadRevisions = async () => {
           }
         }
 
-        let fechaText = '-';
-        if (item.created_at) {
-          const dt = new Date(item.created_at);
-          fechaText = dt.toLocaleDateString() + ' ' + dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        let fechaCompText = '-';
+        if (item.fecha_compromiso) {
+          const parts = item.fecha_compromiso.split('-');
+          if (parts.length === 3) {
+            fechaCompText = `${parts[2]}/${parts[1]}/${parts[0]}`;
+          } else {
+            fechaCompText = item.fecha_compromiso;
+          }
         }
+
+        const cumplidoBadge = item.cumplido
+          ? `<span class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-400">Sí</span>`
+          : `<span class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">No</span>`;
+
+        const anexoLink = item.anexo
+          ? `<a href="${escapeHtml(item.anexo)}" target="_blank" class="text-brand hover:text-brand-light text-xs font-semibold underline inline-flex items-center gap-1">Ver <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>`
+          : `<span class="text-slate-400 italic text-xs">-</span>`;
 
         const row = document.createElement('tr');
         row.className = 'hover:bg-slate-100/50 dark:hover:bg-slate-800/30 transition-colors duration-200';
@@ -126,8 +138,10 @@ export const loadRevisions = async () => {
           <td class="px-6 py-4 text-slate-700 dark:text-slate-200 font-semibold">${empresaName}</td>
           <td class="px-6 py-4 text-slate-650 dark:text-slate-200 font-mono text-xs">${fechaRevText}</td>
           <td class="px-6 py-4 text-slate-600 dark:text-slate-400 text-xs">${descText}</td>
-          <td class="px-6 py-4 text-slate-600 dark:text-slate-400 text-xs">${commentText}</td>
-          <td class="px-6 py-4 text-slate-500 font-mono text-[10px]">${fechaText}</td>
+          <td class="px-6 py-4 text-slate-600 dark:text-slate-400 text-xs">${compromisoText}</td>
+          <td class="px-6 py-4 text-slate-650 dark:text-slate-200 font-mono text-xs">${fechaCompText}</td>
+          <td class="px-6 py-4 text-center">${cumplidoBadge}</td>
+          <td class="px-6 py-4 text-center">${anexoLink}</td>
           <td class="px-6 py-4 text-right space-x-1.5">
             <button onclick="editRevision(${item.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Editar</button>
             <button onclick="deleteRevision(${item.id})" class="text-red-500 hover:text-red-650 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors">Eliminar</button>
@@ -141,7 +155,7 @@ export const loadRevisions = async () => {
     console.error("Error loading revisions:", err);
     tableBody.innerHTML = `
       <tr>
-        <td colspan="7" class="px-6 py-10 text-center text-red-500 font-semibold">
+        <td colspan="9" class="px-6 py-10 text-center text-red-500 font-semibold">
           ${err.message || 'Error cargando revisiones.'}
         </td>
       </tr>
@@ -207,6 +221,10 @@ export const initRevisionsModule = () => {
       document.getElementById('revision-form-id').value = '';
       document.getElementById('revision-form-fecha').value = new Date().toISOString().split('T')[0];
       document.getElementById('revision-form-descripcion').value = '';
+      document.getElementById('revision-form-compromiso').value = '';
+      document.getElementById('revision-form-fecha-compromiso').value = '';
+      document.getElementById('revision-form-anexo').value = '';
+      document.getElementById('revision-form-cumplido').checked = false;
       document.getElementById('revision-form-comentario').value = '';
 
       document.getElementById('revision-modal-title').textContent = 'Crear Revisión';
@@ -225,6 +243,10 @@ export const initRevisionsModule = () => {
     document.getElementById('revision-form-id').value = item.id;
     document.getElementById('revision-form-fecha').value = item.fecha_revision || '';
     document.getElementById('revision-form-descripcion').value = item.descripcion || '';
+    document.getElementById('revision-form-compromiso').value = item.compromiso || '';
+    document.getElementById('revision-form-fecha-compromiso').value = item.fecha_compromiso || '';
+    document.getElementById('revision-form-anexo').value = item.anexo || '';
+    document.getElementById('revision-form-cumplido').checked = !!item.cumplido;
     document.getElementById('revision-form-comentario').value = item.comentario || '';
 
     document.getElementById('revision-modal-title').textContent = 'Editar Revisión';
@@ -245,6 +267,11 @@ export const initRevisionsModule = () => {
       const empresa_id = empresaVal ? parseInt(empresaVal, 10) : null;
       const fecha_revision = document.getElementById('revision-form-fecha').value;
       const descripcion = document.getElementById('revision-form-descripcion').value;
+      const compromiso = document.getElementById('revision-form-compromiso').value;
+      const fechaCompVal = document.getElementById('revision-form-fecha-compromiso').value;
+      const fecha_compromiso = fechaCompVal !== '' ? fechaCompVal : null;
+      const anexo = document.getElementById('revision-form-anexo').value;
+      const cumplido = document.getElementById('revision-form-cumplido').checked;
       const comentario = document.getElementById('revision-form-comentario').value;
 
       const saveBtn = document.getElementById('btn-save-revision-modal');
@@ -259,7 +286,16 @@ export const initRevisionsModule = () => {
       `;
 
       try {
-        const payload = { empresa_id, fecha_revision, descripcion, comentario };
+        const payload = { 
+          empresa_id, 
+          fecha_revision, 
+          descripcion, 
+          compromiso, 
+          fecha_compromiso, 
+          anexo, 
+          cumplido, 
+          comentario 
+        };
 
         let url = `${supabaseUrl}revision`;
         let method = 'POST';
