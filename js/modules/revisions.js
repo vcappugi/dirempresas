@@ -92,9 +92,12 @@ const renderRevisionsCalendar = () => {
     cellEvents.className = "flex-1 overflow-y-auto space-y-1 max-h-[110px] custom-scrollbar";
 
     const dayRevisions = revisionsList.filter(item => item.fecha_revision === dateStr);
+    const dayDeadlines = revisionsList.filter(item => item.fecha_compromiso === dateStr);
 
     dayRevisions.forEach(item => {
       const eventEl = document.createElement('div');
+      eventEl.setAttribute('data-revision-id', item.id);
+      eventEl.setAttribute('data-event-type', 'event');
       
       const themeClasses = item.cumplido
         ? "bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 border-emerald-500 hover:bg-emerald-500/20"
@@ -118,9 +121,53 @@ const renderRevisionsCalendar = () => {
       cellEvents.appendChild(eventEl);
     });
 
+    dayDeadlines.forEach(item => {
+      const deadlineEl = document.createElement('div');
+      deadlineEl.setAttribute('data-revision-id', item.id);
+      deadlineEl.setAttribute('data-event-type', 'deadline');
+      
+      const themeClasses = "bg-rose-500/10 text-rose-600 dark:bg-rose-500/20 dark:text-rose-450 border-rose-500 hover:bg-rose-500/20";
+      deadlineEl.className = `text-[9px] leading-tight p-1 rounded border-l-2 cursor-pointer transition-all font-semibold truncate select-none ${themeClasses}`;
+      
+      const empName = item.empresa ? item.empresa.razon : 'Sin Empresa';
+      const compromiso = item.compromiso || 'Sin Compromiso';
+      
+      deadlineEl.innerHTML = `
+        <span class="block truncate">⚠️ Límite: ${escapeHtml(empName)}</span>
+        <span class="block text-[8px] font-normal opacity-85 truncate">${escapeHtml(compromiso)}</span>
+      `;
+
+      deadlineEl.addEventListener('click', (e) => {
+        e.stopPropagation();
+        window.editRevision(item.id);
+      });
+
+      cellEvents.appendChild(deadlineEl);
+    });
+
     cell.appendChild(cellEvents);
     daysGrid.appendChild(cell);
   }
+
+  // Bind hover connections
+  const allEvents = daysGrid.querySelectorAll('[data-revision-id]');
+  allEvents.forEach(el => {
+    const revId = el.getAttribute('data-revision-id');
+    el.addEventListener('mouseenter', () => {
+      const related = daysGrid.querySelectorAll(`[data-revision-id="${revId}"]`);
+      related.forEach(rel => {
+        const isDeadline = rel.getAttribute('data-event-type') === 'deadline';
+        rel.classList.add('ring-2', 'scale-[1.02]', 'shadow-md', 'z-10');
+        rel.classList.add(isDeadline ? 'ring-rose-500' : 'ring-brand');
+      });
+    });
+    el.addEventListener('mouseleave', () => {
+      const related = daysGrid.querySelectorAll(`[data-revision-id="${revId}"]`);
+      related.forEach(rel => {
+        rel.classList.remove('ring-2', 'ring-brand', 'ring-rose-500', 'scale-[1.02]', 'shadow-md', 'z-10');
+      });
+    });
+  });
 };
 
 const updateRevisionsViewModeUI = () => {
