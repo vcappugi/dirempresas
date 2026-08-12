@@ -74,7 +74,7 @@ export const loadDetails = async (companyId) => {
       await loadEnv();
     }
 
-    const res = await fetch(`${supabaseUrl}detalle_empresa?empresa_id=eq.${companyId}&order=id.asc`, {
+    const res = await fetch(`${supabaseUrl}detalle_empresa?empresa_id=eq.${companyId}&order=orden.asc,id.asc`, {
       method: 'GET',
       headers: getHeaders()
     });
@@ -103,7 +103,10 @@ export const loadDetails = async (companyId) => {
         card.innerHTML = `
           <div class="space-y-3 font-sans">
             <div class="flex items-center justify-between gap-2">
-              <span class="px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider rounded-lg ${badgeColors}">${escapeHtml(det.tipo)}</span>
+              <div class="flex items-center gap-1.5">
+                <span class="px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider rounded-lg ${badgeColors}">${escapeHtml(det.tipo)}</span>
+                ${det.orden !== null && det.orden !== undefined ? `<span class="px-1.5 py-0.5 text-[9px] font-bold rounded bg-slate-100 dark:bg-slate-800 text-slate-500 font-mono" title="Orden de visualización">#${det.orden}</span>` : ''}
+              </div>
               <span class="text-[10px] font-semibold text-slate-450 dark:text-slate-500 font-mono">${det.fecha ? det.fecha : ''}</span>
             </div>
             ${det.comentario ? `<p class="text-xs text-slate-650 dark:text-slate-255 leading-relaxed font-medium">${escapeHtml(det.comentario)}</p>` : ''}
@@ -206,6 +209,7 @@ export const initDetailsModule = () => {
     btnAddDetail.addEventListener('click', () => {
       document.getElementById('detail-form-id').value = '';
       document.getElementById('detail-form-fecha').value = new Date().toISOString().split('T')[0];
+      document.getElementById('detail-form-orden').value = '';
       document.getElementById('detail-form-valor').value = '';
       document.getElementById('detail-form-comentario').value = '';
 
@@ -226,6 +230,7 @@ export const initDetailsModule = () => {
 
     document.getElementById('detail-form-id').value = det.id;
     document.getElementById('detail-form-fecha').value = det.fecha || '';
+    document.getElementById('detail-form-orden').value = det.orden !== null && det.orden !== undefined ? det.orden : '';
     document.getElementById('detail-form-valor').value = det.valor || '';
     document.getElementById('detail-form-comentario').value = det.comentario || '';
 
@@ -245,6 +250,8 @@ export const initDetailsModule = () => {
       const id = document.getElementById('detail-form-id').value;
       const tipo = document.getElementById('detail-form-tipo').value;
       const fecha = document.getElementById('detail-form-fecha').value;
+      const ordenVal = document.getElementById('detail-form-orden').value;
+      const orden = ordenVal !== '' ? parseInt(ordenVal, 10) : null;
       const valor = document.getElementById('detail-form-valor').value;
       const comentario = document.getElementById('detail-form-comentario').value;
 
@@ -264,6 +271,7 @@ export const initDetailsModule = () => {
           empresa_id: currentCompanyIdForDetails,
           tipo,
           fecha,
+          orden,
           valor,
           comentario
         };
