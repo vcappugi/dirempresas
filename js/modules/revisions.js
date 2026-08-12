@@ -222,6 +222,11 @@ export const loadRevisions = async () => {
     // Select with company join
     let queryUrl = `${supabaseUrl}revision?select=*,empresa:empresa_id(razon)`;
 
+    if (!window.isAdmin) {
+      const compId = window.userCompanyId || -1;
+      queryUrl += `&empresa_id=eq.${compId}`;
+    }
+
     if (revisionsSearchQuery && revisionsViewMode === "table") {
       const encSearch = encodeURIComponent(revisionsSearchQuery);
       queryUrl += `&or=(descripcion.ilike.*${encSearch}*,comentario.ilike.*${encSearch}*)&order=id.asc`;
@@ -292,6 +297,11 @@ export const loadRevisions = async () => {
             ? `<a href="${escapeHtml(item.anexo)}" target="_blank" class="text-brand hover:text-brand-light text-xs font-semibold underline inline-flex items-center gap-1">Ver <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>`
             : `<span class="text-slate-400 italic text-xs">-</span>`;
 
+          const editDeleteBtns = window.isAdmin
+            ? `<button onclick="editRevision(${item.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Editar</button>
+               <button onclick="deleteRevision(${item.id})" class="text-red-500 hover:text-red-650 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors">Eliminar</button>`
+            : `<button onclick="editRevision(${item.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Ver</button>`;
+
           const row = document.createElement('tr');
           row.className = 'hover:bg-slate-100/50 dark:hover:bg-slate-800/30 transition-colors duration-200';
           row.innerHTML = `
@@ -304,8 +314,7 @@ export const loadRevisions = async () => {
             <td class="px-6 py-4 text-center">${cumplidoBadge}</td>
             <td class="px-6 py-4 text-center">${anexoLink}</td>
             <td class="px-6 py-4 text-right space-x-1.5">
-              <button onclick="editRevision(${item.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Editar</button>
-              <button onclick="deleteRevision(${item.id})" class="text-red-500 hover:text-red-650 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors">Eliminar</button>
+              ${editDeleteBtns}
             </td>
           `;
           tableBody.appendChild(row);
@@ -365,6 +374,17 @@ export const initRevisionsModule = () => {
     modalOverlay.classList.add('opacity-100');
     modalCard.classList.remove('scale-95', 'opacity-0');
     modalCard.classList.add('scale-100', 'opacity-100');
+
+    const saveBtn = document.getElementById('btn-save-revision-modal');
+    if (saveBtn) {
+      saveBtn.style.display = window.isAdmin ? 'inline-block' : 'none';
+    }
+    if (revisionForm) {
+      const inputs = revisionForm.querySelectorAll('input, select, textarea');
+      inputs.forEach(input => {
+        input.disabled = !window.isAdmin;
+      });
+    }
   };
 
   const closeModal = () => {
@@ -379,6 +399,9 @@ export const initRevisionsModule = () => {
   };
 
   if (btnAddRevision) {
+    if (!window.isAdmin) {
+      btnAddRevision.style.display = 'none';
+    }
     btnAddRevision.addEventListener('click', async () => {
       document.getElementById('revision-form-id').value = '';
       document.getElementById('revision-form-fecha').value = new Date().toISOString().split('T')[0];

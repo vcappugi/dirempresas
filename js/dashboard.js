@@ -68,6 +68,48 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  // --- Role-Based View Access Control ---
+  const getRoleName = () => {
+    if (!profile.rol) return '';
+    if (typeof profile.rol === 'string') return profile.rol.toLowerCase();
+    if (typeof profile.rol === 'object') {
+      return (profile.rol.nombre || '').toLowerCase();
+    }
+    return '';
+  };
+  const isAdmin = getRoleName() === 'admin' || (profile.rol && profile.rol.id === 1);
+  
+  window.isAdmin = isAdmin;
+  window.userId = profile.id;
+  window.userCompanyId = null;
+  window.userCompanyName = null;
+
+  if (!isAdmin) {
+    // Hide settings menu for standard users
+    const parentSettings = document.getElementById('btn-toggle-settings-submenu');
+    if (parentSettings) parentSettings.style.display = 'none';
+
+    // Query company associated with the user
+    try {
+      if (!supabaseUrl || !supabaseKey) {
+        await loadEnv();
+      }
+      const res = await fetch(`${supabaseUrl}empresa?usuario_id=eq.${profile.id}&select=id,razon`, {
+        method: 'GET',
+        headers: getHeaders()
+      });
+      if (res.ok) {
+        const companies = await res.json();
+        if (companies.length > 0) {
+          window.userCompanyId = companies[0].id;
+          window.userCompanyName = companies[0].razon;
+        }
+      }
+    } catch (err) {
+      console.error("Error loading user company info:", err);
+    }
+  }
+
   // Bind dynamic user profile info
   const userDisplayName = document.getElementById('user-display-name');
   const userDisplayEmail = document.getElementById('user-display-email');
@@ -79,28 +121,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (userAvatar) {
     userAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.nombre)}&background=355a31&color=fff`;
   }
-  if (companyDisplayName && profile.empresa) {
-    companyDisplayName.textContent = profile.empresa.razon;
-  }
-
-  // --- Role-Based View Access Control ---
-  // Los usuarios con rol "admin" pueden acceder a todas las opciones; otros roles (ej: "usuario") se restringen.
-  const getRoleName = () => {
-    if (!profile.rol) return '';
-    if (typeof profile.rol === 'string') return profile.rol.toLowerCase();
-    if (typeof profile.rol === 'object') {
-      return (profile.rol.nombre || '').toLowerCase();
+  if (companyDisplayName) {
+    if (isAdmin) {
+      companyDisplayName.textContent = "Administración";
+    } else if (window.userCompanyName) {
+      companyDisplayName.textContent = window.userCompanyName;
+    } else {
+      companyDisplayName.textContent = "Sin empresa asociada";
     }
-    return '';
-  };
-  const isAdmin = getRoleName() === 'admin' || (profile.rol && profile.rol.id === 1);
-  if (!isAdmin) {
-    const parentSettings = document.getElementById('btn-toggle-settings-submenu');
-    if (parentSettings) parentSettings.style.display = 'none';
-    const btnCompanies = document.querySelector('[data-view="view-companies"]');
-    if (btnCompanies) btnCompanies.style.display = 'none';
-    const btnRevisions = document.querySelector('[data-view="view-revisions"]');
-    if (btnRevisions) btnRevisions.style.display = 'none';
   }
 
   // --- Logout Event Listener ---

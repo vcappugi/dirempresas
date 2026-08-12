@@ -99,6 +99,10 @@ export const loadCompanies = async () => {
   try {
     let queryUrl = `${supabaseUrl}empresa?select=*,usuario:usuario_id(nombre)`;
 
+    if (!window.isAdmin) {
+      queryUrl += `&usuario_id=eq.${window.userId}`;
+    }
+
     if (companiesSearchQuery) {
       const encSearch = encodeURIComponent(companiesSearchQuery);
       queryUrl += `&or=(razon.ilike.*${encSearch}*,rif.ilike.*${encSearch}*,codigo.ilike.*${encSearch}*)&order=id.asc`;
@@ -140,6 +144,11 @@ export const loadCompanies = async () => {
 
         const userName = comp.usuario ? escapeHtml(comp.usuario.nombre) : `<span class="text-slate-400 italic">No asignado</span>`;
 
+        const editDeleteBtns = window.isAdmin
+          ? `<button onclick="editCompany(${comp.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Editar</button>
+             <button onclick="deleteCompany(${comp.id})" class="text-red-500 hover:text-red-650 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors">Eliminar</button>`
+          : `<button onclick="editCompany(${comp.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Ver</button>`;
+
         const row = document.createElement('tr');
         row.className = 'hover:bg-slate-100/50 dark:hover:bg-slate-800/30 transition-colors duration-200';
         row.innerHTML = `
@@ -151,8 +160,7 @@ export const loadCompanies = async () => {
           <td class="px-6 py-4 text-right space-x-1.5">
             <button onclick="openDetailsModal(${comp.id})" class="text-slate-500 hover:text-slate-700 dark:hover:text-slate-350 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-500/10 transition-colors">Detalles</button>
             <button onclick="printCompanyReport(${comp.id})" class="text-emerald-500 hover:text-emerald-650 dark:text-emerald-400 dark:hover:text-emerald-300 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-emerald-500/10 transition-colors" title="Imprimir Ficha">Ficha</button>
-            <button onclick="editCompany(${comp.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Editar</button>
-            <button onclick="deleteCompany(${comp.id})" class="text-red-500 hover:text-red-650 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors">Eliminar</button>
+            ${editDeleteBtns}
           </td>
         `;
         tableBody.appendChild(row);
@@ -517,6 +525,17 @@ export const initCompaniesModule = () => {
     companyModalOverlay.classList.add('opacity-100');
     companyModalCard.classList.remove('scale-95', 'opacity-0');
     companyModalCard.classList.add('scale-100', 'opacity-100');
+
+    const saveBtn = document.getElementById('btn-save-company-modal');
+    if (saveBtn) {
+      saveBtn.style.display = window.isAdmin ? 'inline-block' : 'none';
+    }
+    if (companyForm) {
+      const inputs = companyForm.querySelectorAll('input, select, textarea');
+      inputs.forEach(input => {
+        input.disabled = !window.isAdmin;
+      });
+    }
   };
 
   const closeCompanyModal = () => {
@@ -531,6 +550,9 @@ export const initCompaniesModule = () => {
   };
 
   if (btnAddCompany) {
+    if (!window.isAdmin) {
+      btnAddCompany.style.display = 'none';
+    }
     btnAddCompany.addEventListener('click', async () => {
       document.getElementById('company-form-id').value = '';
       document.getElementById('company-form-codigo').value = '';
