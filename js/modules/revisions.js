@@ -70,26 +70,26 @@ const renderRevisionsCalendar = () => {
   // Draw empty cells for preceding month
   for (let i = 0; i < startDay; i++) {
     const emptyCell = document.createElement('div');
-    emptyCell.className = "bg-slate-50/30 dark:bg-slate-950/20 border border-slate-100 dark:border-slate-850 rounded-xl min-h-[95px] opacity-40 p-2";
+    emptyCell.className = "bg-slate-50/30 dark:bg-slate-950/20 border border-slate-100 dark:border-slate-850 rounded-xl min-h-[145px] opacity-40 p-2";
     daysGrid.appendChild(emptyCell);
   }
 
   // Draw days
   for (let day = 1; day <= daysInMonth; day++) {
     const cell = document.createElement('div');
-    cell.className = "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl min-h-[95px] p-2 flex flex-col hover:border-brand/40 dark:hover:border-brand/40 transition-all duration-200";
+    cell.className = "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl min-h-[145px] p-2.5 flex flex-col hover:border-brand/40 dark:hover:border-brand/40 transition-all duration-200";
 
     const monthStr = (month + 1).toString().padStart(2, '0');
     const dayStr = day.toString().padStart(2, '0');
     const dateStr = `${year}-${monthStr}-${dayStr}`;
 
     const cellHeader = document.createElement('div');
-    cellHeader.className = "text-xs font-bold text-slate-500 dark:text-slate-400 mb-1";
+    cellHeader.className = "text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5";
     cellHeader.textContent = day;
     cell.appendChild(cellHeader);
 
     const cellEvents = document.createElement('div');
-    cellEvents.className = "flex-1 overflow-y-auto space-y-1 max-h-[60px] custom-scrollbar";
+    cellEvents.className = "flex-1 overflow-y-auto space-y-1 max-h-[110px] custom-scrollbar";
 
     const dayRevisions = revisionsList.filter(item => item.fecha_revision === dateStr);
 
