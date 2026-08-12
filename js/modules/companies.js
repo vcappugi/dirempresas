@@ -203,7 +203,7 @@ export const printCompanyReport = async (companyId) => {
     if (details.length === 0) {
       detailsRows = `
         <tr>
-          <td colspan="5" style="padding: 16px; text-align: center; color: #64748b; font-style: italic; border-bottom: 1px solid #e2e8f0;">
+          <td colspan="5" style="padding: 10px; text-align: center; color: #64748b; font-style: italic; border-bottom: 1px solid #e2e8f0; font-size: 11px;">
             No hay detalles registrados para esta empresa.
           </td>
         </tr>
@@ -212,11 +212,11 @@ export const printCompanyReport = async (companyId) => {
       details.forEach(det => {
         detailsRows += `
           <tr style="page-break-inside: avoid;">
-            <td style="padding: 12px 16px; border-bottom: 1px solid #e2e8f0; font-family: monospace; font-weight: bold; font-size: 11px; text-align: center; color: #0f172a;">${det.orden !== null && det.orden !== undefined ? det.orden : '-'}</td>
-            <td style="padding: 12px 16px; border-bottom: 1px solid #e2e8f0; font-weight: 600; font-size: 12px; color: #0f172a;">${escapeHtmlHelper(det.tipo)}</td>
-            <td style="padding: 12px 16px; border-bottom: 1px solid #e2e8f0; font-family: monospace; font-size: 11px; color: #64748b;">${formatFecha(det.fecha)}</td>
-            <td style="padding: 12px 16px; border-bottom: 1px solid #e2e8f0; font-size: 12px; font-weight: 600; color: #0f172a; word-break: break-all;">${escapeHtmlHelper(det.valor)}</td>
-            <td style="padding: 12px 16px; border-bottom: 1px solid #e2e8f0; font-size: 11px; color: #475569;">${det.comentario ? escapeHtmlHelper(det.comentario) : '-'}</td>
+            <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0; font-family: monospace; font-weight: bold; font-size: 11px; text-align: center; color: #0f172a;">${det.orden !== null && det.orden !== undefined ? det.orden : '-'}</td>
+            <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0; font-weight: 600; font-size: 11px; color: #0f172a;">${escapeHtmlHelper(det.tipo)}</td>
+            <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0; font-family: monospace; font-size: 10px; color: #64748b;">${formatFecha(det.fecha)}</td>
+            <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0; font-size: 11px; font-weight: 600; color: #0f172a; word-break: break-all;">${escapeHtmlHelper(det.valor)}</td>
+            <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0; font-size: 10px; color: #475569;">${det.comentario ? escapeHtmlHelper(det.comentario) : '-'}</td>
           </tr>
         `;
       });
@@ -235,11 +235,20 @@ export const printCompanyReport = async (companyId) => {
         color: #000000;
         margin: 0;
         padding: 0;
+        font-size: 11px;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
       .no-print { display: none; }
-      .container { max-width: 100% !important; margin: 0 !important; padding: 20px !important; box-shadow: none !important; border: none !important; }
+      .container { max-width: 100% !important; margin: 0 !important; padding: 10px !important; box-shadow: none !important; border: none !important; }
+      .grid { gap: 10px !important; margin-bottom: 15px !important; }
+      .field-card { padding: 8px 12px !important; border-radius: 8px !important; }
+      .field-label { font-size: 9px !important; margin-bottom: 2px !important; }
+      .field-value { font-size: 12px !important; }
+      .section-title { font-size: 14px !important; margin: 15px 0 8px 0 !important; }
+      th, td { padding: 6px 10px !important; font-size: 10px !important; }
+      .header-title-container { margin-bottom: 15px !important; padding-bottom: 8px !important; }
+      .header-title { font-size: 20px !important; }
     }
     
     body {
@@ -247,26 +256,26 @@ export const printCompanyReport = async (companyId) => {
       background-color: #f8fafc;
       color: #0f172a;
       margin: 0;
-      padding: 40px 20px;
+      padding: 30px 15px;
     }
     .container {
-      max-width: 850px;
+      max-width: 800px;
       margin: 0 auto;
       background-color: #ffffff;
-      padding: 40px;
-      border-radius: 20px;
+      padding: 30px;
+      border-radius: 16px;
       border: 1px solid #e2e8f0;
-      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
     }
     .header-title-container {
       border-bottom: 3px solid #10b981;
-      padding-bottom: 12px;
+      padding-bottom: 10px;
       width: 100%;
-      margin-bottom: 30px;
+      margin-bottom: 20px;
     }
     .header-title {
       margin: 0;
-      font-size: 26px;
+      font-size: 24px;
       font-weight: 800;
       color: #0f172a;
       text-transform: uppercase;
@@ -275,25 +284,25 @@ export const printCompanyReport = async (companyId) => {
     .grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      margin-bottom: 30px;
+      gap: 12px;
+      margin-bottom: 20px;
     }
     .field-card {
       background-color: #f8fafc;
       border: 1px solid #f1f5f9;
-      border-radius: 12px;
-      padding: 14px 18px;
+      border-radius: 10px;
+      padding: 10px 14px;
     }
     .field-label {
-      font-size: 11px;
+      font-size: 10px;
       text-transform: uppercase;
       font-weight: 700;
       color: #64748b;
       letter-spacing: 0.5px;
-      margin-bottom: 4px;
+      margin-bottom: 3px;
     }
     .field-value {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
       color: #0f172a;
     }
@@ -301,53 +310,52 @@ export const printCompanyReport = async (companyId) => {
       grid-column: span 2;
     }
     .section-title {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 700;
       text-transform: uppercase;
       color: #0f172a;
       border-left: 4px solid #10b981;
-      padding-left: 10px;
-      margin: 35px 0 15px 0;
+      padding-left: 8px;
+      margin: 25px 0 10px 0;
       letter-spacing: 0.5px;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 10px;
+      margin-top: 8px;
       border: 1px solid #e2e8f0;
-      border-radius: 12px;
+      border-radius: 10px;
       overflow: hidden;
     }
     th {
       background-color: #f1f5f9;
       color: #475569;
       font-weight: 700;
-      font-size: 11px;
+      font-size: 10px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      padding: 12px 16px;
+      padding: 10px 14px;
       text-align: left;
       border-bottom: 2px solid #e2e8f0;
     }
     .print-btn-bar {
       display: flex;
       justify-content: flex-end;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
     }
     .print-btn {
       background-color: #10b981;
       color: #ffffff;
       border: none;
-      padding: 10px 20px;
-      font-size: 13px;
+      padding: 8px 16px;
+      font-size: 12px;
       font-weight: 700;
-      border-radius: 8px;
+      border-radius: 6px;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       box-shadow: 0 4px 6px -1px rgb(16 185 129 / 0.2);
-      transition: background-color 0.2s;
     }
     .print-btn:hover {
       background-color: #059669;
@@ -359,7 +367,7 @@ export const printCompanyReport = async (companyId) => {
   <div class="container">
     <div class="print-btn-bar no-print">
       <button class="print-btn" onclick="window.print()">
-        <svg style="width: 16px; height: 16px; fill: currentColor;" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+        <svg style="width: 14px; height: 14px; fill: currentColor;" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
           <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm-1 9H8v3h4v-3z" clip-rule="evenodd"></path>
         </svg>
         Imprimir Ficha
@@ -405,15 +413,15 @@ export const printCompanyReport = async (companyId) => {
       </div>
       <div class="field-card col-span-2">
         <div class="field-label">Dirección Fiscal</div>
-        <div class="field-value" style="font-weight: 550; font-size: 13px;">${comp.direccion_fiscal ? escapeHtmlHelper(comp.direccion_fiscal) : '-'}</div>
+        <div class="field-value" style="font-weight: 550; font-size: 12px;">${comp.direccion_fiscal ? escapeHtmlHelper(comp.direccion_fiscal) : '-'}</div>
       </div>
       <div class="field-card col-span-2">
         <div class="field-label">Objeto Social</div>
-        <div class="field-value" style="font-weight: 550; font-size: 13px; text-align: justify; line-height: 1.5;">${comp.objeto ? escapeHtmlHelper(comp.objeto) : '-'}</div>
+        <div class="field-value" style="font-weight: 550; font-size: 12px; text-align: justify; line-height: 1.45;">${comp.objeto ? escapeHtmlHelper(comp.objeto) : '-'}</div>
       </div>
       <div class="field-card col-span-2">
         <div class="field-label">Observaciones Generales</div>
-        <div class="field-value" style="font-weight: 550; font-size: 13px; color: #475569;">${comp.observacion ? escapeHtmlHelper(comp.observacion) : '-'}</div>
+        <div class="field-value" style="font-weight: 550; font-size: 12px; color: #475569;">${comp.observacion ? escapeHtmlHelper(comp.observacion) : '-'}</div>
       </div>
     </div>
 
@@ -422,9 +430,9 @@ export const printCompanyReport = async (companyId) => {
     <table>
       <thead>
         <tr>
-          <th style="width: 60px; text-align: center;">Orden</th>
-          <th style="width: 150px;">Tipo de Detalle</th>
-          <th style="width: 120px;">Fecha Reg.</th>
+          <th style="width: 50px; text-align: center;">Orden</th>
+          <th style="width: 140px;">Tipo de Detalle</th>
+          <th style="width: 100px;">Fecha Reg.</th>
           <th>Valor / Registro</th>
           <th>Comentario / Descripción</th>
         </tr>
