@@ -42,6 +42,42 @@ export const loadRegionsForSelect = async (selectedRegionId = null) => {
   }
 };
 
+export const loadUsersForSelect = async (selectedUserId = null) => {
+  const selectEl = document.getElementById('company-form-usuario');
+  if (!selectEl) return;
+
+  selectEl.innerHTML = '<option value="">Cargando usuarios...</option>';
+
+  try {
+    if (!supabaseUrl || !supabaseKey) {
+      await loadEnv();
+    }
+
+    const res = await fetch(`${supabaseUrl}usuario?order=nombre.asc`, {
+      method: 'GET',
+      headers: getHeaders()
+    });
+
+    if (!res.ok) throw new Error("No se pudieron cargar los usuarios.");
+
+    const list = await res.json();
+    selectEl.innerHTML = '<option value="">-- Sin usuario asignado --</option>';
+
+    list.forEach(u => {
+      const option = document.createElement('option');
+      option.value = u.id;
+      option.textContent = `${u.nombre} (${u.rol || 'usuario'})`;
+      if (selectedUserId && u.id === parseInt(selectedUserId, 10)) {
+        option.selected = true;
+      }
+      selectEl.appendChild(option);
+    });
+  } catch (err) {
+    console.error("Error loading users for select:", err);
+    selectEl.innerHTML = '<option value="">Error al cargar usuarios</option>';
+  }
+};
+
 export const loadCompanies = async () => {
   const loadingEl = document.getElementById('companies-loading');
   const tableBody = document.getElementById('companies-table-body');
@@ -61,13 +97,13 @@ export const loadCompanies = async () => {
   const end = start + companiesPageSize - 1;
 
   try {
-    let queryUrl = `${supabaseUrl}empresa`;
+    let queryUrl = `${supabaseUrl}empresa?select=*,usuario:usuario_id(nombre)`;
 
     if (companiesSearchQuery) {
       const encSearch = encodeURIComponent(companiesSearchQuery);
-      queryUrl += `?or=(razon.ilike.*${encSearch}*,rif.ilike.*${encSearch}*,codigo.ilike.*${encSearch}*)&order=id.asc`;
+      queryUrl += `&or=(razon.ilike.*${encSearch}*,rif.ilike.*${encSearch}*,codigo.ilike.*${encSearch}*)&order=id.asc`;
     } else {
-      queryUrl += `?order=id.asc`;
+      queryUrl += `&order=id.asc`;
     }
 
     const headers = getHeaders();
@@ -102,12 +138,15 @@ export const loadCompanies = async () => {
           ? `<span class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-400">Activa</span>`
           : `<span class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">Inactiva</span>`;
 
+        const userName = comp.usuario ? escapeHtml(comp.usuario.nombre) : `<span class="text-slate-400 italic">No asignado</span>`;
+
         const row = document.createElement('tr');
         row.className = 'hover:bg-slate-100/50 dark:hover:bg-slate-800/30 transition-colors duration-200';
         row.innerHTML = `
           <td class="px-6 py-4 font-semibold text-slate-800 dark:text-white">${escapeHtml(comp.codigo)}</td>
           <td class="px-6 py-4 text-slate-650 dark:text-slate-255 font-medium">${escapeHtml(comp.razon)}</td>
           <td class="px-6 py-4 text-slate-550 dark:text-slate-400 font-mono text-xs">${escapeHtml(comp.rif)}</td>
+          <td class="px-6 py-4 text-slate-600 dark:text-slate-400 text-xs">${userName}</td>
           <td class="px-6 py-4">${statusBadge}</td>
           <td class="px-6 py-4 text-right space-x-1.5">
             <button onclick="openDetailsModal(${comp.id})" class="text-slate-500 hover:text-slate-700 dark:hover:text-slate-350 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-500/10 transition-colors">Detalles</button>
@@ -124,7 +163,7 @@ export const loadCompanies = async () => {
     console.error("Error loading companies:", err);
     tableBody.innerHTML = `
       <tr>
-        <td colspan="5" class="px-6 py-10 text-center text-red-500 font-semibold">
+        <td colspan="6" class="px-6 py-10 text-center text-red-500 font-semibold">
           ${err.message || 'Error cargando empresas.'}
         </td>
       </tr>
@@ -513,6 +552,7 @@ export const initCompaniesModule = () => {
       if (detailsBtn) detailsBtn.classList.add('hidden');
 
       await loadRegionsForSelect();
+      await loadUsersForSelect();
 
       document.getElementById('company-modal-title').textContent = 'Crear Empresa';
       openCompanyModal();
@@ -559,6 +599,7 @@ export const initCompaniesModule = () => {
     if (detailsBtn) detailsBtn.classList.remove('hidden');
 
     await loadRegionsForSelect(comp.region_id);
+    await loadUsersForSelect(comp.usuario_id);
 
     document.getElementById('company-modal-title').textContent = 'Editar Empresa';
     openCompanyModal();
@@ -587,6 +628,8 @@ export const initCompaniesModule = () => {
       const objeto = document.getElementById('company-form-objeto').value;
       const regionVal = document.getElementById('company-form-region').value;
       const region_id = regionVal ? parseInt(regionVal, 10) : null;
+      const usuarioVal = document.getElementById('company-form-usuario').value;
+      const usuario_id = usuarioVal ? parseInt(usuarioVal, 10) : null;
       const observacion = document.getElementById('company-form-observacion').value;
       const activo = document.getElementById('company-form-activo').checked;
 
@@ -605,7 +648,7 @@ export const initCompaniesModule = () => {
         const companyData = {
           codigo, razon, rif, fecha_apertura, codigo_maestro,
           estatus_libro, sistema, participacion, capital_suscrito, registro_merc,
-          direccion_fiscal, objeto, region_id, observacion, activo
+          direccion_fiscal, objeto, region_id, usuario_id, observacion, activo
         };
 
         let url = `${supabaseUrl}empresa`;

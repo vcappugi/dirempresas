@@ -47,6 +47,7 @@
             <th scope="col" class="px-6 py-4">Código</th>
             <th scope="col" class="px-6 py-4">Razón Social</th>
             <th scope="col" class="px-6 py-4">RIF</th>
+            <th scope="col" class="px-6 py-4">Usuario</th>
             <th scope="col" class="px-6 py-4">Estado (Activo)</th>
             <th scope="col" class="px-6 py-4 text-right">Acciones</th>
           </tr>
@@ -233,6 +234,17 @@
           <label for="company-form-region"
             class="absolute left-4 -translate-y-4 scale-75 transform text-slate-500 bg-white dark:bg-slate-900 px-1.5 z-10">Región
             Asociada</label>
+        </div>
+
+        <!-- Usuario (Select dinámico) -->
+        <div class="relative sm:col-span-2">
+          <select id="company-form-usuario"
+            class="block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+            <!-- Carga dinámica de usuarios -->
+          </select>
+          <label for="company-form-usuario"
+            class="absolute left-4 -translate-y-4 scale-75 transform text-slate-500 bg-white dark:bg-slate-900 px-1.5 z-10">Usuario
+            Asociado</label>
         </div>
 
         <!-- Observación -->
