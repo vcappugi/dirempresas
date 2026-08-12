@@ -1,9 +1,33 @@
 <!-- View: Revisiones (Tab panel, initially hidden) -->
 <section id="view-revisions" class="dashboard-view hidden space-y-6">
   <div class="p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-4">
-    <div class="border-b border-slate-100 dark:border-slate-800/80 pb-3">
+    <div class="border-b border-slate-100 dark:border-slate-800/80 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
       <h2 class="font-display font-bold text-lg text-slate-800 dark:text-white">Listado de Revisiones</h2>
+      
+      <div class="flex items-center gap-3">
+        <!-- Calendar Navigation controls -->
+        <div id="calendar-header-controls" class="hidden flex items-center gap-2">
+          <button id="btn-calendar-prev" class="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-150 dark:hover:bg-slate-800 transition-all">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+          </button>
+          <span id="calendar-current-month-year" class="text-xs font-bold text-slate-700 dark:text-slate-200 min-w-[110px] text-center uppercase tracking-wider">Agosto 2026</span>
+          <button id="btn-calendar-next" class="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-150 dark:hover:bg-slate-800 transition-all">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+          </button>
+        </div>
+
+        <!-- Mode Toggle buttons -->
+        <div class="flex items-center bg-slate-100 dark:bg-slate-950 p-1 rounded-xl">
+          <button id="btn-revisions-view-table" class="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all text-brand bg-white dark:bg-slate-900 shadow-sm">
+            Tabla
+          </button>
+          <button id="btn-revisions-view-calendar" class="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+            Calendario
+          </button>
+        </div>
+      </div>
     </div>
+    
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div class="relative flex-1 max-w-md">
         <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -21,60 +45,81 @@
       </button>
     </div>
     
-    <!-- Revisions Table -->
-    <div class="overflow-x-auto relative">
-      
-      <!-- Loading Indicator -->
-      <div id="revisions-loading" class="absolute inset-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm z-10 flex items-center justify-center hidden">
-        <svg class="animate-spin h-8 w-8 text-brand" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-      </div>
-
-      <table class="w-full text-sm text-left text-slate-500 dark:text-slate-400">
-        <thead class="text-xs text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-950 uppercase tracking-wider">
-          <tr>
-            <th scope="col" class="px-6 py-4">ID</th>
-            <th scope="col" class="px-6 py-4">Empresa</th>
-            <th scope="col" class="px-6 py-4">Fecha Rev.</th>
-            <th scope="col" class="px-6 py-4">Descripción</th>
-            <th scope="col" class="px-6 py-4">Compromiso</th>
-            <th scope="col" class="px-6 py-4">Fecha Comp.</th>
-            <th scope="col" class="px-6 py-4 text-center">Cumplido</th>
-            <th scope="col" class="px-6 py-4 text-center">Anexo</th>
-            <th scope="col" class="px-6 py-4 text-right">Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="revisions-table-body" class="divide-y divide-slate-100 dark:divide-slate-800">
-          <!-- Dynamically loaded rows -->
-        </tbody>
-      </table>
-
-      <!-- Empty State -->
-      <div id="revisions-empty" class="py-12 text-center hidden">
-        <svg class="w-12 h-12 text-slate-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-        </svg>
-        <p class="text-slate-500">No se encontraron revisiones registradas.</p>
-      </div>
-
-      <!-- Revisions Pagination Controls -->
-      <div id="revisions-pagination" class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-        <div class="text-xs text-slate-500">
-          Mostrando <span id="revisions-range-start" class="font-semibold text-slate-700 dark:text-slate-350">0</span> a <span id="revisions-range-end" class="font-semibold text-slate-700 dark:text-slate-350">0</span> de <span id="revisions-total-count" class="font-semibold text-slate-700 dark:text-slate-350">0</span> registros
+    <!-- Table view container -->
+    <div id="revisions-table-container" class="space-y-4">
+      <!-- Revisions Table -->
+      <div class="overflow-x-auto relative">
+        
+        <!-- Loading Indicator -->
+        <div id="revisions-loading" class="absolute inset-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm z-10 flex items-center justify-center hidden">
+          <svg class="animate-spin h-8 w-8 text-brand" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
         </div>
-        <div class="flex items-center gap-2">
-          <button id="revisions-btn-prev" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-850 disabled:opacity-50 disabled:pointer-events-none transition-all">
-            Anterior
-          </button>
-          <span class="text-xs text-slate-500">Pág. <span id="revisions-current-page" class="font-semibold text-slate-700 dark:text-slate-350">1</span> de <span id="revisions-total-pages" class="font-semibold text-slate-700 dark:text-slate-350">1</span></span>
-          <button id="revisions-btn-next" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-850 disabled:opacity-50 disabled:pointer-events-none transition-all">
-            Siguiente
-          </button>
-        </div>
-      </div>
 
+        <table class="w-full text-sm text-left text-slate-500 dark:text-slate-400">
+          <thead class="text-xs text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-950 uppercase tracking-wider">
+            <tr>
+              <th scope="col" class="px-6 py-4">ID</th>
+              <th scope="col" class="px-6 py-4">Empresa</th>
+              <th scope="col" class="px-6 py-4">Fecha Rev.</th>
+              <th scope="col" class="px-6 py-4">Descripción</th>
+              <th scope="col" class="px-6 py-4">Compromiso</th>
+              <th scope="col" class="px-6 py-4">Fecha Comp.</th>
+              <th scope="col" class="px-6 py-4 text-center">Cumplido</th>
+              <th scope="col" class="px-6 py-4 text-center">Anexo</th>
+              <th scope="col" class="px-6 py-4 text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="revisions-table-body" class="divide-y divide-slate-100 dark:divide-slate-800">
+            <!-- Dynamically loaded rows -->
+          </tbody>
+        </table>
+
+        <!-- Empty State -->
+        <div id="revisions-empty" class="py-12 text-center hidden">
+          <svg class="w-12 h-12 text-slate-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+          <p class="text-slate-500">No se encontraron revisiones registradas.</p>
+        </div>
+
+        <!-- Revisions Pagination Controls -->
+        <div id="revisions-pagination" class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+          <div class="text-xs text-slate-500">
+            Mostrando <span id="revisions-range-start" class="font-semibold text-slate-700 dark:text-slate-350">0</span> a <span id="revisions-range-end" class="font-semibold text-slate-700 dark:text-slate-350">0</span> de <span id="revisions-total-count" class="font-semibold text-slate-700 dark:text-slate-350">0</span> registros
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="revisions-btn-prev" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-850 disabled:opacity-50 disabled:pointer-events-none transition-all">
+              Anterior
+            </button>
+            <span class="text-xs text-slate-500">Pág. <span id="revisions-current-page" class="font-semibold text-slate-700 dark:text-slate-350">1</span> de <span id="revisions-total-pages" class="font-semibold text-slate-700 dark:text-slate-350">1</span></span>
+            <button id="revisions-btn-next" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-850 disabled:opacity-50 disabled:pointer-events-none transition-all">
+              Siguiente
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Calendar view container -->
+    <div id="revisions-calendar-container" class="hidden space-y-3">
+      <!-- Days of the week header -->
+      <div class="grid grid-cols-7 gap-2 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider bg-slate-50 dark:bg-slate-950/40 p-3 rounded-xl border border-slate-100 dark:border-slate-850">
+        <div>Lu</div>
+        <div>Ma</div>
+        <div>Mi</div>
+        <div>Ju</div>
+        <div>Vi</div>
+        <div>Sá</div>
+        <div>Do</div>
+      </div>
+      <!-- Days grid -->
+      <div id="calendar-days-grid" class="grid grid-cols-7 gap-2">
+        <!-- Generated dynamically -->
+      </div>
     </div>
   </div>
 </section>
