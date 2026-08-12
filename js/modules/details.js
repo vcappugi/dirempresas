@@ -4,6 +4,7 @@ import { companiesList } from './companies.js';
 export let currentCompanyIdForDetails = null;
 let detailsList = [];
 let cachedDetailTypes = [];
+let detailsViewMode = 'cards';
 
 const loadDetailTypesSelect = async (selectedVal = null) => {
   const selectEl = document.getElementById('detail-form-tipo');
@@ -75,16 +76,121 @@ const loadDetailTypesSelect = async (selectedVal = null) => {
   }
 };
 
+const renderDetails = () => {
+  const cardsGrid = document.getElementById('details-cards-grid');
+  const tableBody = document.getElementById('details-table-body');
+  const listContainer = document.getElementById('details-list-container');
+  const emptyEl = document.getElementById('details-empty');
+
+  if (!cardsGrid || !tableBody || !listContainer) return;
+
+  cardsGrid.innerHTML = '';
+  tableBody.innerHTML = '';
+
+  if (detailsList.length === 0) {
+    emptyEl?.classList.remove('hidden');
+    cardsGrid.classList.add('hidden');
+    listContainer.classList.add('hidden');
+    return;
+  }
+
+  emptyEl?.classList.add('hidden');
+
+  if (detailsViewMode === 'cards') {
+    cardsGrid.classList.remove('hidden');
+    listContainer.classList.add('hidden');
+
+    detailsList.forEach(det => {
+      let badgeColors = "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-350";
+      if (det.tipo === "Impuestos") {
+        badgeColors = "bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-400";
+      } else if (det.tipo === "Licencias") {
+        badgeColors = "bg-yellow-100 text-yellow-700 dark:bg-yellow-950/30 dark:text-yellow-400";
+      } else if (det.tipo === "Contacto") {
+        badgeColors = "bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400";
+      } else if (det.tipo === "Facturación") {
+        badgeColors = "bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-400";
+      }
+
+      const card = document.createElement('div');
+      card.className = "flex flex-col justify-between p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-4 hover:shadow-md transition-all duration-300";
+      card.innerHTML = `
+        <div class="space-y-3 font-sans">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-1.5">
+              <span class="px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider rounded-lg ${badgeColors}">${escapeHtml(det.tipo)}</span>
+              ${det.orden !== null && det.orden !== undefined ? `<span class="px-1.5 py-0.5 text-[9px] font-bold rounded bg-slate-100 dark:bg-slate-800 text-slate-500 font-mono" title="Orden de visualización">#${det.orden}</span>` : ''}
+            </div>
+            <span class="text-[10px] font-semibold text-slate-450 dark:text-slate-500 font-mono">${det.fecha ? det.fecha : ''}</span>
+          </div>
+          ${det.comentario ? `<p class="text-xs text-slate-650 dark:text-slate-255 leading-relaxed font-medium">${escapeHtml(det.comentario)}</p>` : ''}
+          <p class="font-display font-bold text-base text-slate-900 dark:text-white break-words">${escapeHtml(det.valor)}</p>
+        </div>
+        <div class="flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-800/80 pt-3">
+          <button onclick="editDetail(${det.id})" class="inline-flex items-center gap-1.5 text-xs text-brand hover:text-brand-light font-semibold px-2 py-1 rounded-lg hover:bg-brand/10 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+            </svg> Editar
+          </button>
+          <button onclick="deleteDetail(${det.id})" class="inline-flex items-center gap-1.5 text-xs text-red-500 hover:text-red-650 font-semibold px-2 py-1 rounded-lg hover:bg-red-500/10 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg> Eliminar
+          </button>
+        </div>
+      `;
+      cardsGrid.appendChild(card);
+    });
+  } else {
+    cardsGrid.classList.add('hidden');
+    listContainer.classList.remove('hidden');
+
+    detailsList.forEach(det => {
+      let badgeColors = "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-350";
+      if (det.tipo === "Impuestos") {
+        badgeColors = "bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-400";
+      } else if (det.tipo === "Licencias") {
+        badgeColors = "bg-yellow-100 text-yellow-700 dark:bg-yellow-950/30 dark:text-yellow-400";
+      } else if (det.tipo === "Contacto") {
+        badgeColors = "bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400";
+      } else if (det.tipo === "Facturación") {
+        badgeColors = "bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-400";
+      }
+
+      const row = document.createElement('tr');
+      row.className = 'hover:bg-slate-100/50 dark:hover:bg-slate-800/30 transition-colors duration-200';
+      row.innerHTML = `
+        <td class="px-6 py-4 font-mono font-bold text-xs text-slate-850 dark:text-slate-300">${det.orden !== null && det.orden !== undefined ? det.orden : '-'}</td>
+        <td class="px-6 py-4"><span class="px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider rounded-lg ${badgeColors}">${escapeHtml(det.tipo)}</span></td>
+        <td class="px-6 py-4 text-xs font-medium text-slate-450 dark:text-slate-500 font-mono">${det.fecha ? det.fecha : ''}</td>
+        <td class="px-6 py-4 text-sm font-bold text-slate-900 dark:text-white break-all">${escapeHtml(det.valor)}</td>
+        <td class="px-6 py-4 text-xs text-slate-600 dark:text-slate-400 max-w-xs truncate" title="${det.comentario ? escapeHtml(det.comentario) : ''}">${det.comentario ? escapeHtml(det.comentario) : '<span class="text-slate-400 italic">Sin comentario</span>'}</td>
+        <td class="px-6 py-4 text-right space-x-1">
+          <button onclick="editDetail(${det.id})" class="inline-flex items-center gap-1.5 text-xs text-brand hover:text-brand-light font-semibold px-2 py-1.5 rounded-lg hover:bg-brand/10 transition-colors" title="Editar">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+            </svg>
+          </button>
+          <button onclick="deleteDetail(${det.id})" class="inline-flex items-center gap-1.5 text-xs text-red-500 hover:text-red-650 font-semibold px-2 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors" title="Eliminar">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+          </button>
+        </td>
+      `;
+      tableBody.appendChild(row);
+    });
+  }
+};
+
 export const loadDetails = async (companyId) => {
   const loadingEl = document.getElementById('details-loading');
   const cardsGrid = document.getElementById('details-cards-grid');
-  const emptyEl = document.getElementById('details-empty');
 
   if (!cardsGrid) return;
 
   loadingEl?.classList.remove('hidden');
   cardsGrid.innerHTML = '';
-  emptyEl?.classList.add('hidden');
 
   try {
     if (!supabaseUrl || !supabaseKey) {
@@ -99,52 +205,8 @@ export const loadDetails = async (companyId) => {
     if (!res.ok) throw new Error("Error al obtener los detalles de la empresa.");
 
     detailsList = await res.json();
+    renderDetails();
 
-    if (detailsList.length === 0) {
-      emptyEl?.classList.remove('hidden');
-    } else {
-      detailsList.forEach(det => {
-        let badgeColors = "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-350";
-        if (det.tipo === "Impuestos") {
-          badgeColors = "bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-400";
-        } else if (det.tipo === "Licencias") {
-          badgeColors = "bg-yellow-100 text-yellow-700 dark:bg-yellow-950/30 dark:text-yellow-400";
-        } else if (det.tipo === "Contacto") {
-          badgeColors = "bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400";
-        } else if (det.tipo === "Facturación") {
-          badgeColors = "bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-400";
-        }
-
-        const card = document.createElement('div');
-        card.className = "flex flex-col justify-between p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-4 hover:shadow-md transition-all duration-300";
-        card.innerHTML = `
-          <div class="space-y-3 font-sans">
-            <div class="flex items-center justify-between gap-2">
-              <div class="flex items-center gap-1.5">
-                <span class="px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider rounded-lg ${badgeColors}">${escapeHtml(det.tipo)}</span>
-                ${det.orden !== null && det.orden !== undefined ? `<span class="px-1.5 py-0.5 text-[9px] font-bold rounded bg-slate-100 dark:bg-slate-800 text-slate-500 font-mono" title="Orden de visualización">#${det.orden}</span>` : ''}
-              </div>
-              <span class="text-[10px] font-semibold text-slate-450 dark:text-slate-500 font-mono">${det.fecha ? det.fecha : ''}</span>
-            </div>
-            ${det.comentario ? `<p class="text-xs text-slate-650 dark:text-slate-255 leading-relaxed font-medium">${escapeHtml(det.comentario)}</p>` : ''}
-            <p class="font-display font-bold text-base text-slate-900 dark:text-white break-words">${escapeHtml(det.valor)}</p>
-          </div>
-          <div class="flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-800/80 pt-3">
-            <button onclick="editDetail(${det.id})" class="inline-flex items-center gap-1.5 text-xs text-brand hover:text-brand-light font-semibold px-2 py-1 rounded-lg hover:bg-brand/10 transition-colors">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
-              </svg> Editar
-            </button>
-            <button onclick="deleteDetail(${det.id})" class="inline-flex items-center gap-1.5 text-xs text-red-500 hover:text-red-650 font-semibold px-2 py-1 rounded-lg hover:bg-red-500/10 transition-colors">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-              </svg> Eliminar
-            </button>
-          </div>
-        `;
-        cardsGrid.appendChild(card);
-      });
-    }
   } catch (err) {
     console.error("Error loading details:", err);
     cardsGrid.innerHTML = `<div class="col-span-full py-8 text-center text-red-500 font-semibold">${err.message || 'Error cargando detalles.'}</div>`;
@@ -153,8 +215,24 @@ export const loadDetails = async (companyId) => {
   }
 };
 
+const updateToggleButtonsUI = () => {
+  const btnViewCards = document.getElementById('btn-details-view-cards');
+  const btnViewList = document.getElementById('btn-details-view-list');
+  if (!btnViewCards || !btnViewList) return;
+
+  if (detailsViewMode === 'cards') {
+    btnViewCards.className = "px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all text-brand bg-white dark:bg-slate-900 shadow-sm";
+    btnViewList.className = "px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white";
+  } else {
+    btnViewCards.className = "px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white";
+    btnViewList.className = "px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all text-brand bg-white dark:bg-slate-900 shadow-sm";
+  }
+};
+
 export const openDetailsModal = (companyId) => {
   currentCompanyIdForDetails = companyId;
+  detailsViewMode = 'cards';
+  updateToggleButtonsUI();
 
   const comp = companiesList.find(c => c.id === companyId);
   const companyName = comp ? comp.razon : `Empresa #${companyId}`;
@@ -180,6 +258,9 @@ export const initDetailsModule = () => {
   const detailsModalCard = document.getElementById('company-details-modal-card');
   const btnCloseDetailsModal = document.getElementById('btn-close-company-details-modal');
   const btnAddDetail = document.getElementById('btn-add-detail');
+
+  const btnViewCards = document.getElementById('btn-details-view-cards');
+  const btnViewList = document.getElementById('btn-details-view-list');
 
   const detailModalOverlay = document.getElementById('detail-modal-overlay');
   const detailModalCard = document.getElementById('detail-modal-card');
@@ -221,6 +302,22 @@ export const initDetailsModule = () => {
   };
 
   if (btnCloseDetailsModal) btnCloseDetailsModal.addEventListener('click', closeDetailsModal);
+
+  if (btnViewCards) {
+    btnViewCards.addEventListener('click', () => {
+      detailsViewMode = 'cards';
+      updateToggleButtonsUI();
+      renderDetails();
+    });
+  }
+
+  if (btnViewList) {
+    btnViewList.addEventListener('click', () => {
+      detailsViewMode = 'list';
+      updateToggleButtonsUI();
+      renderDetails();
+    });
+  }
 
   if (btnAddDetail) {
     btnAddDetail.addEventListener('click', () => {

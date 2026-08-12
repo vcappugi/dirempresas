@@ -301,13 +301,31 @@
         <p class="text-xs text-slate-500 dark:text-slate-400">Administra registros de impuestos, licencias, facturación
           o contactos asociados.</p>
       </div>
-      <button id="btn-add-detail"
-        class="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-brand hover:bg-brand-light rounded-xl shadow-lg shadow-brand/10 transition-all duration-300">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4.5v15m7.5-7.5h-15"></path>
-        </svg>
-        Añadir Detalle
-      </button>
+      <div class="flex flex-wrap items-center gap-3">
+        <!-- View Toggle Buttons (Card / List) -->
+        <div class="inline-flex rounded-xl p-0.5 bg-slate-100 dark:bg-slate-800 border border-slate-200/50 dark:border-slate-700">
+          <button type="button" id="btn-details-view-cards" class="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all text-brand bg-white dark:bg-slate-900 shadow-sm" title="Vista Tarjetas">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+            </svg>
+            Tarjetas
+          </button>
+          <button type="button" id="btn-details-view-list" class="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white" title="Vista Lista">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+            Lista
+          </button>
+        </div>
+
+        <button id="btn-add-detail"
+          class="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-brand hover:bg-brand-light rounded-xl shadow-lg shadow-brand/10 transition-all duration-300">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4.5v15m7.5-7.5h-15"></path>
+          </svg>
+          Añadir Detalle
+        </button>
+      </div>
     </div>
 
     <!-- Loading Details Indicator -->
@@ -336,6 +354,25 @@
     <!-- Cards Grid -->
     <div id="details-cards-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 py-2">
       <!-- Cards loaded dynamically -->
+    </div>
+
+    <!-- List Table Container (hidden by default) -->
+    <div id="details-list-container" class="overflow-x-auto relative hidden border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900">
+      <table class="w-full text-sm text-left text-slate-500 dark:text-slate-400">
+        <thead class="text-xs text-slate-700 dark:text-slate-350 bg-slate-55 dark:bg-slate-950 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
+          <tr>
+            <th scope="col" class="px-6 py-4">Orden</th>
+            <th scope="col" class="px-6 py-4">Tipo</th>
+            <th scope="col" class="px-6 py-4">Fecha</th>
+            <th scope="col" class="px-6 py-4">Valor</th>
+            <th scope="col" class="px-6 py-4">Comentario</th>
+            <th scope="col" class="px-6 py-4 text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="details-table-body" class="divide-y divide-slate-100 dark:divide-slate-800">
+          <!-- Dynamically loaded rows -->
+        </tbody>
+      </table>
     </div>
 
   </div>
