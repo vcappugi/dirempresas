@@ -111,6 +111,7 @@ export const loadCompanies = async () => {
           <td class="px-6 py-4">${statusBadge}</td>
           <td class="px-6 py-4 text-right space-x-1.5">
             <button onclick="openDetailsModal(${comp.id})" class="text-slate-500 hover:text-slate-700 dark:hover:text-slate-350 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-500/10 transition-colors">Detalles</button>
+            <button onclick="printCompanyReport(${comp.id})" class="text-emerald-500 hover:text-emerald-650 dark:text-emerald-400 dark:hover:text-emerald-300 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-emerald-500/10 transition-colors" title="Imprimir Ficha">Ficha</button>
             <button onclick="editCompany(${comp.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Editar</button>
             <button onclick="deleteCompany(${comp.id})" class="text-red-500 hover:text-red-650 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors">Eliminar</button>
           </td>
@@ -153,6 +154,304 @@ const updateCompaniesPaginationUI = (startRange, endRange) => {
 
   if (btnPrev) btnPrev.disabled = companiesPage <= 1;
   if (btnNext) btnNext.disabled = companiesPage >= totalPages;
+};
+
+export const printCompanyReport = async (companyId) => {
+  const comp = companiesList.find(c => c.id === companyId);
+  if (!comp) return;
+
+  showToast("Generando Ficha de Empresa...", true);
+
+  try {
+    // Fetch details for this company, ordered by orden.asc,id.asc
+    const res = await fetch(`${supabaseUrl}detalle_empresa?empresa_id=eq.${companyId}&order=orden.asc,id.asc`, {
+      method: 'GET',
+      headers: getHeaders()
+    });
+
+    if (!res.ok) throw new Error("No se pudieron obtener los detalles para la ficha.");
+    const details = await res.json();
+
+    // Construct print window
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      showToast("Por favor, permite las ventanas emergentes para poder imprimir.", false);
+      return;
+    }
+
+    const escapeHtmlHelper = (str) => {
+      if (!str) return '';
+      return str.toString()
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    };
+
+    const formatFecha = (f) => {
+      if (!f) return '-';
+      const parts = f.split('-');
+      if (parts.length === 3) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+      }
+      return f;
+    };
+
+    // Build the details rows HTML
+    let detailsRows = '';
+    if (details.length === 0) {
+      detailsRows = `
+        <tr>
+          <td colspan="5" style="padding: 16px; text-align: center; color: #64748b; font-style: italic; border-bottom: 1px solid #e2e8f0;">
+            No hay detalles registrados para esta empresa.
+          </td>
+        </tr>
+      `;
+    } else {
+      details.forEach(det => {
+        detailsRows += `
+          <tr style="page-break-inside: avoid;">
+            <td style="padding: 12px 16px; border-bottom: 1px solid #e2e8f0; font-family: monospace; font-weight: bold; font-size: 11px; text-align: center; color: #0f172a;">${det.orden !== null && det.orden !== undefined ? det.orden : '-'}</td>
+            <td style="padding: 12px 16px; border-bottom: 1px solid #e2e8f0; font-weight: 600; font-size: 12px; color: #0f172a;">${escapeHtmlHelper(det.tipo)}</td>
+            <td style="padding: 12px 16px; border-bottom: 1px solid #e2e8f0; font-family: monospace; font-size: 11px; color: #64748b;">${formatFecha(det.fecha)}</td>
+            <td style="padding: 12px 16px; border-bottom: 1px solid #e2e8f0; font-size: 12px; font-weight: 600; color: #0f172a; word-break: break-all;">${escapeHtmlHelper(det.valor)}</td>
+            <td style="padding: 12px 16px; border-bottom: 1px solid #e2e8f0; font-size: 11px; color: #475569;">${det.comentario ? escapeHtmlHelper(det.comentario) : '-'}</td>
+          </tr>
+        `;
+      });
+    }
+
+    const htmlContent = `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Ficha de Empresa - ${escapeHtmlHelper(comp.razon)}</title>
+  <style>
+    @media print {
+      body {
+        background-color: #ffffff;
+        color: #000000;
+        margin: 0;
+        padding: 0;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .no-print { display: none; }
+      .container { max-width: 100% !important; margin: 0 !important; padding: 20px !important; box-shadow: none !important; border: none !important; }
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+      margin: 0;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 850px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      padding: 40px;
+      border-radius: 20px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+    }
+    .header-title-container {
+      border-bottom: 3px solid #10b981;
+      padding-bottom: 12px;
+      width: 100%;
+      margin-bottom: 30px;
+    }
+    .header-title {
+      margin: 0;
+      font-size: 26px;
+      font-weight: 800;
+      color: #0f172a;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    .field-card {
+      background-color: #f8fafc;
+      border: 1px solid #f1f5f9;
+      border-radius: 12px;
+      padding: 14px 18px;
+    }
+    .field-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: #64748b;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .field-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: #0f172a;
+    }
+    .col-span-2 {
+      grid-column: span 2;
+    }
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #0f172a;
+      border-left: 4px solid #10b981;
+      padding-left: 10px;
+      margin: 35px 0 15px 0;
+      letter-spacing: 0.5px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    th {
+      background-color: #f1f5f9;
+      color: #475569;
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .print-btn-bar {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 20px;
+    }
+    .print-btn {
+      background-color: #10b981;
+      color: #ffffff;
+      border: none;
+      padding: 10px 20px;
+      font-size: 13px;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 6px -1px rgb(16 185 129 / 0.2);
+      transition: background-color 0.2s;
+    }
+    .print-btn:hover {
+      background-color: #059669;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="print-btn-bar no-print">
+      <button class="print-btn" onclick="window.print()">
+        <svg style="width: 16px; height: 16px; fill: currentColor;" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm-1 9H8v3h4v-3z" clip-rule="evenodd"></path>
+        </svg>
+        Imprimir Ficha
+      </button>
+    </div>
+
+    <div class="header-title-container">
+      <h1 class="header-title">Ficha Informativa de Empresa</h1>
+    </div>
+
+    <div class="grid">
+      <div class="field-card">
+        <div class="field-label">Código de la Empresa</div>
+        <div class="field-value">${escapeHtmlHelper(comp.codigo)}</div>
+      </div>
+      <div class="field-card">
+        <div class="field-label">Razón Social</div>
+        <div class="field-value">${escapeHtmlHelper(comp.razon)}</div>
+      </div>
+      <div class="field-card">
+        <div class="field-label">R.I.F.</div>
+        <div class="field-value" style="font-family: monospace;">${escapeHtmlHelper(comp.rif)}</div>
+      </div>
+      <div class="field-card">
+        <div class="field-label">Fecha Apertura</div>
+        <div class="field-value" style="font-family: monospace;">${formatFecha(comp.fecha_apertura)}</div>
+      </div>
+      <div class="field-card">
+        <div class="field-label">Código Maestro</div>
+        <div class="field-value">${comp.codigo_maestro ? escapeHtmlHelper(comp.codigo_maestro) : '-'}</div>
+      </div>
+      <div class="field-card">
+        <div class="field-label">Estatus del Libro</div>
+        <div class="field-value">${comp.estatus_libro ? escapeHtmlHelper(comp.estatus_libro) : '-'}</div>
+      </div>
+      <div class="field-card">
+        <div class="field-label">Capital Suscrito</div>
+        <div class="field-value">${comp.capital_suscrito ? escapeHtmlHelper(comp.capital_suscrito) : '-'}</div>
+      </div>
+      <div class="field-card">
+        <div class="field-label">Registro Mercantil</div>
+        <div class="field-value">${comp.registro_merc ? escapeHtmlHelper(comp.registro_merc) : '-'}</div>
+      </div>
+      <div class="field-card col-span-2">
+        <div class="field-label">Dirección Fiscal</div>
+        <div class="field-value" style="font-weight: 550; font-size: 13px;">${comp.direccion_fiscal ? escapeHtmlHelper(comp.direccion_fiscal) : '-'}</div>
+      </div>
+      <div class="field-card col-span-2">
+        <div class="field-label">Objeto Social</div>
+        <div class="field-value" style="font-weight: 550; font-size: 13px; text-align: justify; line-height: 1.5;">${comp.objeto ? escapeHtmlHelper(comp.objeto) : '-'}</div>
+      </div>
+      <div class="field-card col-span-2">
+        <div class="field-label">Observaciones Generales</div>
+        <div class="field-value" style="font-weight: 550; font-size: 13px; color: #475569;">${comp.observacion ? escapeHtmlHelper(comp.observacion) : '-'}</div>
+      </div>
+    </div>
+
+    <div class="section-title">Detalles Adicionales de la Empresa</div>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 60px; text-align: center;">Orden</th>
+          <th style="width: 150px;">Tipo de Detalle</th>
+          <th style="width: 120px;">Fecha Reg.</th>
+          <th>Valor / Registro</th>
+          <th>Comentario / Descripción</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${detailsRows}
+      </tbody>
+    </table>
+  </div>
+
+</body>
+</html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+
+    // Trigger print automatically after slight delay to ensure browser loads document structure
+    setTimeout(() => {
+      printWindow.focus();
+      printWindow.print();
+    }, 500);
+
+  } catch (err) {
+    console.error("Print report error:", err);
+    showToast(err.message || "Error al generar la ficha.", false);
+  }
 };
 
 export const initCompaniesModule = () => {
@@ -225,6 +524,8 @@ export const initCompaniesModule = () => {
       }
     });
   }
+
+  window.printCompanyReport = printCompanyReport;
 
   window.editCompany = async (id) => {
     const comp = companiesList.find(c => c.id === id);
