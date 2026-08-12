@@ -17,6 +17,7 @@ import { initCompaniesModule, loadCompanies } from './modules/companies.js';
 import { initDetailsModule, loadDetails, currentCompanyIdForDetails } from './modules/details.js';
 import { initDetailTypesModule, loadDetailTypes } from './modules/detail_types.js';
 import { initRevisionsModule, loadRevisions } from './modules/revisions.js';
+import { initBranchesModule, loadBranches } from './modules/branches.js';
 
 const loadTemplates = async () => {
   const container = document.querySelector('main');
@@ -24,6 +25,7 @@ const loadTemplates = async () => {
   
   const templates = [
     'templates/companies.html',
+    'templates/branches.html',
     'templates/users.html',
     'templates/roles.html',
     'templates/regions.html',
@@ -352,6 +354,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initDetailsModule();
   initDetailTypesModule();
   initRevisionsModule();
+  initBranchesModule();
 
   // --- Tab Navigation System (Simulate Views) ---
   const sidebarItems = document.querySelectorAll('.sidebar-item');
@@ -360,6 +363,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const viewTitles = {
     'view-dashboard': 'Dashboard - Empresas',
     'view-companies': 'Empresas - Empresas',
+    'view-branches': 'Sucursales - Empresas',
     'view-revisions': 'Revisiones - Empresas',
     'view-users': 'Usuarios - Empresas',
     'view-roles': 'Roles - Empresas',
@@ -395,6 +399,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (targetViewId === 'view-roles') loadRoles();
           if (targetViewId === 'view-regions') loadRegions();
           if (targetViewId === 'view-companies') loadCompanies();
+          if (targetViewId === 'view-branches') loadBranches();
           if (targetViewId === 'view-detail-types') loadDetailTypes();
           if (targetViewId === 'view-revisions') loadRevisions();
         } else {
@@ -518,6 +523,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (e) {
           console.error(e);
           showToast('Error al eliminar la revisión.', false);
+          loadingEl?.classList.add('hidden');
+        }
+      } else if (type === 'branch') {
+        const loadingEl = document.getElementById('branches-loading');
+        loadingEl?.classList.remove('hidden');
+        try {
+          const res = await fetch(`${supabaseUrl}sucursales?id=eq.${id}`, {
+            method: 'DELETE',
+            headers: getHeaders()
+          });
+          if (!res.ok) throw new Error("No se pudo eliminar la sucursal.");
+          showToast('Sucursal eliminada con éxito.', true);
+          loadBranches();
+        } catch (e) {
+          console.error(e);
+          showToast('Error al eliminar la sucursal.', false);
           loadingEl?.classList.add('hidden');
         }
       } else {
