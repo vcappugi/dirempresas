@@ -3,6 +3,7 @@ import { companiesList } from './companies.js';
 
 export let currentCompanyIdForDetails = null;
 let detailsList = [];
+let cachedDetailTypes = [];
 
 const loadDetailTypesSelect = async (selectedVal = null) => {
   const selectEl = document.getElementById('detail-form-tipo');
@@ -18,6 +19,7 @@ const loadDetailTypesSelect = async (selectedVal = null) => {
 
     if (!res.ok) throw new Error("Error al cargar tipo_detalle");
     const data = await res.json();
+    cachedDetailTypes = data;
 
     selectEl.innerHTML = '<option value="" disabled>Seleccione un Tipo</option>';
     
@@ -55,6 +57,21 @@ const loadDetailTypesSelect = async (selectedVal = null) => {
     } else {
       selectEl.value = "";
     }
+  }
+
+  // Bind change event listener once to automatically populate orden field
+  if (!selectEl.dataset.listenerBound) {
+    selectEl.addEventListener('change', (e) => {
+      const selectedVal = e.target.value;
+      const matched = cachedDetailTypes.find(t => t.tipo === selectedVal);
+      if (matched && matched.orden !== null && matched.orden !== undefined) {
+        const ordenInput = document.getElementById('detail-form-orden');
+        if (ordenInput) {
+          ordenInput.value = matched.orden;
+        }
+      }
+    });
+    selectEl.dataset.listenerBound = "true";
   }
 };
 

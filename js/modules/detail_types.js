@@ -29,9 +29,9 @@ export const loadDetailTypes = async () => {
 
     if (detailTypesSearchQuery) {
       const encSearch = encodeURIComponent(detailTypesSearchQuery);
-      queryUrl += `?or=(tipo.ilike.*${encSearch}*,descripcion.ilike.*${encSearch}*)&order=id.asc`;
+      queryUrl += `?or=(tipo.ilike.*${encSearch}*,descripcion.ilike.*${encSearch}*)&order=orden.asc,id.asc`;
     } else {
-      queryUrl += `?order=id.asc`;
+      queryUrl += `?order=orden.asc,id.asc`;
     }
 
     const headers = getHeaders();
@@ -68,6 +68,7 @@ export const loadDetailTypes = async () => {
           <td class="px-6 py-4 font-semibold text-slate-800 dark:text-white">${item.id}</td>
           <td class="px-6 py-4 text-slate-650 dark:text-slate-255 font-medium">${escapeHtml(item.tipo)}</td>
           <td class="px-6 py-4 text-slate-550 dark:text-slate-450 text-xs">${item.descripcion ? escapeHtml(item.descripcion) : '<span class="text-slate-400 italic">Sin descripción</span>'}</td>
+          <td class="px-6 py-4 text-slate-550 dark:text-slate-450 font-mono text-xs">${item.orden !== null && item.orden !== undefined ? item.orden : '-'}</td>
           <td class="px-6 py-4 text-right space-x-1.5">
             <button onclick="editDetailType(${item.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Editar</button>
             <button onclick="deleteDetailType(${item.id})" class="text-red-500 hover:text-red-650 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors">Eliminar</button>
@@ -81,7 +82,7 @@ export const loadDetailTypes = async () => {
     console.error("Error loading detail types:", err);
     tableBody.innerHTML = `
       <tr>
-        <td colspan="4" class="px-6 py-10 text-center text-red-500 font-semibold">
+        <td colspan="5" class="px-6 py-10 text-center text-red-500 font-semibold">
           ${err.message || 'Error cargando tipos de detalles.'}
         </td>
       </tr>
@@ -147,6 +148,7 @@ export const initDetailTypesModule = () => {
       document.getElementById('detail-type-form-id').value = '';
       document.getElementById('detail-type-form-tipo').value = '';
       document.getElementById('detail-type-form-descripcion').value = '';
+      document.getElementById('detail-type-form-orden').value = '';
 
       document.getElementById('detail-type-modal-title').textContent = 'Crear Tipo de Detalle';
       openModal();
@@ -163,6 +165,7 @@ export const initDetailTypesModule = () => {
     document.getElementById('detail-type-form-id').value = item.id;
     document.getElementById('detail-type-form-tipo').value = item.tipo || '';
     document.getElementById('detail-type-form-descripcion').value = item.descripcion || '';
+    document.getElementById('detail-type-form-orden').value = item.orden !== null && item.orden !== undefined ? item.orden : '';
 
     document.getElementById('detail-type-modal-title').textContent = 'Editar Tipo de Detalle';
     openModal();
@@ -179,6 +182,8 @@ export const initDetailTypesModule = () => {
       const id = document.getElementById('detail-type-form-id').value;
       const tipo = document.getElementById('detail-type-form-tipo').value;
       const descripcion = document.getElementById('detail-type-form-descripcion').value;
+      const ordenVal = document.getElementById('detail-type-form-orden').value;
+      const orden = ordenVal !== '' ? parseInt(ordenVal, 10) : null;
 
       const saveBtn = document.getElementById('btn-save-detail-type-modal');
       const originalBtnText = saveBtn.innerHTML;
@@ -192,7 +197,7 @@ export const initDetailTypesModule = () => {
       `;
 
       try {
-        const payload = { tipo, descripcion };
+        const payload = { tipo, descripcion, orden };
 
         let url = `${supabaseUrl}tipo_detalle`;
         let method = 'POST';
