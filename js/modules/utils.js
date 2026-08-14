@@ -116,7 +116,7 @@ export const openDeleteModal = (id, type) => {
   } else if (type === 'company') {
     if (titleEl) titleEl.textContent = '¿Eliminar Empresa?';
     if (descEl) descEl.textContent = 'Esta acción no se puede deshacer. La empresa será eliminada permanentemente de la base de datos.';
-  } else if (type === 'detail') {
+  } else if (type === 'detail' || type === 'branch_detail') {
     if (titleEl) titleEl.textContent = '¿Eliminar Detalle?';
     if (descEl) descEl.textContent = 'Esta acción no se puede deshacer. El detalle será eliminado permanentemente de la base de datos.';
   } else if (type === 'detail_type') {

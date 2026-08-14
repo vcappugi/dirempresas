@@ -15,6 +15,7 @@ import { initRolesModule, loadRoles } from './modules/roles.js';
 import { initRegionsModule, loadRegions } from './modules/regions.js';
 import { initCompaniesModule, loadCompanies } from './modules/companies.js';
 import { initDetailsModule, loadDetails, currentCompanyIdForDetails } from './modules/details.js';
+import { initBranchDetailsModule, loadBranchDetails, currentBranchIdForDetails } from './modules/branch_details.js';
 import { initDetailTypesModule, loadDetailTypes } from './modules/detail_types.js';
 import { initRevisionsModule, loadRevisions } from './modules/revisions.js';
 import { initBranchesModule, loadBranches } from './modules/branches.js';
@@ -352,6 +353,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initRegionsModule();
   initCompaniesModule();
   initDetailsModule();
+  initBranchDetailsModule();
   initDetailTypesModule();
   initRevisionsModule();
   initBranchesModule();
@@ -488,6 +490,22 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (!res.ok) throw new Error("No se pudo eliminar el detalle.");
           showToast('Detalle de empresa eliminado con éxito.', true);
           loadDetails(currentCompanyIdForDetails);
+        } catch (e) {
+          console.error(e);
+          showToast('Error al eliminar el detalle.', false);
+          loadingEl?.classList.add('hidden');
+        }
+      } else if (type === 'branch_detail') {
+        const loadingEl = document.getElementById('branch-details-loading');
+        loadingEl?.classList.remove('hidden');
+        try {
+          const res = await fetch(`${supabaseUrl}detalle_sucursales?id=eq.${id}`, {
+            method: 'DELETE',
+            headers: getHeaders()
+          });
+          if (!res.ok) throw new Error("No se pudo eliminar el detalle.");
+          showToast('Detalle de sucursal eliminado con éxito.', true);
+          loadBranchDetails(currentBranchIdForDetails);
         } catch (e) {
           console.error(e);
           showToast('Error al eliminar el detalle.', false);

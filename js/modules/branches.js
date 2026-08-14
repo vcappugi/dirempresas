@@ -3,6 +3,9 @@ import { supabaseUrl, supabaseKey, loadEnv, getHeaders, showToast, escapeHtml, o
 let branchesPage = 1;
 const branchesPageSize = 5;
 let branchesSearchQuery = "";
+let branchesFilterEmpresa = "";
+let branchesFilterRegion = "";
+let branchesFilterParticipacion = "";
 let branchesTotalCount = 0;
 let branchesList = [];
 
@@ -88,6 +91,113 @@ export const loadRegionsForSelect = async (selectedRegionId = null) => {
   }
 };
 
+export const loadCompaniesForFilter = async () => {
+  const selectEl = document.getElementById('branches-filter-empresa');
+  if (!selectEl) return;
+
+  selectEl.innerHTML = '<option value="">Todas las empresas</option>';
+
+  try {
+    if (!supabaseUrl || !supabaseKey) {
+      await loadEnv();
+    }
+
+    let url = `${supabaseUrl}empresa?activo=eq.true&order=razon.asc`;
+    if (!window.isAdmin) {
+      const compId = window.userCompanyId || -1;
+      url = `${supabaseUrl}empresa?id=eq.${compId}&order=razon.asc`;
+    }
+
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: getHeaders()
+    });
+
+    if (!res.ok) throw new Error("No se pudieron cargar las empresas para filtro.");
+
+    const companies = await res.json();
+    companies.forEach(comp => {
+      const option = document.createElement('option');
+      option.value = comp.id;
+      option.textContent = comp.razon;
+      selectEl.appendChild(option);
+    });
+  } catch (err) {
+    console.error("Error loading companies for filter:", err);
+  }
+};
+
+export const loadRegionsForFilter = async () => {
+  const selectEl = document.getElementById('branches-filter-region');
+  if (!selectEl) return;
+
+  selectEl.innerHTML = '<option value="">Todas las regiones</option>';
+
+  try {
+    if (!supabaseUrl || !supabaseKey) {
+      await loadEnv();
+    }
+
+    const res = await fetch(`${supabaseUrl}region?activo=eq.true&order=nombre.asc`, {
+      method: 'GET',
+      headers: getHeaders()
+    });
+
+    if (!res.ok) throw new Error("No se pudieron cargar las regiones para filtro.");
+
+    const regions = await res.json();
+    regions.forEach(reg => {
+      const option = document.createElement('option');
+      option.value = reg.id;
+      option.textContent = reg.nombre;
+      selectEl.appendChild(option);
+    });
+  } catch (err) {
+    console.error("Error loading regions for filter:", err);
+  }
+};
+
+export const loadParticipationsForFilter = async () => {
+  const selectEl = document.getElementById('branches-filter-participacion');
+  if (!selectEl) return;
+
+  selectEl.innerHTML = '<option value="">Cualquier participación</option>';
+
+  try {
+    if (!supabaseUrl || !supabaseKey) {
+      await loadEnv();
+    }
+
+    let url = `${supabaseUrl}sucursales?select=participacion`;
+    if (!window.isAdmin) {
+      const compId = window.userCompanyId || -1;
+      url += `&empresa_id=eq.${compId}`;
+    }
+    
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: getHeaders()
+    });
+
+    if (!res.ok) throw new Error("No se pudieron cargar las participaciones.");
+
+    const data = await res.json();
+    const parts = data
+      .map(item => item.participacion)
+      .filter(p => p !== null && p !== undefined);
+    const uniqueParts = [...new Set(parts)].sort((a, b) => b - a);
+
+    uniqueParts.forEach(val => {
+      const option = document.createElement('option');
+      option.value = val;
+      option.textContent = `${val}%`;
+      selectEl.appendChild(option);
+    });
+  } catch (err) {
+    console.error("Error loading participations for filter:", err);
+  }
+};
+
 export const loadBranches = async () => {
   const loadingEl = document.getElementById('branches-loading');
   const tableBody = document.getElementById('branches-table-body');
@@ -107,19 +217,29 @@ export const loadBranches = async () => {
   const end = start + branchesPageSize - 1;
 
   try {
-    let queryUrl = `${supabaseUrl}sucursales?select=*,empresa:empresa_id(razon),region:region_id(nombre)`;
+    let queryUrl = `${supabaseUrl}sucursales?select=*,empresa:empresa_id(razon,participacion),region:region_id(nombre)`;
 
     if (!window.isAdmin) {
       const compId = window.userCompanyId || -1;
       queryUrl += `&empresa_id=eq.${compId}`;
+    } else if (branchesFilterEmpresa) {
+      queryUrl += `&empresa_id=eq.${branchesFilterEmpresa}`;
+    }
+
+    if (branchesFilterRegion) {
+      queryUrl += `&region_id=eq.${branchesFilterRegion}`;
+    }
+
+    if (branchesFilterParticipacion) {
+      queryUrl += `&participacion=eq.${branchesFilterParticipacion}`;
     }
 
     if (branchesSearchQuery) {
       const encSearch = encodeURIComponent(branchesSearchQuery);
-      queryUrl += `&nombre=ilike.*${encSearch}*&order=id.asc`;
-    } else {
-      queryUrl += `&order=id.asc`;
+      queryUrl += `&nombre=ilike.*${encSearch}*`;
     }
+
+    queryUrl += `&order=id.asc`;
 
     const headers = getHeaders();
     headers["Prefer"] = "count=exact";
@@ -165,9 +285,11 @@ export const loadBranches = async () => {
         }
 
         const editDeleteBtns = window.isAdmin
-          ? `<button onclick="editBranch(${branch.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Editar</button>
+          ? `<button onclick="openBranchDetailsModal(${branch.id})" class="text-slate-500 hover:text-slate-700 dark:hover:text-slate-350 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-500/10 transition-colors">Detalles</button>
+             <button onclick="editBranch(${branch.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Editar</button>
              <button onclick="deleteBranch(${branch.id})" class="text-red-500 hover:text-red-650 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors">Eliminar</button>`
-          : `<button onclick="editBranch(${branch.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Ver</button>`;
+          : `<button onclick="openBranchDetailsModal(${branch.id})" class="text-slate-500 hover:text-slate-700 dark:hover:text-slate-350 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-500/10 transition-colors">Detalles</button>
+             <button onclick="editBranch(${branch.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Ver</button>`;
 
         const row = document.createElement('tr');
         row.className = 'hover:bg-slate-100/50 dark:hover:bg-slate-800/30 transition-colors duration-200';
@@ -274,6 +396,9 @@ export const initBranchesModule = () => {
       document.getElementById('branch-form-fecha').value = '';
       document.getElementById('branch-form-estatus').value = '';
 
+      const detailsBtn = document.getElementById('btn-manage-branch-details');
+      if (detailsBtn) detailsBtn.classList.add('hidden');
+
       await loadCompaniesForSelect();
       await loadRegionsForSelect();
 
@@ -285,6 +410,17 @@ export const initBranchesModule = () => {
   if (btnCloseBranchModal) btnCloseBranchModal.addEventListener('click', closeBranchModal);
   if (btnCancelBranchModal) btnCancelBranchModal.addEventListener('click', closeBranchModal);
 
+  const btnManageDetails = document.getElementById('btn-manage-branch-details');
+  if (btnManageDetails) {
+    btnManageDetails.addEventListener('click', () => {
+      const branchId = document.getElementById('branch-form-id').value;
+      if (branchId) {
+        closeBranchModal();
+        window.openBranchDetailsModal?.(parseInt(branchId, 10));
+      }
+    });
+  }
+
   window.editBranch = async (id) => {
     const branch = branchesList.find(b => b.id === id);
     if (!branch) return;
@@ -294,6 +430,9 @@ export const initBranchesModule = () => {
     document.getElementById('branch-form-sistema').value = branch.sistema || '';
     document.getElementById('branch-form-fecha').value = branch.fecha_apertura || '';
     document.getElementById('branch-form-estatus').value = branch.estatus_operativo || '';
+
+    const detailsBtn = document.getElementById('btn-manage-branch-details');
+    if (detailsBtn) detailsBtn.classList.remove('hidden');
 
     await loadCompaniesForSelect(branch.empresa_id);
     await loadRegionsForSelect(branch.region_id);
@@ -366,6 +505,45 @@ export const initBranchesModule = () => {
     });
   }
 
+  // Initialize and register filters
+  const filterEmpresaEl = document.getElementById('branches-filter-empresa');
+  const filterRegionEl = document.getElementById('branches-filter-region');
+  const filterParticipacionEl = document.getElementById('branches-filter-participacion');
+  const filterEmpresaContainer = document.getElementById('branches-filter-empresa-container');
+
+  if (!window.isAdmin && filterEmpresaContainer) {
+    filterEmpresaContainer.style.display = 'none';
+  }
+
+  // Load select options
+  loadCompaniesForFilter();
+  loadRegionsForFilter();
+  loadParticipationsForFilter();
+
+  if (filterEmpresaEl) {
+    filterEmpresaEl.addEventListener('change', (e) => {
+      branchesFilterEmpresa = e.target.value;
+      branchesPage = 1;
+      loadBranches();
+    });
+  }
+
+  if (filterRegionEl) {
+    filterRegionEl.addEventListener('change', (e) => {
+      branchesFilterRegion = e.target.value;
+      branchesPage = 1;
+      loadBranches();
+    });
+  }
+
+  if (filterParticipacionEl) {
+    filterParticipacionEl.addEventListener('change', (e) => {
+      branchesFilterParticipacion = e.target.value;
+      branchesPage = 1;
+      loadBranches();
+    });
+  }
+
   // Search input with debounce
   const searchInput = document.getElementById('branches-search');
   if (searchInput) {
@@ -403,3 +581,5 @@ export const initBranchesModule = () => {
     });
   }
 };
+
+export { branchesPage, branchesPageSize, branchesSearchQuery, branchesTotalCount, branchesList };
