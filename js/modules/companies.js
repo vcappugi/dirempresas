@@ -162,15 +162,19 @@ export const loadCompanies = async () => {
           : `<button onclick="editCompany(${comp.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2 px-1 rounded hover:bg-brand/10 transition-colors">Ver</button>`;
 
         const row = document.createElement('tr');
-        row.className = 'hover:bg-slate-100/50 dark:hover:bg-slate-800/30 transition-colors duration-200 text-xs';
-        row.innerHTML = `
+        row.className = 'hover:bg-slate-100/50 dark:hover:bg-slate-800/30 transition-colors duration-200 text-xs';        row.innerHTML = `
+          <td class="px-4 py-3 text-left space-x-1 whitespace-nowrap">
+            <button onclick="openDetailsModal(${comp.id})" class="text-slate-500 hover:text-slate-700 dark:hover:text-slate-350 text-xs font-semibold px-2 px-1 rounded hover:bg-slate-500/10 transition-colors">Detalles</button>
+            <button onclick="printCompanyReport(${comp.id})" class="text-emerald-500 hover:text-emerald-650 dark:text-emerald-400 dark:hover:text-emerald-300 text-xs font-semibold px-2 px-1 rounded hover:bg-emerald-500/10 transition-colors" title="Imprimir Ficha">Ficha</button>
+            ${editDeleteBtns}
+          </td>
           <td class="px-4 py-3 font-semibold text-slate-800 dark:text-white">${escapeHtml(comp.codigo || '')}</td>
           <td class="px-4 py-3 font-medium">
             <button onclick="editCompany(${comp.id})" class="text-brand hover:text-brand-light font-semibold hover:underline text-left transition-all">
               ${escapeHtml(comp.razon || '')}
             </button>
           </td>
-          <td class="px-4 py-3 text-slate-550 dark:text-slate-450 font-mono">${escapeHtml(comp.rif || '')}</td>
+          <td class="px-4 py-3 text-slate-550 dark:text-slate-455 font-mono">${escapeHtml(comp.rif || '')}</td>
           <td class="px-4 py-3 text-slate-600 dark:text-slate-400 font-mono">${fechaAperturaText}</td>
           <td class="px-4 py-3 text-slate-600 dark:text-slate-400 font-mono">${escapeHtml(comp.codigo_maestro || '-')}</td>
           <td class="px-4 py-3 text-slate-600 dark:text-slate-400 capitalize">${escapeHtml(comp.estatus_libro || '-')}</td>
@@ -184,11 +188,6 @@ export const loadCompanies = async () => {
           <td class="px-4 py-3 text-slate-600 dark:text-slate-400">${userName}</td>
           <td class="px-4 py-3 text-slate-500 dark:text-slate-400 truncate max-w-[200px]" title="${escapeHtml(comp.observacion || '')}">${escapeHtml(comp.observacion || '-')}</td>
           <td class="px-4 py-3">${statusBadge}</td>
-          <td class="px-4 py-3 text-right space-x-1.5">
-            <button onclick="openDetailsModal(${comp.id})" class="text-slate-500 hover:text-slate-700 dark:hover:text-slate-350 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-500/10 transition-colors">Detalles</button>
-            <button onclick="printCompanyReport(${comp.id})" class="text-emerald-500 hover:text-emerald-650 dark:text-emerald-400 dark:hover:text-emerald-300 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-emerald-500/10 transition-colors" title="Imprimir Ficha">Ficha</button>
-            ${editDeleteBtns}
-          </td>
         `;
         tableBody.appendChild(row);
       });
