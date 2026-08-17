@@ -332,10 +332,12 @@ export const loadBranches = async () => {
 
         const canWrite = window.hasPermission('view-branches', 'escribir');
         const editDeleteBtns = canWrite
-          ? `<button onclick="openBranchDetailsModal(${branch.id})" class="text-slate-500 hover:text-slate-700 dark:hover:text-slate-350 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-500/10 transition-colors">Detalles</button>
+          ? `<button onclick="printBranchReport(${branch.id})" class="text-emerald-500 hover:text-emerald-650 dark:text-emerald-400 dark:hover:text-emerald-300 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-emerald-500/10 transition-colors" title="Imprimir Ficha">Ficha</button>
+             <button onclick="openBranchDetailsModal(${branch.id})" class="text-slate-500 hover:text-slate-700 dark:hover:text-slate-350 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-500/10 transition-colors">Detalles</button>
              <button onclick="editBranch(${branch.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Editar</button>
              <button onclick="deleteBranch(${branch.id})" class="text-red-500 hover:text-red-650 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors">Eliminar</button>`
-          : `<button onclick="openBranchDetailsModal(${branch.id})" class="text-slate-500 hover:text-slate-700 dark:hover:text-slate-350 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-500/10 transition-colors">Detalles</button>
+          : `<button onclick="printBranchReport(${branch.id})" class="text-emerald-500 hover:text-emerald-650 dark:text-emerald-400 dark:hover:text-emerald-300 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-emerald-500/10 transition-colors" title="Imprimir Ficha">Ficha</button>
+             <button onclick="openBranchDetailsModal(${branch.id})" class="text-slate-500 hover:text-slate-700 dark:hover:text-slate-350 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-500/10 transition-colors">Detalles</button>
              <button onclick="editBranch(${branch.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Ver</button>`;
 
         const row = document.createElement('tr');
@@ -446,6 +448,9 @@ export const initBranchesModule = () => {
       const detailsBtn = document.getElementById('btn-manage-branch-details');
       if (detailsBtn) detailsBtn.classList.add('hidden');
 
+      const reportBtn = document.getElementById('btn-print-branch-report');
+      if (reportBtn) reportBtn.classList.add('hidden');
+
       await loadCompaniesForSelect();
       await loadRegionsForSelect();
 
@@ -468,6 +473,16 @@ export const initBranchesModule = () => {
     });
   }
 
+  const btnPrintReport = document.getElementById('btn-print-branch-report');
+  if (btnPrintReport) {
+    btnPrintReport.addEventListener('click', () => {
+      const branchId = document.getElementById('branch-form-id').value;
+      if (branchId) {
+        printBranchReport(parseInt(branchId, 10));
+      }
+    });
+  }
+
   window.editBranch = async (id) => {
     const branch = branchesList.find(b => b.id === id);
     if (!branch) return;
@@ -480,6 +495,9 @@ export const initBranchesModule = () => {
 
     const detailsBtn = document.getElementById('btn-manage-branch-details');
     if (detailsBtn) detailsBtn.classList.remove('hidden');
+
+    const reportBtn = document.getElementById('btn-print-branch-report');
+    if (reportBtn) reportBtn.classList.remove('hidden');
 
     await loadCompaniesForSelect(branch.empresa_id);
     await loadRegionsForSelect(branch.region_id);
@@ -640,5 +658,300 @@ export const initBranchesModule = () => {
     });
   }
 };
+
+export const printBranchReport = async (branchId) => {
+  const branch = branchesList.find(b => b.id === branchId);
+  if (!branch) return;
+
+  showToast("Generando Ficha de Sucursal...", true);
+
+  try {
+    // Fetch details for this branch, ordered by orden.asc,id.asc
+    const res = await fetch(`${supabaseUrl}detalle_sucursales?sucursal_id=eq.${branchId}&order=orden.asc,id.asc`, {
+      method: 'GET',
+      headers: getHeaders()
+    });
+
+    if (!res.ok) throw new Error("No se pudieron obtener los detalles para la ficha.");
+    const details = await res.json();
+
+    // Construct print window
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      showToast("Por favor, permite las ventanas emergentes para poder imprimir.", false);
+      return;
+    }
+
+    const escapeHtmlHelper = (str) => {
+      if (!str) return '';
+      return str.toString()
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    };
+
+    const formatFecha = (f) => {
+      if (!f) return '-';
+      const parts = f.split('-');
+      if (parts.length === 3) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+      }
+      return f;
+    };
+
+    // Build the details rows HTML
+    let detailsRows = '';
+    if (details.length === 0) {
+      detailsRows = `
+        <tr>
+          <td colspan="5" style="padding: 10px; text-align: center; color: #64748b; font-style: italic; border-bottom: 1px solid #e2e8f0; font-size: 11px;">
+            No hay detalles registrados para esta sucursal.
+          </td>
+        </tr>
+      `;
+    } else {
+      details.forEach(det => {
+        detailsRows += `
+          <tr style="page-break-inside: avoid;">
+            <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0; font-family: monospace; font-weight: bold; font-size: 11px; text-align: center; color: #0f172a;">${det.orden !== null && det.orden !== undefined ? det.orden : '-'}</td>
+            <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0; font-weight: 600; font-size: 11px; color: #0f172a;">${escapeHtmlHelper(det.tipo)}</td>
+            <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0; font-family: monospace; font-size: 10px; color: #64748b;">${formatFecha(det.fecha)}</td>
+            <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0; font-size: 11px; font-weight: 600; color: #0f172a; word-break: break-all;">${escapeHtmlHelper(det.valor)}</td>
+            <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0; font-size: 10px; color: #475569;">${det.comentario ? escapeHtmlHelper(det.comentario) : '-'}</td>
+          </tr>
+        `;
+      });
+    }
+
+    const empresaName = branch.empresa ? branch.empresa.razon : 'No asignada';
+    const regionName = branch.region ? branch.region.nombre : 'No asignada';
+
+    const htmlContent = `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Ficha de Sucursal - ${escapeHtmlHelper(branch.nombre)}</title>
+  <style>
+    @media print {
+      body {
+        background-color: #ffffff;
+        color: #000000;
+        margin: 0;
+        padding: 0;
+        font-size: 11px;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .no-print { display: none; }
+      .container { max-width: 100% !important; margin: 0 !important; padding: 10px !important; box-shadow: none !important; border: none !important; }
+      .grid { gap: 10px !important; margin-bottom: 15px !important; }
+      .field-card { padding: 8px 12px !important; border-radius: 8px !important; }
+      .field-label { font-size: 9px !important; margin-bottom: 2px !important; }
+      .field-value { font-size: 12px !important; }
+      .section-title { font-size: 14px !important; margin: 15px 0 8px 0 !important; }
+      th, td { padding: 6px 10px !important; font-size: 10px !important; }
+      .header-title-container { margin-bottom: 15px !important; padding-bottom: 8px !important; }
+      .header-title { font-size: 20px !important; }
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+      margin: 0;
+      padding: 30px 15px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      padding: 30px;
+      border-radius: 16px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+    }
+    .header-title-container {
+      border-bottom: 3px solid #10b981;
+      padding-bottom: 10px;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+    .header-title {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 800;
+      color: #0f172a;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .field-card {
+      background-color: #f8fafc;
+      border: 1px solid #f1f5f9;
+      border-radius: 10px;
+      padding: 10px 14px;
+    }
+    .field-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: #64748b;
+      letter-spacing: 0.5px;
+      margin-bottom: 3px;
+    }
+    .field-value {
+      font-size: 13px;
+      font-weight: 600;
+      color: #0f172a;
+    }
+    .col-span-2 {
+      grid-column: span 2;
+    }
+    .section-title {
+      font-size: 15px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #0f172a;
+      border-left: 4px solid #10b981;
+      padding-left: 8px;
+      margin: 25px 0 10px 0;
+      letter-spacing: 0.5px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    th {
+      background-color: #f1f5f9;
+      color: #475569;
+      font-weight: 700;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .print-btn-bar {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 15px;
+    }
+    .print-btn {
+      background-color: #10b981;
+      color: #ffffff;
+      border: none;
+      padding: 8px 16px;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 6px -1px rgb(16 185 129 / 0.2);
+    }
+    .print-btn:hover {
+      background-color: #059669;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="print-btn-bar no-print">
+      <button class="print-btn" onclick="window.print()">
+        <svg style="width: 14px; height: 14px; fill: currentColor;" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm-1 9H8v3h4v-3z" clip-rule="evenodd"></path>
+        </svg>
+        Imprimir Ficha
+      </button>
+    </div>
+
+    <div class="header-title-container">
+      <h1 class="header-title">Ficha Informativa de Sucursal</h1>
+    </div>
+
+    <div class="grid">
+      <div class="field-card">
+        <div class="field-label">ID Sucursal</div>
+        <div class="field-value">${branch.id}</div>
+      </div>
+      <div class="field-card">
+        <div class="field-label">Nombre de Sucursal</div>
+        <div class="field-value">${escapeHtmlHelper(branch.nombre)}</div>
+      </div>
+      <div class="field-card">
+        <div class="field-label">Empresa Asociada</div>
+        <div class="field-value">${escapeHtmlHelper(empresaName)}</div>
+      </div>
+      <div class="field-card">
+        <div class="field-label">Región</div>
+        <div class="field-value">${escapeHtmlHelper(regionName)}</div>
+      </div>
+      <div class="field-card">
+        <div class="field-label">Sistema Operativo / ERP</div>
+        <div class="field-value">${branch.sistema ? escapeHtmlHelper(branch.sistema) : '-'}</div>
+      </div>
+      <div class="field-card">
+        <div class="field-label">Fecha de Apertura</div>
+        <div class="field-value" style="font-family: monospace;">${formatFecha(branch.fecha_apertura)}</div>
+      </div>
+      <div class="field-card col-span-2">
+        <div class="field-label">Estatus Operativo</div>
+        <div class="field-value">${branch.estatus_operativo ? escapeHtmlHelper(branch.estatus_operativo) : '-'}</div>
+      </div>
+    </div>
+
+    <div class="section-title">Detalles Adicionales de la Sucursal</div>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 50px; text-align: center;">Orden</th>
+          <th style="width: 140px;">Tipo de Detalle</th>
+          <th style="width: 100px;">Fecha Reg.</th>
+          <th>Valor / Registro</th>
+          <th>Comentario / Descripción</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${detailsRows}
+      </tbody>
+    </table>
+  </div>
+
+</body>
+</html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+
+    // Trigger print automatically after slight delay to ensure browser loads document structure
+    setTimeout(() => {
+      printWindow.focus();
+      printWindow.print();
+    }, 500);
+
+  } catch (err) {
+    console.error("Print branch report error:", err);
+    showToast(err.message || "Error al generar la ficha de sucursal.", false);
+  }
+};
+
+window.printBranchReport = printBranchReport;
 
 export { branchesPage, branchesPageSize, branchesSearchQuery, branchesTotalCount, branchesList };
