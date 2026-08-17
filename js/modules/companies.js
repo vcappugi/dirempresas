@@ -598,6 +598,13 @@ export const initCompaniesModule = () => {
 
   window.printCompanyReport = printCompanyReport;
 
+  const btnPrintCompaniesList = document.getElementById('btn-print-companies-report');
+  if (btnPrintCompaniesList) {
+    btnPrintCompaniesList.addEventListener('click', () => {
+      printCompaniesListReport();
+    });
+  }
+
   window.editCompany = async (id) => {
     const comp = companiesList.find(c => c.id === id);
     if (!comp) return;
@@ -738,4 +745,235 @@ export const initCompaniesModule = () => {
     });
   }
 };
+export const printCompaniesListReport = async () => {
+  showToast("Generando Reporte de Listado...", true);
+
+  try {
+    if (!supabaseUrl || !supabaseKey) {
+      await loadEnv();
+    }
+
+    let queryUrl = `${supabaseUrl}empresa?select=*,usuario:usuario_id(nombre)`;
+    if (!window.isAdmin) {
+      queryUrl += `&usuario_id=eq.${window.userId}`;
+    }
+    if (companiesSearchQuery) {
+      const encSearch = encodeURIComponent(companiesSearchQuery);
+      queryUrl += `&or=(razon.ilike.*${encSearch}*,rif.ilike.*${encSearch}*,codigo.ilike.*${encSearch}*)&order=id.asc`;
+    } else {
+      queryUrl += `&order=id.asc`;
+    }
+
+    const res = await fetch(queryUrl, {
+      method: 'GET',
+      headers: getHeaders()
+    });
+
+    if (!res.ok) throw new Error("No se pudieron obtener las empresas para el reporte.");
+    const companies = await res.json();
+
+    // Construct print window
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      showToast("Por favor, permite las ventanas emergentes para poder imprimir.", false);
+      return;
+    }
+
+    const escapeHtmlHelper = (str) => {
+      if (!str) return '';
+      return str.toString()
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    };
+
+    // Build rows HTML
+    let rowsHtml = '';
+    if (companies.length === 0) {
+      rowsHtml = `
+        <tr>
+          <td colspan="5" style="padding: 12px; text-align: center; color: #64748b; font-style: italic; border-bottom: 1px solid #e2e8f0; font-size: 12px;">
+            No hay empresas registradas.
+          </td>
+        </tr>
+      `;
+    } else {
+      companies.forEach(comp => {
+        const estadoText = comp.activo ? 'Activa' : 'Inactiva';
+        const estadoStyle = comp.activo ? 'color: #15803d; font-weight: 600;' : 'color: #64748b;';
+        const userText = comp.usuario ? escapeHtmlHelper(comp.usuario.nombre) : '-';
+        
+        rowsHtml += `
+          <tr style="page-break-inside: avoid;">
+            <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0; font-family: monospace; font-weight: bold; font-size: 11px; text-align: left; color: #0f172a;">${escapeHtmlHelper(comp.codigo)}</td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0; font-weight: 600; font-size: 11px; color: #0f172a;">${escapeHtmlHelper(comp.razon)}</td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0; font-family: monospace; font-size: 11px; color: #334155;">${escapeHtmlHelper(comp.rif)}</td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0; font-size: 11px; color: #475569;">${userText}</td>
+            <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0; font-size: 11px; ${estadoStyle}">${estadoText}</td>
+          </tr>
+        `;
+      });
+    }
+
+    const htmlContent = `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Reporte de Listado de Empresas</title>
+  <style>
+    @media print {
+      body {
+        background-color: #ffffff;
+        color: #000000;
+        margin: 0;
+        padding: 0;
+        font-size: 11px;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .no-print { display: none; }
+      .container { max-width: 100% !important; margin: 0 !important; padding: 10px !important; box-shadow: none !important; border: none !important; }
+      th, td { padding: 8px 10px !important; font-size: 10px !important; }
+      .header-title-container { margin-bottom: 15px !important; padding-bottom: 8px !important; }
+      .header-title { font-size: 20px !important; }
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+      margin: 0;
+      padding: 30px 15px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      padding: 30px;
+      border-radius: 16px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+    }
+    .header-title-container {
+      border-bottom: 3px solid #1e3a8a;
+      padding-bottom: 10px;
+      width: 100%;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+    .header-title {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 800;
+      color: #0f172a;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .meta-info {
+      font-size: 11px;
+      color: #64748b;
+      font-weight: 600;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    th {
+      background-color: #f1f5f9;
+      color: #475569;
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 12px;
+      text-align: left;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .print-btn-bar {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 15px;
+    }
+    .print-btn {
+      background-color: #1e3a8a;
+      color: #ffffff;
+      border: none;
+      padding: 8px 16px;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 6px -1px rgb(30 58 138 / 0.2);
+    }
+    .print-btn:hover {
+      background-color: #172554;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="print-btn-bar no-print">
+      <button class="print-btn" onclick="window.print()">
+        <svg style="width: 14px; height: 14px; fill: currentColor;" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm-1 9H8v3h4v-3z" clip-rule="evenodd"></path>
+        </svg>
+        Imprimir Reporte
+      </button>
+    </div>
+
+    <div class="header-title-container">
+      <h1 class="header-title">Listado de Empresas</h1>
+      <span class="meta-info">Total: ${companies.length} empresas</span>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 120px;">Código</th>
+          <th>Razón Social</th>
+          <th style="width: 150px;">RIF</th>
+          <th style="width: 180px;">Usuario Asignado</th>
+          <th style="width: 100px;">Estatus</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rowsHtml}
+      </tbody>
+    </table>
+  </div>
+
+</body>
+</html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+
+    // Trigger print automatically after slight delay to ensure browser loads document structure
+    setTimeout(() => {
+      printWindow.focus();
+      printWindow.print();
+    }, 500);
+
+  } catch (err) {
+    console.error("Print companies list report error:", err);
+    showToast(err.message || "Error al generar el listado de empresas.", false);
+  }
+};
+
+window.printCompaniesListReport = printCompaniesListReport;
+
 export { companiesPage, companiesPageSize, companiesSearchQuery, companiesTotalCount, companiesList };
