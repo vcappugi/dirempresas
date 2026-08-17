@@ -6,6 +6,7 @@ let branchesSearchQuery = "";
 let branchesFilterEmpresa = "";
 let branchesFilterRegion = "";
 let branchesFilterParticipacion = "";
+let branchesFilterSistema = "";
 let branchesTotalCount = 0;
 let branchesList = [];
 
@@ -198,6 +199,47 @@ export const loadParticipationsForFilter = async () => {
   }
 };
 
+export const loadSystemsForFilter = async () => {
+  const selectEl = document.getElementById('branches-filter-sistema');
+  if (!selectEl) return;
+
+  selectEl.innerHTML = '<option value="">Cualquier sistema</option>';
+
+  try {
+    if (!supabaseUrl || !supabaseKey) {
+      await loadEnv();
+    }
+
+    let url = `${supabaseUrl}sucursales?select=sistema`;
+    if (!window.isAdmin) {
+      const compId = window.userCompanyId || -1;
+      url += `&empresa_id=eq.${compId}`;
+    }
+
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: getHeaders()
+    });
+
+    if (!res.ok) throw new Error("No se pudieron cargar los sistemas.");
+
+    const data = await res.json();
+    const systems = data
+      .map(item => item.sistema)
+      .filter(s => s !== null && s !== undefined && s.trim() !== "");
+    const uniqueSystems = [...new Set(systems)].sort();
+
+    uniqueSystems.forEach(val => {
+      const option = document.createElement('option');
+      option.value = val;
+      option.textContent = val;
+      selectEl.appendChild(option);
+    });
+  } catch (err) {
+    console.error("Error loading systems for filter:", err);
+  }
+};
+
 export const loadBranches = async () => {
   const loadingEl = document.getElementById('branches-loading');
   const tableBody = document.getElementById('branches-table-body');
@@ -232,6 +274,10 @@ export const loadBranches = async () => {
 
     if (branchesFilterParticipacion) {
       queryUrl += `&participacion=eq.${branchesFilterParticipacion}`;
+    }
+
+    if (branchesFilterSistema) {
+      queryUrl += `&sistema=eq.${encodeURIComponent(branchesFilterSistema)}`;
     }
 
     if (branchesSearchQuery) {
@@ -497,6 +543,7 @@ export const initBranchesModule = () => {
         showToast(id ? 'Sucursal actualizada con éxito.' : 'Sucursal creada con éxito.', true);
         closeBranchModal();
         loadBranches();
+        loadSystemsForFilter();
       } catch (err) {
         console.error("Save branch error:", err);
         showToast(err.message || 'Error al guardar los datos de la sucursal.', false);
@@ -511,6 +558,7 @@ export const initBranchesModule = () => {
   const filterEmpresaEl = document.getElementById('branches-filter-empresa');
   const filterRegionEl = document.getElementById('branches-filter-region');
   const filterParticipacionEl = document.getElementById('branches-filter-participacion');
+  const filterSistemaEl = document.getElementById('branches-filter-sistema');
   const filterEmpresaContainer = document.getElementById('branches-filter-empresa-container');
 
   if (!window.isAdmin && filterEmpresaContainer) {
@@ -521,6 +569,7 @@ export const initBranchesModule = () => {
   loadCompaniesForFilter();
   loadRegionsForFilter();
   loadParticipationsForFilter();
+  loadSystemsForFilter();
 
   if (filterEmpresaEl) {
     filterEmpresaEl.addEventListener('change', (e) => {
@@ -541,6 +590,14 @@ export const initBranchesModule = () => {
   if (filterParticipacionEl) {
     filterParticipacionEl.addEventListener('change', (e) => {
       branchesFilterParticipacion = e.target.value;
+      branchesPage = 1;
+      loadBranches();
+    });
+  }
+
+  if (filterSistemaEl) {
+    filterSistemaEl.addEventListener('change', (e) => {
+      branchesFilterSistema = e.target.value;
       branchesPage = 1;
       loadBranches();
     });
