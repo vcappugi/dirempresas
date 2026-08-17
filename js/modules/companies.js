@@ -165,7 +165,11 @@ export const loadCompanies = async () => {
         row.className = 'hover:bg-slate-100/50 dark:hover:bg-slate-800/30 transition-colors duration-200 text-xs';
         row.innerHTML = `
           <td class="px-4 py-3 font-semibold text-slate-800 dark:text-white">${escapeHtml(comp.codigo || '')}</td>
-          <td class="px-4 py-3 text-slate-650 dark:text-slate-200 font-medium">${escapeHtml(comp.razon || '')}</td>
+          <td class="px-4 py-3 font-medium">
+            <button onclick="editCompany(${comp.id})" class="text-brand hover:text-brand-light font-semibold hover:underline text-left transition-all">
+              ${escapeHtml(comp.razon || '')}
+            </button>
+          </td>
           <td class="px-4 py-3 text-slate-550 dark:text-slate-450 font-mono">${escapeHtml(comp.rif || '')}</td>
           <td class="px-4 py-3 text-slate-600 dark:text-slate-400 font-mono">${fechaAperturaText}</td>
           <td class="px-4 py-3 text-slate-600 dark:text-slate-400 font-mono">${escapeHtml(comp.codigo_maestro || '-')}</td>
