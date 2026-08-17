@@ -97,7 +97,7 @@ export const loadCompanies = async () => {
   const end = start + companiesPageSize - 1;
 
   try {
-    let queryUrl = `${supabaseUrl}empresa?select=*,usuario:usuario_id(nombre)`;
+    let queryUrl = `${supabaseUrl}empresa?select=*,usuario:usuario_id(nombre),region:region_id(nombre)`;
 
     if (!window.isAdmin) {
       queryUrl += `&usuario_id=eq.${window.userId}`;
@@ -143,22 +143,44 @@ export const loadCompanies = async () => {
           : `<span class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">Inactiva</span>`;
 
         const userName = comp.usuario ? escapeHtml(comp.usuario.nombre) : `<span class="text-slate-400 italic">No asignado</span>`;
+        const regionName = comp.region ? escapeHtml(comp.region.nombre) : `<span class="text-slate-400 italic">No asignada</span>`;
+
+        let fechaAperturaText = '-';
+        if (comp.fecha_apertura) {
+          const parts = comp.fecha_apertura.split('-');
+          if (parts.length === 3) {
+            fechaAperturaText = `${parts[2]}/${parts[1]}/${parts[0]}`;
+          } else {
+            fechaAperturaText = comp.fecha_apertura;
+          }
+        }
 
         const canWrite = window.hasPermission('view-companies', 'escribir');
         const editDeleteBtns = canWrite
-          ? `<button onclick="editCompany(${comp.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Editar</button>
-             <button onclick="deleteCompany(${comp.id})" class="text-red-500 hover:text-red-650 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors">Eliminar</button>`
-          : `<button onclick="editCompany(${comp.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Ver</button>`;
+          ? `<button onclick="editCompany(${comp.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2 px-1 rounded hover:bg-brand/10 transition-colors">Editar</button>
+             <button onclick="deleteCompany(${comp.id})" class="text-red-500 hover:text-red-650 text-xs font-semibold px-2 px-1 rounded hover:bg-red-500/10 transition-colors">Eliminar</button>`
+          : `<button onclick="editCompany(${comp.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2 px-1 rounded hover:bg-brand/10 transition-colors">Ver</button>`;
 
         const row = document.createElement('tr');
-        row.className = 'hover:bg-slate-100/50 dark:hover:bg-slate-800/30 transition-colors duration-200';
+        row.className = 'hover:bg-slate-100/50 dark:hover:bg-slate-800/30 transition-colors duration-200 text-xs';
         row.innerHTML = `
-          <td class="px-6 py-4 font-semibold text-slate-800 dark:text-white">${escapeHtml(comp.codigo)}</td>
-          <td class="px-6 py-4 text-slate-650 dark:text-slate-255 font-medium">${escapeHtml(comp.razon)}</td>
-          <td class="px-6 py-4 text-slate-550 dark:text-slate-400 font-mono text-xs">${escapeHtml(comp.rif)}</td>
-          <td class="px-6 py-4 text-slate-600 dark:text-slate-400 text-xs">${userName}</td>
-          <td class="px-6 py-4">${statusBadge}</td>
-          <td class="px-6 py-4 text-right space-x-1.5">
+          <td class="px-4 py-3 font-semibold text-slate-800 dark:text-white">${escapeHtml(comp.codigo || '')}</td>
+          <td class="px-4 py-3 text-slate-650 dark:text-slate-200 font-medium">${escapeHtml(comp.razon || '')}</td>
+          <td class="px-4 py-3 text-slate-550 dark:text-slate-450 font-mono">${escapeHtml(comp.rif || '')}</td>
+          <td class="px-4 py-3 text-slate-600 dark:text-slate-400 font-mono">${fechaAperturaText}</td>
+          <td class="px-4 py-3 text-slate-600 dark:text-slate-400 font-mono">${escapeHtml(comp.codigo_maestro || '-')}</td>
+          <td class="px-4 py-3 text-slate-600 dark:text-slate-400 capitalize">${escapeHtml(comp.estatus_libro || '-')}</td>
+          <td class="px-4 py-3 text-slate-600 dark:text-slate-400">${escapeHtml(comp.sistema || '-')}</td>
+          <td class="px-4 py-3 text-slate-600 dark:text-slate-400 font-mono">${comp.participacion !== null && comp.participacion !== undefined ? escapeHtml(comp.participacion) + '%' : '-'}</td>
+          <td class="px-4 py-3 text-slate-600 dark:text-slate-400">${escapeHtml(comp.capital_suscrito || '-')}</td>
+          <td class="px-4 py-3 text-slate-600 dark:text-slate-400">${escapeHtml(comp.registro_merc || '-')}</td>
+          <td class="px-4 py-3 text-slate-500 dark:text-slate-400 truncate max-w-[200px]" title="${escapeHtml(comp.direccion_fiscal || '')}">${escapeHtml(comp.direccion_fiscal || '-')}</td>
+          <td class="px-4 py-3 text-slate-500 dark:text-slate-400 truncate max-w-[200px]" title="${escapeHtml(comp.objeto || '')}">${escapeHtml(comp.objeto || '-')}</td>
+          <td class="px-4 py-3 text-slate-600 dark:text-slate-400">${regionName}</td>
+          <td class="px-4 py-3 text-slate-600 dark:text-slate-400">${userName}</td>
+          <td class="px-4 py-3 text-slate-500 dark:text-slate-400 truncate max-w-[200px]" title="${escapeHtml(comp.observacion || '')}">${escapeHtml(comp.observacion || '-')}</td>
+          <td class="px-4 py-3">${statusBadge}</td>
+          <td class="px-4 py-3 text-right space-x-1.5">
             <button onclick="openDetailsModal(${comp.id})" class="text-slate-500 hover:text-slate-700 dark:hover:text-slate-350 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-500/10 transition-colors">Detalles</button>
             <button onclick="printCompanyReport(${comp.id})" class="text-emerald-500 hover:text-emerald-650 dark:text-emerald-400 dark:hover:text-emerald-300 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-emerald-500/10 transition-colors" title="Imprimir Ficha">Ficha</button>
             ${editDeleteBtns}
@@ -753,7 +775,7 @@ export const printCompaniesListReport = async () => {
       await loadEnv();
     }
 
-    let queryUrl = `${supabaseUrl}empresa?select=*,usuario:usuario_id(nombre)`;
+    let queryUrl = `${supabaseUrl}empresa?select=*,usuario:usuario_id(nombre),region:region_id(nombre)`;
     if (!window.isAdmin) {
       queryUrl += `&usuario_id=eq.${window.userId}`;
     }
@@ -794,7 +816,7 @@ export const printCompaniesListReport = async () => {
     if (companies.length === 0) {
       rowsHtml = `
         <tr>
-          <td colspan="5" style="padding: 12px; text-align: center; color: #64748b; font-style: italic; border-bottom: 1px solid #e2e8f0; font-size: 12px;">
+          <td colspan="16" style="padding: 12px; text-align: center; color: #64748b; font-style: italic; border-bottom: 1px solid #e2e8f0; font-size: 11px;">
             No hay empresas registradas.
           </td>
         </tr>
@@ -804,14 +826,37 @@ export const printCompaniesListReport = async () => {
         const estadoText = comp.activo ? 'Activa' : 'Inactiva';
         const estadoStyle = comp.activo ? 'color: #15803d; font-weight: 600;' : 'color: #64748b;';
         const userText = comp.usuario ? escapeHtmlHelper(comp.usuario.nombre) : '-';
+        const regionText = comp.region ? escapeHtmlHelper(comp.region.nombre) : '-';
+        const participacionText = comp.participacion !== null && comp.participacion !== undefined ? comp.participacion + '%' : '-';
         
+        let fechaAperturaText = '-';
+        if (comp.fecha_apertura) {
+          const parts = comp.fecha_apertura.split('-');
+          if (parts.length === 3) {
+            fechaAperturaText = `${parts[2]}/${parts[1]}/${parts[0]}`;
+          } else {
+            fechaAperturaText = comp.fecha_apertura;
+          }
+        }
+
         rowsHtml += `
           <tr style="page-break-inside: avoid;">
-            <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0; font-family: monospace; font-weight: bold; font-size: 11px; text-align: left; color: #0f172a;">${escapeHtmlHelper(comp.codigo)}</td>
-            <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0; font-weight: 600; font-size: 11px; color: #0f172a;">${escapeHtmlHelper(comp.razon)}</td>
-            <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0; font-family: monospace; font-size: 11px; color: #334155;">${escapeHtmlHelper(comp.rif)}</td>
-            <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0; font-size: 11px; color: #475569;">${userText}</td>
-            <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0; font-size: 11px; ${estadoStyle}">${estadoText}</td>
+            <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-family: monospace; font-weight: bold; font-size: 9px; color: #0f172a; white-space: nowrap;">${escapeHtmlHelper(comp.codigo)}</td>
+            <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-weight: 600; font-size: 9px; color: #0f172a;">${escapeHtmlHelper(comp.razon)}</td>
+            <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-family: monospace; font-size: 9px; color: #334155; white-space: nowrap;">${escapeHtmlHelper(comp.rif)}</td>
+            <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-family: monospace; font-size: 9px; color: #334155; white-space: nowrap;">${fechaAperturaText}</td>
+            <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-family: monospace; font-size: 9px; color: #334155; white-space: nowrap;">${escapeHtmlHelper(comp.codigo_maestro || '-')}</td>
+            <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-size: 9px; color: #334155; text-transform: capitalize;">${escapeHtmlHelper(comp.estatus_libro || '-')}</td>
+            <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-size: 9px; color: #334155; white-space: nowrap;">${escapeHtmlHelper(comp.sistema || '-')}</td>
+            <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-family: monospace; font-size: 9px; color: #334155; white-space: nowrap;">${participacionText}</td>
+            <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-size: 9px; color: #334155;">${escapeHtmlHelper(comp.capital_suscrito || '-')}</td>
+            <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-size: 9px; color: #334155;">${escapeHtmlHelper(comp.registro_merc || '-')}</td>
+            <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-size: 8px; color: #475569; max-width: 120px; word-break: break-word;">${escapeHtmlHelper(comp.direccion_fiscal || '-')}</td>
+            <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-size: 8px; color: #475569; max-width: 120px; word-break: break-word;">${escapeHtmlHelper(comp.objeto || '-')}</td>
+            <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-size: 9px; color: #334155;">${regionText}</td>
+            <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-size: 9px; color: #334155;">${userText}</td>
+            <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-size: 8px; color: #475569; max-width: 120px; word-break: break-word;">${escapeHtmlHelper(comp.observacion || '-')}</td>
+            <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-size: 9px; ${estadoStyle}">${estadoText}</td>
           </tr>
         `;
       });
@@ -824,21 +869,25 @@ export const printCompaniesListReport = async () => {
   <meta charset="UTF-8">
   <title>Reporte de Listado de Empresas</title>
   <style>
+    @page {
+      size: landscape;
+      margin: 0.8cm;
+    }
     @media print {
       body {
         background-color: #ffffff;
         color: #000000;
         margin: 0;
         padding: 0;
-        font-size: 11px;
+        font-size: 9px;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
       .no-print { display: none; }
-      .container { max-width: 100% !important; margin: 0 !important; padding: 10px !important; box-shadow: none !important; border: none !important; }
-      th, td { padding: 8px 10px !important; font-size: 10px !important; }
-      .header-title-container { margin-bottom: 15px !important; padding-bottom: 8px !important; }
-      .header-title { font-size: 20px !important; }
+      .container { max-width: 100% !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; border: none !important; }
+      th, td { padding: 5px 6px !important; font-size: 8px !important; }
+      .header-title-container { margin-bottom: 12px !important; padding-bottom: 6px !important; }
+      .header-title { font-size: 18px !important; }
     }
     
     body {
@@ -846,69 +895,69 @@ export const printCompaniesListReport = async () => {
       background-color: #f8fafc;
       color: #0f172a;
       margin: 0;
-      padding: 30px 15px;
+      padding: 20px;
     }
     .container {
-      max-width: 900px;
+      max-width: 1200px;
       margin: 0 auto;
       background-color: #ffffff;
-      padding: 30px;
-      border-radius: 16px;
+      padding: 20px;
+      border-radius: 12px;
       border: 1px solid #e2e8f0;
       box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
     }
     .header-title-container {
       border-bottom: 3px solid #1e3a8a;
-      padding-bottom: 10px;
+      padding-bottom: 8px;
       width: 100%;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
       display: flex;
       justify-content: space-between;
       align-items: flex-end;
     }
     .header-title {
       margin: 0;
-      font-size: 24px;
+      font-size: 20px;
       font-weight: 800;
       color: #0f172a;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
     .meta-info {
-      font-size: 11px;
+      font-size: 10px;
       color: #64748b;
       font-weight: 600;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 15px;
+      margin-top: 10px;
       border: 1px solid #e2e8f0;
-      border-radius: 10px;
+      border-radius: 8px;
       overflow: hidden;
     }
     th {
       background-color: #f1f5f9;
       color: #475569;
       font-weight: 700;
-      font-size: 11px;
+      font-size: 9px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      padding: 12px;
+      padding: 8px 10px;
       text-align: left;
       border-bottom: 2px solid #e2e8f0;
     }
     .print-btn-bar {
       display: flex;
       justify-content: flex-end;
-      margin-bottom: 15px;
+      margin-bottom: 12px;
     }
     .print-btn {
       background-color: #1e3a8a;
       color: #ffffff;
       border: none;
       padding: 8px 16px;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
       border-radius: 6px;
       cursor: pointer;
@@ -942,11 +991,22 @@ export const printCompaniesListReport = async () => {
     <table>
       <thead>
         <tr>
-          <th style="width: 120px;">Código</th>
+          <th>Código</th>
           <th>Razón Social</th>
-          <th style="width: 150px;">RIF</th>
-          <th style="width: 180px;">Usuario Asignado</th>
-          <th style="width: 100px;">Estatus</th>
+          <th>RIF</th>
+          <th>Fecha Const.</th>
+          <th>Código SAP</th>
+          <th>Est. Libro</th>
+          <th>Sistema</th>
+          <th>Part. (%)</th>
+          <th>Capital Susc.</th>
+          <th>Reg. Mercantil</th>
+          <th>Dirección Fiscal</th>
+          <th>Objeto Social</th>
+          <th>Región</th>
+          <th>Usuario</th>
+          <th>Observación</th>
+          <th>Estatus</th>
         </tr>
       </thead>
       <tbody>
