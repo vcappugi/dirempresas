@@ -12,6 +12,7 @@ import {
 
 import { initUsersModule, loadUsers } from './modules/users.js';
 import { initRolesModule, loadRoles } from './modules/roles.js';
+import { initRolePermissionsModule, loadRolePermissions } from './modules/role_permissions.js';
 import { initRegionsModule, loadRegions } from './modules/regions.js';
 import { initCompaniesModule, loadCompanies } from './modules/companies.js';
 import { initDetailsModule, loadDetails, currentCompanyIdForDetails } from './modules/details.js';
@@ -87,11 +88,58 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.userCompanyId = null;
   window.userCompanyName = null;
 
-  if (!isAdmin) {
-    // Hide settings menu for standard users
-    const parentSettings = document.getElementById('btn-toggle-settings-submenu');
-    if (parentSettings) parentSettings.style.display = 'none';
+  window.hasPermission = (viewId, action = 'leer') => {
+    if (!profile) return false;
+    
+    // Fallback if no permissions are configured/loaded in the session
+    if (!profile.permissions) {
+      if (isAdmin) return true;
+      const allowedRead = ['view-dashboard', 'view-companies', 'view-branches', 'view-revisions'];
+      if (action === 'leer') {
+        return allowedRead.includes(viewId);
+      }
+      return false;
+    }
+    
+    const viewPerm = profile.permissions[viewId];
+    if (!viewPerm) return false;
+    
+    return !!viewPerm[action];
+  };
 
+  const applySidebarPermissions = () => {
+    const sidebarItems = document.querySelectorAll('.sidebar-item');
+    let visibleSettingsCount = 0;
+    
+    sidebarItems.forEach(item => {
+      const viewId = item.getAttribute('data-view');
+      if (viewId) {
+        const hasRead = window.hasPermission(viewId, 'leer');
+        if (!hasRead) {
+          item.style.display = 'none';
+        } else {
+          item.style.display = 'flex';
+          if (item.closest('#settings-submenu')) {
+            visibleSettingsCount++;
+          }
+        }
+      }
+    });
+    
+    const parentSettings = document.getElementById('btn-toggle-settings-submenu');
+    if (parentSettings) {
+      if (visibleSettingsCount === 0) {
+        parentSettings.style.display = 'none';
+      } else {
+        parentSettings.style.display = 'flex';
+      }
+    }
+  };
+
+  // Call it immediately to restrict menu items based on DB permissions
+  applySidebarPermissions();
+
+  if (!isAdmin) {
     // Query company associated with the user
     try {
       if (!supabaseUrl || !supabaseKey) {
@@ -355,6 +403,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initDetailsModule();
   initBranchDetailsModule();
   initDetailTypesModule();
+  initRolePermissionsModule();
   initRevisionsModule();
   initBranchesModule();
 
@@ -378,6 +427,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     item.addEventListener('click', (e) => {
       const targetViewId = item.getAttribute('data-view');
       if (!targetViewId) return;
+
+      if (!window.hasPermission(targetViewId, 'leer')) {
+        showToast('No tienes permiso para acceder a esta sección.', false);
+        return;
+      }
 
       sidebarItems.forEach((el) => {
         el.classList.remove('bg-brand/10', 'text-brand', 'border-l-4', 'border-brand', 'dark:text-white', 'active-item');
@@ -431,7 +485,23 @@ document.addEventListener('DOMContentLoaded', async () => {
       const type = itemToDeleteType;
       closeDeleteModal();
 
-      if (type === 'role') {
+      if (type === 'role_permission') {
+        const loadingEl = document.getElementById('role-permissions-loading');
+        loadingEl?.classList.remove('hidden');
+        try {
+          const res = await fetch(`${supabaseUrl}roles_permision?id=eq.${id}`, {
+            method: 'DELETE',
+            headers: getHeaders()
+          });
+          if (!res.ok) throw new Error("No se pudo eliminar el permiso.");
+          showToast('Permiso eliminado con éxito.', true);
+          loadRolePermissions();
+        } catch (e) {
+          console.error(e);
+          showToast('Error al eliminar el permiso.', false);
+          loadingEl?.classList.add('hidden');
+        }
+      } else if (type === 'role') {
         const loadingEl = document.getElementById('roles-loading');
         loadingEl?.classList.remove('hidden');
         try {

@@ -284,7 +284,8 @@ export const loadBranches = async () => {
           }
         }
 
-        const editDeleteBtns = window.isAdmin
+        const canWrite = window.hasPermission('view-branches', 'escribir');
+        const editDeleteBtns = canWrite
           ? `<button onclick="openBranchDetailsModal(${branch.id})" class="text-slate-500 hover:text-slate-700 dark:hover:text-slate-350 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-500/10 transition-colors">Detalles</button>
              <button onclick="editBranch(${branch.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Editar</button>
              <button onclick="deleteBranch(${branch.id})" class="text-red-500 hover:text-red-650 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors">Eliminar</button>`
@@ -362,14 +363,15 @@ export const initBranchesModule = () => {
     branchModalCard.classList.remove('scale-95', 'opacity-0');
     branchModalCard.classList.add('scale-100', 'opacity-100');
 
+    const canWrite = window.hasPermission('view-branches', 'escribir');
     const saveBtn = document.getElementById('btn-save-branch-modal');
     if (saveBtn) {
-      saveBtn.style.display = window.isAdmin ? 'inline-block' : 'none';
+      saveBtn.style.display = canWrite ? 'inline-block' : 'none';
     }
     if (branchForm) {
       const inputs = branchForm.querySelectorAll('input, select, textarea');
       inputs.forEach(input => {
-        input.disabled = !window.isAdmin;
+        input.disabled = !canWrite;
       });
     }
   };
@@ -386,9 +388,8 @@ export const initBranchesModule = () => {
   };
 
   if (btnAddBranch) {
-    if (!window.isAdmin) {
-      btnAddBranch.style.display = 'none';
-    }
+    const canWrite = window.hasPermission('view-branches', 'escribir');
+    btnAddBranch.style.display = canWrite ? 'inline-flex' : 'none';
     btnAddBranch.addEventListener('click', async () => {
       document.getElementById('branch-form-id').value = '';
       document.getElementById('branch-form-nombre').value = '';
@@ -437,7 +438,8 @@ export const initBranchesModule = () => {
     await loadCompaniesForSelect(branch.empresa_id);
     await loadRegionsForSelect(branch.region_id);
 
-    document.getElementById('branch-modal-title').textContent = window.isAdmin ? 'Editar Sucursal' : 'Detalles de la Sucursal';
+    const canWrite = window.hasPermission('view-branches', 'escribir');
+    document.getElementById('branch-modal-title').textContent = canWrite ? 'Editar Sucursal' : 'Detalles de la Sucursal';
     openBranchModal();
   };
 

@@ -81,8 +81,11 @@ export const loadUsers = async () => {
           <td class="px-6 py-4">${roleBadge}</td>
           <td class="px-6 py-4">${statusBadge}</td>
           <td class="px-6 py-4 text-right space-x-1.5">
-            <button onclick="editUser(${user.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Editar</button>
-            <button onclick="deleteUser(${user.id})" class="text-red-500 hover:text-red-650 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors">Eliminar</button>
+            ${window.hasPermission('view-users', 'escribir')
+              ? `<button onclick="editUser(${user.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Editar</button>
+                 <button onclick="deleteUser(${user.id})" class="text-red-500 hover:text-red-650 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors">Eliminar</button>`
+              : `<button onclick="editUser(${user.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Ver</button>`
+            }
           </td>
         `;
         tableBody.appendChild(row);
@@ -141,6 +144,18 @@ export const initUsersModule = () => {
     modalOverlay.classList.add('opacity-100');
     modalCard.classList.remove('scale-95', 'opacity-0');
     modalCard.classList.add('scale-100', 'opacity-100');
+
+    const canWrite = window.hasPermission('view-users', 'escribir');
+    const saveBtn = document.getElementById('btn-save-modal');
+    if (saveBtn) {
+      saveBtn.style.display = canWrite ? 'inline-block' : 'none';
+    }
+    if (userForm) {
+      const inputs = userForm.querySelectorAll('input, select, textarea');
+      inputs.forEach(input => {
+        input.disabled = !canWrite;
+      });
+    }
   };
 
   const closeModal = () => {
@@ -155,6 +170,8 @@ export const initUsersModule = () => {
   };
 
   if (btnAddUser) {
+    const canWrite = window.hasPermission('view-users', 'escribir');
+    btnAddUser.style.display = canWrite ? 'inline-flex' : 'none';
     btnAddUser.addEventListener('click', () => {
       document.getElementById('form-id').value = '';
       document.getElementById('form-nombre').value = '';
@@ -190,7 +207,8 @@ export const initUsersModule = () => {
     document.getElementById('form-activo').checked = user.activo === true;
     document.getElementById('form-rol').value = user.rol || '';
 
-    document.getElementById('modal-title').textContent = 'Editar Usuario';
+    const canWrite = window.hasPermission('view-users', 'escribir');
+    document.getElementById('modal-title').textContent = canWrite ? 'Editar Usuario' : 'Detalles del Usuario';
     document.getElementById('password-hint').classList.remove('hidden');
     
     openModal();

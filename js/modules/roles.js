@@ -4,7 +4,7 @@ let rolesPage = 1;
 const rolesPageSize = 5;
 let rolesSearchQuery = "";
 let rolesTotalCount = 0;
-let rolesList = [];
+export let rolesList = [];
 
 export const loadRoles = async () => {
   const loadingEl = document.getElementById('roles-loading');
@@ -73,8 +73,12 @@ export const loadRoles = async () => {
           <td class="px-6 py-4 text-slate-650 dark:text-slate-400">${escapeHtml(role.tipo)}</td>
           <td class="px-6 py-4">${statusBadge}</td>
           <td class="px-6 py-4 text-right space-x-1.5">
-            <button onclick="editRole(${role.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Editar</button>
-            <button onclick="deleteRole(${role.id})" class="text-red-500 hover:text-red-650 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors">Eliminar</button>
+            <button onclick="openRolePermissionsModal(${role.id})" class="text-slate-500 hover:text-slate-700 dark:hover:text-slate-350 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-500/10 transition-colors">Permisos</button>
+            ${window.hasPermission('view-roles', 'escribir')
+              ? `<button onclick="editRole(${role.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Editar</button>
+                 <button onclick="deleteRole(${role.id})" class="text-red-500 hover:text-red-650 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors">Eliminar</button>`
+              : `<button onclick="editRole(${role.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Ver</button>`
+            }
           </td>
         `;
         tableBody.appendChild(row);
@@ -133,6 +137,18 @@ export const initRolesModule = () => {
     roleModalOverlay.classList.add('opacity-100');
     roleModalCard.classList.remove('scale-95', 'opacity-0');
     roleModalCard.classList.add('scale-100', 'opacity-100');
+
+    const canWrite = window.hasPermission('view-roles', 'escribir');
+    const saveBtn = document.getElementById('btn-save-role-modal');
+    if (saveBtn) {
+      saveBtn.style.display = canWrite ? 'inline-block' : 'none';
+    }
+    if (roleForm) {
+      const inputs = roleForm.querySelectorAll('input, select, textarea');
+      inputs.forEach(input => {
+        input.disabled = !canWrite;
+      });
+    }
   };
 
   const closeRoleModal = () => {
@@ -147,11 +163,16 @@ export const initRolesModule = () => {
   };
 
   if (btnAddRole) {
+    const canWrite = window.hasPermission('view-roles', 'escribir');
+    btnAddRole.style.display = canWrite ? 'inline-flex' : 'none';
     btnAddRole.addEventListener('click', () => {
       document.getElementById('role-form-id').value = '';
       document.getElementById('role-form-nombre').value = '';
       document.getElementById('role-form-tipo').value = '';
       document.getElementById('role-form-activo').checked = true;
+
+      const permsBtn = document.getElementById('btn-manage-role-permissions');
+      if (permsBtn) permsBtn.classList.add('hidden');
 
       document.getElementById('role-modal-title').textContent = 'Crear Rol';
       openRoleModal();
@@ -160,6 +181,17 @@ export const initRolesModule = () => {
 
   if (btnCloseRoleModal) btnCloseRoleModal.addEventListener('click', closeRoleModal);
   if (btnCancelRoleModal) btnCancelRoleModal.addEventListener('click', closeRoleModal);
+
+  const btnManagePermissions = document.getElementById('btn-manage-role-permissions');
+  if (btnManagePermissions) {
+    btnManagePermissions.addEventListener('click', () => {
+      const roleId = document.getElementById('role-form-id').value;
+      if (roleId) {
+        closeRoleModal();
+        window.openRolePermissionsModal?.(parseInt(roleId, 10));
+      }
+    });
+  }
 
   window.editRole = (id) => {
     const role = rolesList.find(r => r.id === id);
@@ -170,7 +202,11 @@ export const initRolesModule = () => {
     document.getElementById('role-form-tipo').value = role.tipo || '';
     document.getElementById('role-form-activo').checked = role.activo === true;
 
-    document.getElementById('role-modal-title').textContent = 'Editar Rol';
+    const permsBtn = document.getElementById('btn-manage-role-permissions');
+    if (permsBtn) permsBtn.classList.remove('hidden');
+
+    const canWrite = window.hasPermission('view-roles', 'escribir');
+    document.getElementById('role-modal-title').textContent = canWrite ? 'Editar Rol' : 'Detalles del Rol';
     openRoleModal();
   };
 

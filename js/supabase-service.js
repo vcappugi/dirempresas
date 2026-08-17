@@ -121,13 +121,64 @@ export const login = async (email, password) => {
     throw new Error("Contraseña incorrecta.");
   }
 
-  // 3. Resolve role directly from the text column "rol" in the "usuario" table
-  const userRoleString = (userData.rol || "usuario").toLowerCase();
-  const roleData = {
-    id: userRoleString === 'admin' ? 1 : 2,
-    nombre: userRoleString,
-    activo: true
-  };
+  // 3. Query user roles and permissions from database
+  let roleData = null;
+  let permissions = {};
+  
+  try {
+    const { data: userRolesData, error: userRolesError } = await client
+      .from('user_roles')
+      .select('*, roles(*)')
+      .eq('user_id', userData.id);
+
+    if (!userRolesError && userRolesData && userRolesData.length > 0) {
+      // Collect all role IDs assigned to user
+      const roleIds = userRolesData.map(ur => ur.roles_id);
+      
+      // Use the first role as primary roleData
+      const primaryRole = userRolesData[0].roles;
+      if (primaryRole) {
+        roleData = {
+          id: primaryRole.id,
+          nombre: primaryRole.nombre,
+          tipo: primaryRole.tipo,
+          activo: primaryRole.activo
+        };
+      }
+      
+      // Query permissions from roles_permision table
+      const { data: permissionsData } = await client
+        .from('roles_permision')
+        .select('*, objetos:objeto_id(id_vista)')
+        .in('rol_id', roleIds)
+        .eq('activo', true);
+        
+      if (permissionsData) {
+        permissionsData.forEach(p => {
+          if (p.objetos && p.objetos.id_vista) {
+            const viewId = p.objetos.id_vista.trim();
+            if (!permissions[viewId]) {
+              permissions[viewId] = { leer: false, escribir: false };
+            }
+            if (p.leer) permissions[viewId].leer = true;
+            if (p.escribir) permissions[viewId].escribir = true;
+          }
+        });
+      }
+    }
+  } catch (err) {
+    console.error("Error loading user roles and permissions from DB:", err);
+  }
+
+  // Fallback if no roles found or table query failed
+  if (!roleData) {
+    const userRoleString = (userData.rol || "usuario").toLowerCase();
+    roleData = {
+      id: userRoleString === 'admin' ? 1 : 2,
+      nombre: userRoleString,
+      activo: true
+    };
+  }
 
   // 4. Fetch Empresa information (first company)
   const { data: empresaData } = await client
@@ -189,7 +240,8 @@ export const login = async (email, password) => {
     telefono: userData.telefono,
     activo: userData.activo,
     rol: roleData || { id: 3, nombre: "DEALER_MANAGER", tipo: "dealer access", activo: true },
-    empresa: empresaData || { id: 1, razon: "Empresas S.L.", rif: "J123", activo: true }
+    empresa: empresaData || { id: 1, razon: "Empresas S.L.", rif: "J123", activo: true },
+    permissions: permissions
   };
 
   // Save session details in localStorage for persistence

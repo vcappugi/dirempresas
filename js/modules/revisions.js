@@ -297,7 +297,8 @@ export const loadRevisions = async () => {
             ? `<a href="${escapeHtml(item.anexo)}" target="_blank" class="text-brand hover:text-brand-light text-xs font-semibold underline inline-flex items-center gap-1">Ver <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>`
             : `<span class="text-slate-400 italic text-xs">-</span>`;
 
-          const editDeleteBtns = window.isAdmin
+          const canWrite = window.hasPermission('view-revisions', 'escribir');
+          const editDeleteBtns = canWrite
             ? `<button onclick="editRevision(${item.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Editar</button>
                <button onclick="deleteRevision(${item.id})" class="text-red-500 hover:text-red-650 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors">Eliminar</button>`
             : `<button onclick="editRevision(${item.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Ver</button>`;
@@ -375,14 +376,15 @@ export const initRevisionsModule = () => {
     modalCard.classList.remove('scale-95', 'opacity-0');
     modalCard.classList.add('scale-100', 'opacity-100');
 
+    const canWrite = window.hasPermission('view-revisions', 'escribir');
     const saveBtn = document.getElementById('btn-save-revision-modal');
     if (saveBtn) {
-      saveBtn.style.display = window.isAdmin ? 'inline-block' : 'none';
+      saveBtn.style.display = canWrite ? 'inline-block' : 'none';
     }
     if (revisionForm) {
       const inputs = revisionForm.querySelectorAll('input, select, textarea');
       inputs.forEach(input => {
-        input.disabled = !window.isAdmin;
+        input.disabled = !canWrite;
       });
     }
   };
@@ -399,9 +401,8 @@ export const initRevisionsModule = () => {
   };
 
   if (btnAddRevision) {
-    if (!window.isAdmin) {
-      btnAddRevision.style.display = 'none';
-    }
+    const canWrite = window.hasPermission('view-revisions', 'escribir');
+    btnAddRevision.style.display = canWrite ? 'inline-flex' : 'none';
     btnAddRevision.addEventListener('click', async () => {
       document.getElementById('revision-form-id').value = '';
       document.getElementById('revision-form-fecha').value = new Date().toISOString().split('T')[0];
@@ -434,7 +435,8 @@ export const initRevisionsModule = () => {
     document.getElementById('revision-form-cumplido').checked = !!item.cumplido;
     document.getElementById('revision-form-comentario').value = item.comentario || '';
 
-    document.getElementById('revision-modal-title').textContent = 'Editar Revisión';
+    const canWrite = window.hasPermission('view-revisions', 'escribir');
+    document.getElementById('revision-modal-title').textContent = canWrite ? 'Editar Revisión' : 'Detalles de la Revisión';
     await loadCompaniesForSelect(item.empresa_id);
     openModal();
   };

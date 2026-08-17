@@ -73,8 +73,11 @@ export const loadRegions = async () => {
           <td class="px-6 py-4 text-slate-650 dark:text-slate-255 font-medium">${escapeHtml(reg.nombre)}</td>
           <td class="px-6 py-4">${statusBadge}</td>
           <td class="px-6 py-4 text-right space-x-1.5">
-            <button onclick="editRegion(${reg.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Editar</button>
-            <button onclick="deleteRegion(${reg.id})" class="text-red-500 hover:text-red-650 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors">Eliminar</button>
+            ${window.hasPermission('view-regions', 'escribir')
+              ? `<button onclick="editRegion(${reg.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Editar</button>
+                 <button onclick="deleteRegion(${reg.id})" class="text-red-500 hover:text-red-650 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors">Eliminar</button>`
+              : `<button onclick="editRegion(${reg.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Ver</button>`
+            }
           </td>
         `;
         tableBody.appendChild(row);
@@ -133,6 +136,18 @@ export const initRegionsModule = () => {
     regionModalOverlay.classList.add('opacity-100');
     regionModalCard.classList.remove('scale-95', 'opacity-0');
     regionModalCard.classList.add('scale-100', 'opacity-100');
+
+    const canWrite = window.hasPermission('view-regions', 'escribir');
+    const saveBtn = document.getElementById('btn-save-region-modal');
+    if (saveBtn) {
+      saveBtn.style.display = canWrite ? 'inline-block' : 'none';
+    }
+    if (regionForm) {
+      const inputs = regionForm.querySelectorAll('input, select, textarea');
+      inputs.forEach(input => {
+        input.disabled = !canWrite;
+      });
+    }
   };
 
   const closeRegionModal = () => {
@@ -147,6 +162,8 @@ export const initRegionsModule = () => {
   };
 
   if (btnAddRegion) {
+    const canWrite = window.hasPermission('view-regions', 'escribir');
+    btnAddRegion.style.display = canWrite ? 'inline-flex' : 'none';
     btnAddRegion.addEventListener('click', () => {
       document.getElementById('region-form-id').value = '';
       document.getElementById('region-form-nombre').value = '';
@@ -168,7 +185,8 @@ export const initRegionsModule = () => {
     document.getElementById('region-form-nombre').value = reg.nombre || '';
     document.getElementById('region-form-activo').checked = reg.activo === true;
 
-    document.getElementById('region-modal-title').textContent = 'Editar Región';
+    const canWrite = window.hasPermission('view-regions', 'escribir');
+    document.getElementById('region-modal-title').textContent = canWrite ? 'Editar Región' : 'Detalles de la Región';
     openRegionModal();
   };
 

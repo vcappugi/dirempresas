@@ -115,7 +115,8 @@ const renderDetails = () => {
       const card = document.createElement('div');
       card.className = "flex flex-col justify-between p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-4 hover:shadow-md transition-all duration-300";
       
-      const actionRow = window.isAdmin
+      const canWrite = window.hasPermission('view-companies', 'escribir');
+      const actionRow = canWrite
         ? `<div class="flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-800/80 pt-3">
             <button onclick="editDetail(${det.id})" class="inline-flex items-center gap-1.5 text-xs text-brand hover:text-brand-light font-semibold px-2 py-1 rounded-lg hover:bg-brand/10 transition-colors">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -165,7 +166,8 @@ const renderDetails = () => {
       const row = document.createElement('tr');
       row.className = 'hover:bg-slate-100/50 dark:hover:bg-slate-800/30 transition-colors duration-200';
 
-      const actionCell = window.isAdmin
+      const canWrite = window.hasPermission('view-companies', 'escribir');
+      const actionCell = canWrite
         ? `<td class="px-6 py-4 text-right space-x-1">
             <button onclick="editDetail(${det.id})" class="inline-flex items-center gap-1.5 text-xs text-brand hover:text-brand-light font-semibold px-2 py-1.5 rounded-lg hover:bg-brand/10 transition-colors" title="Editar">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -199,9 +201,10 @@ export const loadDetails = async (companyId) => {
 
   if (!cardsGrid) return;
 
+  const canWrite = window.hasPermission('view-companies', 'escribir');
   const addBtn = document.getElementById('btn-add-detail');
   if (addBtn) {
-    addBtn.style.display = window.isAdmin ? 'inline-flex' : 'none';
+    addBtn.style.display = canWrite ? 'inline-flex' : 'none';
   }
 
   loadingEl?.classList.remove('hidden');

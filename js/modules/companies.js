@@ -144,7 +144,8 @@ export const loadCompanies = async () => {
 
         const userName = comp.usuario ? escapeHtml(comp.usuario.nombre) : `<span class="text-slate-400 italic">No asignado</span>`;
 
-        const editDeleteBtns = window.isAdmin
+        const canWrite = window.hasPermission('view-companies', 'escribir');
+        const editDeleteBtns = canWrite
           ? `<button onclick="editCompany(${comp.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Editar</button>
              <button onclick="deleteCompany(${comp.id})" class="text-red-500 hover:text-red-650 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors">Eliminar</button>`
           : `<button onclick="editCompany(${comp.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Ver</button>`;
@@ -526,14 +527,15 @@ export const initCompaniesModule = () => {
     companyModalCard.classList.remove('scale-95', 'opacity-0');
     companyModalCard.classList.add('scale-100', 'opacity-100');
 
+    const canWrite = window.hasPermission('view-companies', 'escribir');
     const saveBtn = document.getElementById('btn-save-company-modal');
     if (saveBtn) {
-      saveBtn.style.display = window.isAdmin ? 'inline-block' : 'none';
+      saveBtn.style.display = canWrite ? 'inline-block' : 'none';
     }
     if (companyForm) {
       const inputs = companyForm.querySelectorAll('input, select, textarea');
       inputs.forEach(input => {
-        input.disabled = !window.isAdmin;
+        input.disabled = !canWrite;
       });
     }
   };
@@ -550,9 +552,8 @@ export const initCompaniesModule = () => {
   };
 
   if (btnAddCompany) {
-    if (!window.isAdmin) {
-      btnAddCompany.style.display = 'none';
-    }
+    const canWrite = window.hasPermission('view-companies', 'escribir');
+    btnAddCompany.style.display = canWrite ? 'inline-flex' : 'none';
     btnAddCompany.addEventListener('click', async () => {
       document.getElementById('company-form-id').value = '';
       document.getElementById('company-form-codigo').value = '';
@@ -623,7 +624,8 @@ export const initCompaniesModule = () => {
     await loadRegionsForSelect(comp.region_id);
     await loadUsersForSelect(comp.usuario_id);
 
-    document.getElementById('company-modal-title').textContent = 'Editar Empresa';
+    const canWrite = window.hasPermission('view-companies', 'escribir');
+    document.getElementById('company-modal-title').textContent = canWrite ? 'Editar Empresa' : 'Detalles de la Empresa';
     openCompanyModal();
   };
 

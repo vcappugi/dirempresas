@@ -70,8 +70,11 @@ export const loadDetailTypes = async () => {
           <td class="px-6 py-4 text-slate-550 dark:text-slate-450 text-xs">${item.descripcion ? escapeHtml(item.descripcion) : '<span class="text-slate-400 italic">Sin descripción</span>'}</td>
           <td class="px-6 py-4 text-slate-550 dark:text-slate-450 font-mono text-xs">${item.orden !== null && item.orden !== undefined ? item.orden : '-'}</td>
           <td class="px-6 py-4 text-right space-x-1.5">
-            <button onclick="editDetailType(${item.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Editar</button>
-            <button onclick="deleteDetailType(${item.id})" class="text-red-500 hover:text-red-650 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors">Eliminar</button>
+            ${window.hasPermission('view-detail-types', 'escribir')
+              ? `<button onclick="editDetailType(${item.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Editar</button>
+                 <button onclick="deleteDetailType(${item.id})" class="text-red-500 hover:text-red-650 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors">Eliminar</button>`
+              : `<button onclick="editDetailType(${item.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Ver</button>`
+            }
           </td>
         `;
         tableBody.appendChild(row);
@@ -130,6 +133,18 @@ export const initDetailTypesModule = () => {
     modalOverlay.classList.add('opacity-100');
     modalCard.classList.remove('scale-95', 'opacity-0');
     modalCard.classList.add('scale-100', 'opacity-100');
+
+    const canWrite = window.hasPermission('view-detail-types', 'escribir');
+    const saveBtn = document.getElementById('btn-save-detail-type-modal');
+    if (saveBtn) {
+      saveBtn.style.display = canWrite ? 'inline-block' : 'none';
+    }
+    if (detailTypeForm) {
+      const inputs = detailTypeForm.querySelectorAll('input, select, textarea');
+      inputs.forEach(input => {
+        input.disabled = !canWrite;
+      });
+    }
   };
 
   const closeModal = () => {
@@ -144,6 +159,8 @@ export const initDetailTypesModule = () => {
   };
 
   if (btnAddDetailType) {
+    const canWrite = window.hasPermission('view-detail-types', 'escribir');
+    btnAddDetailType.style.display = canWrite ? 'inline-flex' : 'none';
     btnAddDetailType.addEventListener('click', () => {
       document.getElementById('detail-type-form-id').value = '';
       document.getElementById('detail-type-form-tipo').value = '';
@@ -167,7 +184,8 @@ export const initDetailTypesModule = () => {
     document.getElementById('detail-type-form-descripcion').value = item.descripcion || '';
     document.getElementById('detail-type-form-orden').value = item.orden !== null && item.orden !== undefined ? item.orden : '';
 
-    document.getElementById('detail-type-modal-title').textContent = 'Editar Tipo de Detalle';
+    const canWrite = window.hasPermission('view-detail-types', 'escribir');
+    document.getElementById('detail-type-modal-title').textContent = canWrite ? 'Editar Tipo de Detalle' : 'Detalles de Tipo de Detalle';
     openModal();
   };
 

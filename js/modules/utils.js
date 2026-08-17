@@ -125,6 +125,9 @@ export const openDeleteModal = (id, type) => {
   } else if (type === 'revision') {
     if (titleEl) titleEl.textContent = '¿Eliminar Revisión?';
     if (descEl) descEl.textContent = 'Esta acción no se puede deshacer. La revisión será eliminada permanentemente de la base de datos.';
+  } else if (type === 'role_permission') {
+    if (titleEl) titleEl.textContent = '¿Eliminar Permiso?';
+    if (descEl) descEl.textContent = 'Esta acción no se puede deshacer. La regla de permiso será eliminada permanentemente del rol.';
   } else {
     if (titleEl) titleEl.textContent = '¿Eliminar Usuario?';
     if (descEl) descEl.textContent = 'Esta acción no se puede deshacer. El usuario será eliminado permanentemente de la base de datos.';
