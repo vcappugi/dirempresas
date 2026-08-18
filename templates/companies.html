@@ -121,190 +121,180 @@
 <div id="company-modal-overlay"
   class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm hidden opacity-0 transition-all duration-300">
   <div id="company-modal-card"
-    class="bg-white dark:bg-slate-900 w-full max-w-2xl p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl relative space-y-6 scale-95 opacity-0 transition-all duration-300 max-h-[90vh] overflow-y-auto">
+    class="bg-white dark:bg-slate-900 w-full max-w-4xl p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl relative space-y-4 scale-95 opacity-0 transition-all duration-300 max-h-[95vh] overflow-y-auto">
 
     <!-- Close Button -->
     <button id="btn-close-company-modal"
-      class="absolute top-6 right-6 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      class="absolute top-5 right-5 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
       </svg>
     </button>
 
     <div>
-      <h3 id="company-modal-title" class="font-display font-bold text-xl text-slate-900 dark:text-white">Crear Empresa
-      </h3>
-      <p class="text-xs text-slate-500 dark:text-slate-400">Rellene los datos de la empresa. ID y created_at se asignan
-        automáticamente.</p>
+      <h3 id="company-modal-title" class="font-display font-bold text-lg text-slate-900 dark:text-white">Crear Empresa</h3>
+      <p class="text-[11px] text-slate-500 dark:text-slate-400">Rellene los datos de la empresa. ID y fecha de registro se asignan automáticamente.</p>
     </div>
 
-    <form id="company-form" class="space-y-5">
+    <form id="company-form" class="space-y-3">
       <input type="hidden" id="company-form-id">
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
         <!-- Código -->
-        <div class="relative">
+        <div class="relative md:col-span-3">
           <input type="text" id="company-form-codigo" required placeholder=" "
-            class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+            class="peer block w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
           <label for="company-form-codigo"
-            class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Código</label>
+            class="absolute left-3 top-2 origin-[0] -translate-y-3.5 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3.5 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1">Código</label>
         </div>
 
         <!-- Razón Social -->
-        <div class="relative">
+        <div class="relative md:col-span-6">
           <input type="text" id="company-form-razon" required placeholder=" "
-            class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+            class="peer block w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
           <label for="company-form-razon"
-            class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Razón
-            Social</label>
+            class="absolute left-3 top-2 origin-[0] -translate-y-3.5 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3.5 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1">Razón Social</label>
         </div>
 
         <!-- RIF -->
-        <div class="relative">
+        <div class="relative md:col-span-3">
           <input type="text" id="company-form-rif" required placeholder=" "
-            class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+            class="peer block w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
           <label for="company-form-rif"
-            class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">RIF</label>
+            class="absolute left-3 top-2 origin-[0] -translate-y-3.5 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3.5 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1">RIF</label>
         </div>
 
         <!-- Fecha Apertura -->
-        <div class="relative">
+        <div class="relative md:col-span-3">
           <input type="date" id="company-form-fecha" required placeholder=" "
-            class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+            class="peer block w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
           <label for="company-form-fecha"
-            class="absolute left-4 -translate-y-4 scale-75 transform text-slate-500 bg-white dark:bg-slate-900 px-1.5 z-10">Fecha
-            de Constitución</label>
+            class="absolute left-3 -translate-y-3.5 scale-75 transform text-slate-500 bg-white dark:bg-slate-900 px-1 z-10">Fecha de Constitución</label>
         </div>
 
-        <!-- Código Maestro -->
-        <div class="relative">
+        <!-- Código SAP -->
+        <div class="relative md:col-span-3">
           <input type="text" id="company-form-maestro" placeholder=" "
-            class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+            class="peer block w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
           <label for="company-form-maestro"
-            class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Código
-            SAP</label>
+            class="absolute left-3 top-2 origin-[0] -translate-y-3.5 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3.5 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1">Código SAP</label>
+        </div>
+
+        <!-- Sistema -->
+        <div class="relative md:col-span-3">
+          <input type="text" id="company-form-sistema" placeholder=" "
+            class="peer block w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+          <label for="company-form-sistema"
+            class="absolute left-3 top-2 origin-[0] -translate-y-3.5 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3.5 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1">Sistema (ej: sap)</label>
+        </div>
+
+        <!-- Participación -->
+        <div class="relative md:col-span-3">
+          <input type="text" id="company-form-participacion" placeholder=" "
+            class="peer block w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+          <label for="company-form-participacion"
+            class="absolute left-3 top-2 origin-[0] -translate-y-3.5 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3.5 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1">Participación (ej: 100)</label>
+        </div>
+
+        <!-- Capital Suscrito -->
+        <div class="relative md:col-span-4">
+          <input type="text" id="company-form-capital" placeholder=" "
+            class="peer block w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+          <label for="company-form-capital"
+            class="absolute left-3 top-2 origin-[0] -translate-y-3.5 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3.5 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1">Capital Suscrito</label>
+        </div>
+
+        <!-- Registro Mercantil -->
+        <div class="relative md:col-span-4">
+          <input type="text" id="company-form-registro" placeholder=" "
+            class="peer block w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+          <label for="company-form-registro"
+            class="absolute left-3 top-2 origin-[0] -translate-y-3.5 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3.5 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1">Registro Mercantil</label>
         </div>
 
         <!-- Estatus Libro -->
-        <div class="relative">
+        <div class="relative md:col-span-4">
           <select id="company-form-libro"
-            class="block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+            class="block w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
             <option value="activo">Activo</option>
             <option value="inactivo">Inactivo</option>
           </select>
           <label for="company-form-libro"
-            class="absolute left-4 -translate-y-4 scale-75 transform text-slate-500 bg-white dark:bg-slate-900 px-1.5 z-10">Estatus
-            Libro</label>
-        </div>
-
-        <!-- Sistema -->
-        <div class="relative">
-          <input type="text" id="company-form-sistema" placeholder=" "
-            class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
-          <label for="company-form-sistema"
-            class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Sistema
-            (ej: sap)</label>
-        </div>
-
-        <!-- Participación -->
-        <div class="relative">
-          <input type="text" id="company-form-participacion" placeholder=" "
-            class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
-          <label for="company-form-participacion"
-            class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Participación
-            (ej: 100)</label>
-        </div>
-
-        <!-- Capital Suscrito -->
-        <div class="relative">
-          <input type="text" id="company-form-capital" placeholder=" "
-            class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
-          <label for="company-form-capital"
-            class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Capital Suscrito</label>
-        </div>
-
-        <!-- Registro Mercantil -->
-        <div class="relative">
-          <input type="text" id="company-form-registro" placeholder=" "
-            class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
-          <label for="company-form-registro"
-            class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Registro Mercantil</label>
-        </div>
-
-        <!-- Dirección Fiscal -->
-        <div class="relative sm:col-span-2">
-          <textarea id="company-form-direccion" rows="2" placeholder=" "
-            class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300"></textarea>
-          <label for="company-form-direccion"
-            class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Dirección Fiscal</label>
-        </div>
-
-        <!-- Objeto Social -->
-        <div class="relative sm:col-span-2">
-          <textarea id="company-form-objeto" rows="2" placeholder=" "
-            class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300"></textarea>
-          <label for="company-form-objeto"
-            class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Objeto Social</label>
+            class="absolute left-3 -translate-y-3.5 scale-75 transform text-slate-500 bg-white dark:bg-slate-900 px-1 z-10">Estatus Libro</label>
         </div>
 
         <!-- Región (Select dinámico) -->
-        <div class="relative sm:col-span-2">
+        <div class="relative md:col-span-6">
           <select id="company-form-region" required
-            class="block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+            class="block w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
             <!-- Carga dinámica de regiones activas -->
           </select>
           <label for="company-form-region"
-            class="absolute left-4 -translate-y-4 scale-75 transform text-slate-500 bg-white dark:bg-slate-900 px-1.5 z-10">Región
-            Asociada</label>
+            class="absolute left-3 -translate-y-3.5 scale-75 transform text-slate-500 bg-white dark:bg-slate-900 px-1 z-10">Región Asociada</label>
         </div>
 
         <!-- Usuario (Select dinámico) -->
-        <div class="relative sm:col-span-2">
+        <div class="relative md:col-span-6">
           <select id="company-form-usuario"
-            class="block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+            class="block w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
             <!-- Carga dinámica de usuarios -->
           </select>
           <label for="company-form-usuario"
-            class="absolute left-4 -translate-y-4 scale-75 transform text-slate-500 bg-white dark:bg-slate-900 px-1.5 z-10">Usuario
-            Asociado</label>
+            class="absolute left-3 -translate-y-3.5 scale-75 transform text-slate-500 bg-white dark:bg-slate-900 px-1 z-10">Usuario Asociado</label>
+        </div>
+
+        <!-- Dirección Fiscal -->
+        <div class="relative md:col-span-6">
+          <textarea id="company-form-direccion" rows="1" placeholder=" "
+            class="peer block w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300"></textarea>
+          <label for="company-form-direccion"
+            class="absolute left-3 top-2 origin-[0] -translate-y-3.5 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3.5 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1">Dirección Fiscal</label>
+        </div>
+
+        <!-- Objeto Social -->
+        <div class="relative md:col-span-6">
+          <textarea id="company-form-objeto" rows="1" placeholder=" "
+            class="peer block w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300"></textarea>
+          <label for="company-form-objeto"
+            class="absolute left-3 top-2 origin-[0] -translate-y-3.5 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3.5 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1">Objeto Social</label>
         </div>
 
         <!-- Observación -->
-        <div class="relative sm:col-span-2">
-          <textarea id="company-form-observacion" rows="2" placeholder=" "
-            class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300"></textarea>
+        <div class="relative md:col-span-8">
+          <textarea id="company-form-observacion" rows="1" placeholder=" "
+            class="peer block w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300"></textarea>
           <label for="company-form-observacion"
-            class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Observación</label>
+            class="absolute left-3 top-2 origin-[0] -translate-y-3.5 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3.5 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1">Observación</label>
         </div>
-      </div>
 
-      <!-- Activo toggle/switch (Premium styling) -->
-      <div
-        class="flex items-center justify-between p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40">
-        <div class="space-y-0.5">
-          <span class="text-sm font-semibold">Estado Activo</span>
-          <p class="text-xs text-slate-400">Si está inactiva, no se mostrará como activa en las dependencias.</p>
-        </div>
-        <label class="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" id="company-form-activo" class="sr-only peer" checked>
-          <div
-            class="w-11 h-6 bg-slate-200 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand">
+        <!-- Activo toggle/switch -->
+        <div
+          class="flex items-center justify-between px-3 py-1.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 md:col-span-4">
+          <div class="space-y-0.5">
+            <span class="text-[11px] font-semibold">Estado Activo</span>
+            <p class="text-[9px] leading-tight text-slate-400">Mostrar en dependencias</p>
           </div>
-        </label>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="company-form-activo" class="sr-only peer" checked>
+            <div
+              class="w-9 h-5 bg-slate-200 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand">
+            </div>
+          </label>
+        </div>
       </div>
 
       <!-- Action Buttons -->
-      <div class="flex flex-wrap gap-4 pt-3">
+      <div class="flex flex-wrap gap-3 pt-1">
         <button type="button" id="btn-manage-company-details"
-          class="flex-1 py-3 px-4 text-sm font-semibold text-brand hover:text-brand-light bg-brand/10 rounded-xl transition-all hidden">
+          class="flex-1 py-2 px-4 text-xs font-semibold text-brand hover:text-brand-light bg-brand/10 rounded-xl transition-all hidden">
           Gestionar Detalles
         </button>
         <button type="button" id="btn-cancel-company-modal"
-          class="flex-1 py-3 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-350 dark:hover:bg-slate-700 rounded-xl transition-all">
+          class="flex-1 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-350 dark:hover:bg-slate-700 rounded-xl transition-all">
           Cancelar
         </button>
         <button type="submit" id="btn-save-company-modal"
-          class="flex-1 py-3 text-sm font-semibold text-white bg-brand hover:bg-brand-light focus:ring-4 focus:ring-brand-200 rounded-xl transition-all shadow-lg shadow-brand/10">
+          class="flex-1 py-2 text-xs font-semibold text-white bg-brand hover:bg-brand-light focus:ring-4 focus:ring-brand-200 rounded-xl transition-all shadow-lg shadow-brand/10">
           Guardar
         </button>
       </div>

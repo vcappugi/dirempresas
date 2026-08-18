@@ -331,28 +331,77 @@ export const loadBranches = async () => {
         }
 
         const canWrite = window.hasPermission('view-branches', 'escribir');
-        const editDeleteBtns = canWrite
-          ? `<button onclick="printBranchReport(${branch.id})" class="text-emerald-500 hover:text-emerald-650 dark:text-emerald-400 dark:hover:text-emerald-300 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-emerald-500/10 transition-colors" title="Imprimir Ficha">Ficha</button>
-             <button onclick="openBranchDetailsModal(${branch.id})" class="text-slate-500 hover:text-slate-700 dark:hover:text-slate-350 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-500/10 transition-colors">Detalles</button>
-             <button onclick="editBranch(${branch.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Editar</button>
-             <button onclick="deleteBranch(${branch.id})" class="text-red-500 hover:text-red-650 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors">Eliminar</button>`
-          : `<button onclick="printBranchReport(${branch.id})" class="text-emerald-500 hover:text-emerald-650 dark:text-emerald-400 dark:hover:text-emerald-300 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-emerald-500/10 transition-colors" title="Imprimir Ficha">Ficha</button>
-             <button onclick="openBranchDetailsModal(${branch.id})" class="text-slate-500 hover:text-slate-700 dark:hover:text-slate-350 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-500/10 transition-colors">Detalles</button>
-             <button onclick="editBranch(${branch.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Ver</button>`;
+        
+        const btnDetalles = `
+          <button onclick="openBranchDetailsModal(${branch.id})" class="inline-flex items-center justify-center p-1.5 rounded-lg text-slate-600 bg-slate-100 hover:bg-slate-200 dark:text-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 transition-all duration-200 shadow-sm border border-slate-200/50 dark:border-slate-700/50" title="Ver Detalles">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+            </svg>
+          </button>
+        `;
+
+        const btnFicha = `
+          <button onclick="printBranchReport(${branch.id})" class="inline-flex items-center justify-center p-1.5 rounded-lg text-emerald-600 bg-emerald-50 hover:bg-emerald-100/80 dark:text-emerald-400 dark:bg-emerald-950/20 dark:hover:bg-emerald-900/30 transition-all duration-200 shadow-sm border border-emerald-200/40 dark:border-emerald-800/40" title="Imprimir Ficha">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+            </svg>
+          </button>
+        `;
+
+        const btnEditar = `
+          <button onclick="editBranch(${branch.id})" class="inline-flex items-center justify-center p-1.5 rounded-lg text-brand bg-brand/10 hover:bg-brand/20 dark:text-brand-light dark:bg-brand/15 dark:hover:bg-brand/25 transition-all duration-200 shadow-sm border border-brand/20 dark:border-brand/30" title="Editar Sucursal">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+            </svg>
+          </button>
+        `;
+
+        const btnVer = `
+          <button onclick="editBranch(${branch.id})" class="inline-flex items-center justify-center p-1.5 rounded-lg text-brand bg-brand/10 hover:bg-brand/20 dark:text-brand-light dark:bg-brand/15 dark:hover:bg-brand/25 transition-all duration-200 shadow-sm border border-brand/20 dark:border-brand/30" title="Ver Detalles">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+            </svg>
+          </button>
+        `;
+
+        const btnEliminar = `
+          <button onclick="deleteBranch(${branch.id})" class="inline-flex items-center justify-center p-1.5 rounded-lg text-red-600 bg-red-50 hover:bg-red-100 dark:text-red-400 dark:bg-red-950/20 dark:hover:bg-red-950/40 transition-all duration-200 shadow-sm border border-red-200/40 dark:border-red-800/40" title="Eliminar Sucursal">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+          </button>
+        `;
+
+        const editDeleteRow = canWrite
+          ? `${btnEditar}${btnEliminar}`
+          : `${btnVer}`;
 
         const row = document.createElement('tr');
-        row.className = 'hover:bg-slate-100/50 dark:hover:bg-slate-800/30 transition-colors duration-200';
+        row.className = 'hover:bg-slate-100/50 dark:hover:bg-slate-800/30 transition-colors duration-200 text-xs';
         row.innerHTML = `
-          <td class="px-6 py-4 font-semibold text-slate-800 dark:text-white">${branch.id}</td>
-          <td class="px-6 py-4 text-slate-700 dark:text-slate-200 font-semibold">${escapeHtml(branch.nombre || '')}</td>
-          <td class="px-6 py-4 text-slate-650 dark:text-slate-205 font-medium text-xs">${empresaName}</td>
-          <td class="px-6 py-4 text-slate-650 dark:text-slate-205 font-medium text-xs">${regionName}</td>
-          <td class="px-6 py-4 text-slate-600 dark:text-slate-400 text-xs">${sistemaVal}</td>
-          <td class="px-6 py-4 text-slate-600 dark:text-slate-400 font-mono text-xs">${fechaAperturaText}</td>
-          <td class="px-6 py-4 text-slate-600 dark:text-slate-400 text-xs">${estatusVal}</td>
-          <td class="px-6 py-4 text-right space-x-1.5">
-            ${editDeleteBtns}
+          <td class="px-4 py-3 text-left whitespace-nowrap">
+            <div class="flex flex-col gap-1.5 w-max">
+              <div class="flex items-center gap-1.5">
+                ${btnDetalles}
+                ${btnFicha}
+              </div>
+              <div class="flex items-center gap-1.5">
+                ${editDeleteRow}
+              </div>
+            </div>
           </td>
+          <td class="px-4 py-3 font-semibold text-slate-800 dark:text-white">${branch.id}</td>
+          <td class="px-4 py-3 font-medium">
+            <button onclick="editBranch(${branch.id})" class="text-brand hover:text-brand-light font-semibold hover:underline text-left transition-all">
+              ${escapeHtml(branch.nombre || '')}
+            </button>
+          </td>
+          <td class="px-4 py-3 text-slate-650 dark:text-slate-205 font-medium">${empresaName}</td>
+          <td class="px-4 py-3 text-slate-650 dark:text-slate-205 font-medium">${regionName}</td>
+          <td class="px-4 py-3 text-slate-600 dark:text-slate-400">${sistemaVal}</td>
+          <td class="px-4 py-3 text-slate-600 dark:text-slate-400 font-mono">${fechaAperturaText}</td>
+          <td class="px-4 py-3 text-slate-600 dark:text-slate-400">${estatusVal}</td>
         `;
         tableBody.appendChild(row);
       });
@@ -362,7 +411,7 @@ export const loadBranches = async () => {
     console.error("Error loading branches:", err);
     tableBody.innerHTML = `
       <tr>
-        <td colspan="8" class="px-6 py-10 text-center text-red-500 font-semibold">
+        <td colspan="8" class="px-4 py-10 text-center text-red-500 font-semibold">
           ${err.message || 'Error cargando sucursales.'}
         </td>
       </tr>
