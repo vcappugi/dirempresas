@@ -706,6 +706,21 @@ export const initBranchesModule = () => {
       }
     });
   }
+
+  // Print and Export Excel buttons
+  const btnPrintBranches = document.getElementById('btn-print-branches-report');
+  if (btnPrintBranches) {
+    btnPrintBranches.addEventListener('click', () => {
+      printBranchesListReport();
+    });
+  }
+
+  const btnExportBranches = document.getElementById('btn-export-branches-excel');
+  if (btnExportBranches) {
+    btnExportBranches.addEventListener('click', () => {
+      exportBranchesToExcel();
+    });
+  }
 };
 
 export const printBranchReport = async (branchId) => {
@@ -1002,5 +1017,240 @@ export const printBranchReport = async (branchId) => {
 };
 
 window.printBranchReport = printBranchReport;
+
+const getFilteredBranchesUrl = () => {
+  let queryUrl = `${supabaseUrl}sucursales?select=*,empresa:empresa_id(razon,participacion),region:region_id(nombre)`;
+
+  if (!window.isAdmin) {
+    const compId = window.userCompanyId || -1;
+    queryUrl += `&empresa_id=eq.${compId}`;
+  } else if (branchesFilterEmpresa) {
+    queryUrl += `&empresa_id=eq.${branchesFilterEmpresa}`;
+  }
+
+  if (branchesFilterRegion) {
+    queryUrl += `&region_id=eq.${branchesFilterRegion}`;
+  }
+
+  if (branchesFilterParticipacion) {
+    queryUrl += `&participacion=eq.${branchesFilterParticipacion}`;
+  }
+
+  if (branchesFilterSistema) {
+    queryUrl += `&sistema=eq.${encodeURIComponent(branchesFilterSistema)}`;
+  }
+
+  if (branchesSearchQuery) {
+    const encSearch = encodeURIComponent(branchesSearchQuery);
+    queryUrl += `&nombre=ilike.*${encSearch}*`;
+  }
+
+  queryUrl += `&order=id.asc`;
+  return queryUrl;
+};
+
+export const printBranchesListReport = async () => {
+  showToast("Generando Reporte de Listado...", true);
+
+  try {
+    if (!supabaseUrl || !supabaseKey) {
+      await loadEnv();
+    }
+
+    const queryUrl = getFilteredBranchesUrl();
+    const res = await fetch(queryUrl, {
+      method: 'GET',
+      headers: getHeaders()
+    });
+
+    if (!res.ok) throw new Error("No se pudieron obtener las sucursales para el reporte.");
+    const branches = await res.json();
+
+    // Construct print window
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      showToast("Por favor, permite las ventanas emergentes para poder imprimir.", false);
+      return;
+    }
+
+    const escapeHtmlHelper = (str) => {
+      if (!str) return '';
+      return str.toString()
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    };
+
+    // Build rows HTML
+    let rowsHtml = '';
+    if (branches.length === 0) {
+      rowsHtml = `
+        <tr>
+          <td colspan="7" style="padding: 12px; text-align: center; color: #64748b; font-style: italic; border-bottom: 1px solid #e2e8f0; font-size: 11px;">
+            No hay sucursales registradas.
+          </td>
+        </tr>
+      `;
+    } else {
+      branches.forEach(branch => {
+        const estadoText = branch.estatus_operativo ? escapeHtmlHelper(branch.estatus_operativo) : '-';
+        const estadoStyle = (branch.estatus_operativo && branch.estatus_operativo.toLowerCase() === 'activa') ? 'color: #15803d; font-weight: 600;' : 'color: #64748b;';
+        const empresaText = branch.empresa ? escapeHtmlHelper(branch.empresa.razon) : '-';
+        const regionText = branch.region ? escapeHtmlHelper(branch.region.nombre) : '-';
+        const sistemaText = branch.sistema ? escapeHtmlHelper(branch.sistema) : '-';
+        
+        let fechaAperturaText = '-';
+        if (branch.fecha_apertura) {
+          const parts = branch.fecha_apertura.split('-');
+          if (parts.length === 3) {
+            fechaAperturaText = `${parts[2]}/${parts[1]}/${parts[0]}`;
+          } else {
+            fechaAperturaText = branch.fecha_apertura;
+          }
+        }
+
+        rowsHtml += `
+          <tr style="page-break-inside: avoid;">
+            <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-family: monospace; font-weight: bold; font-size: 10px; color: #0f172a; white-space: nowrap;">${branch.id}</td>
+            <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-weight: 600; font-size: 10px; color: #0f172a;">${escapeHtmlHelper(branch.nombre)}</td>
+            <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-size: 10px; color: #334155;">${empresaText}</td>
+            <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-size: 10px; color: #334155;">${regionText}</td>
+            <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-size: 10px; color: #334155;">${sistemaText}</td>
+            <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-family: monospace; font-size: 10px; color: #334155; white-space: nowrap;">${fechaAperturaText}</td>
+            <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-size: 10px; ${estadoStyle}">${estadoText}</td>
+          </tr>
+        `;
+      });
+    }
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Reporte de Sucursales</title>
+        <style>
+          body { font-family: 'Segoe UI', Arial, sans-serif; color: #1e293b; margin: 0; padding: 20px; line-height: 1.4; }
+          .header { margin-bottom: 25px; border-bottom: 2px solid #4f46e5; padding-bottom: 10px; }
+          .header h1 { font-size: 20px; margin: 0 0 5px 0; color: #4f46e5; font-weight: bold; text-transform: uppercase; }
+          .header p { margin: 0; font-size: 11px; color: #64748b; }
+          .meta-info { margin-bottom: 15px; font-size: 10px; color: #475569; background-color: #f8fafc; padding: 8px 12px; border-radius: 6px; border: 1px solid #f1f5f9; display: inline-block; }
+          table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+          th { background-color: #f8fafc; color: #475569; font-weight: bold; text-transform: uppercase; font-size: 9px; padding: 8px; text-align: left; border-bottom: 2px solid #cbd5e1; border-top: 1px solid #e2e8f0; }
+          tr:nth-child(even) { background-color: #f8fafc; }
+          @media print {
+            body { padding: 0; }
+            .no-print { display: none; }
+            @page { size: letter landscape; margin: 0.8cm; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>Reporte General de Sucursales</h1>
+          <p>Listado del total de sucursales según filtros activos.</p>
+        </div>
+        <div class="meta-info font-mono">
+          <strong>Fecha de Generación:</strong> ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()} | 
+          <strong>Total Registros:</strong> ${branches.length}
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 60px;">ID</th>
+              <th>Nombre</th>
+              <th>Empresa</th>
+              <th>Región</th>
+              <th>Sistema</th>
+              <th style="width: 100px;">Fecha Apertura</th>
+              <th style="width: 80px;">Estatus</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+        <script>
+          window.onload = function() {
+            setTimeout(function() {
+              window.print();
+            }, 300);
+          };
+        </script>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.open();
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+
+  } catch (err) {
+    console.error("Print report error:", err);
+    showToast(err.message || 'Error al generar el reporte de impresión.', false);
+  }
+};
+
+export const exportBranchesToExcel = async () => {
+  showToast("Exportando Listado a Excel...", true);
+
+  try {
+    if (!supabaseUrl || !supabaseKey) {
+      await loadEnv();
+    }
+
+    const queryUrl = getFilteredBranchesUrl();
+    const res = await fetch(queryUrl, {
+      method: 'GET',
+      headers: getHeaders()
+    });
+
+    if (!res.ok) throw new Error("No se pudieron obtener las sucursales para exportar.");
+    const branches = await res.json();
+
+    if (branches.length === 0) {
+      showToast("No hay registros para exportar.", false);
+      return;
+    }
+
+    let csvContent = "\uFEFF";
+    
+    // Header row
+    csvContent += "ID;Nombre;Empresa;Región;Sistema;Fecha Apertura;Estatus\n";
+
+    branches.forEach(item => {
+      const id = item.id;
+      const nombre = (item.nombre || '').replace(/;/g, ',');
+      const empresa = (item.empresa ? item.empresa.razon : '-').replace(/;/g, ',');
+      const region = (item.region ? item.region.nombre : '-').replace(/;/g, ',');
+      const sistema = (item.sistema || '-').replace(/;/g, ',');
+      const fecha = item.fecha_apertura || '-';
+      const estatus = item.estatus_operativo || '-';
+
+      csvContent += `${id};${nombre};${empresa};${region};${sistema};${fecha};${estatus}\n`;
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `listado_sucursales_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showToast("Exportación completada con éxito.", true);
+
+  } catch (err) {
+    console.error("Export to Excel error:", err);
+    showToast(err.message || 'Error al exportar a Excel.', false);
+  }
+};
+
+window.printBranchesListReport = printBranchesListReport;
+window.exportBranchesToExcel = exportBranchesToExcel;
 
 export { branchesPage, branchesPageSize, branchesSearchQuery, branchesTotalCount, branchesList };

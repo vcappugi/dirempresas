@@ -76,6 +76,61 @@ const loadDetailTypesSelect = async (selectedVal = null) => {
   }
 };
 
+const populateDetailTypesFilter = async () => {
+  const filterSelect = document.getElementById('company-details-filter-tipo');
+  if (!filterSelect) return;
+
+  filterSelect.innerHTML = '<option value="">Todos los tipos</option>';
+
+  try {
+    let types = cachedDetailTypes;
+    if (types.length === 0) {
+      if (!supabaseUrl || !supabaseKey) {
+        await loadEnv();
+      }
+      const res = await fetch(`${supabaseUrl}tipo_detalle?order=tipo.asc`, {
+        method: 'GET',
+        headers: getHeaders()
+      });
+      if (res.ok) {
+        types = await res.json();
+        cachedDetailTypes = types;
+      }
+    }
+
+    if (types.length > 0) {
+      types.forEach(item => {
+        const val = item.tipo;
+        if (val) {
+          const option = document.createElement('option');
+          option.value = val;
+          option.textContent = val;
+          filterSelect.appendChild(option);
+        }
+      });
+    } else {
+      // Fallback estático
+      const fallbacks = ["Impuestos", "Licencias", "Contacto", "Facturación", "Otros"];
+      fallbacks.forEach(val => {
+        const option = document.createElement('option');
+        option.value = val;
+        option.textContent = val;
+        filterSelect.appendChild(option);
+      });
+    }
+  } catch (err) {
+    console.warn("Error populating detail types filter, using fallback:", err);
+    // Fallback estático
+    const fallbacks = ["Impuestos", "Licencias", "Contacto", "Facturación", "Otros"];
+    fallbacks.forEach(val => {
+      const option = document.createElement('option');
+      option.value = val;
+      option.textContent = val;
+      filterSelect.appendChild(option);
+    });
+  }
+};
+
 const renderDetails = () => {
   const cardsGrid = document.getElementById('details-cards-grid');
   const tableBody = document.getElementById('details-table-body');
@@ -87,7 +142,38 @@ const renderDetails = () => {
   cardsGrid.innerHTML = '';
   tableBody.innerHTML = '';
 
+  const emptyTitle = document.getElementById('company-details-empty-title');
+  const emptyDesc = document.getElementById('company-details-empty-desc');
+
   if (detailsList.length === 0) {
+    if (emptyTitle) emptyTitle.textContent = 'Sin detalles registrados';
+    if (emptyDesc) emptyDesc.textContent = 'Comienza agregando un nuevo detalle como un impuesto, licencia o información de contacto para esta empresa.';
+    emptyEl?.classList.remove('hidden');
+    cardsGrid.classList.add('hidden');
+    listContainer.classList.add('hidden');
+    return;
+  }
+
+  // Client-Side Search and Filter Logic
+  const searchInput = document.getElementById('company-details-search');
+  const filterTipoSelect = document.getElementById('company-details-filter-tipo');
+
+  const searchQuery = searchInput ? searchInput.value.trim().toLowerCase() : '';
+  const filterTipo = filterTipoSelect ? filterTipoSelect.value : '';
+
+  const filteredList = detailsList.filter(det => {
+    if (filterTipo && det.tipo !== filterTipo) return false;
+    if (searchQuery) {
+      const val = (det.valor || '').toLowerCase();
+      const comment = (det.comentario || '').toLowerCase();
+      if (!val.includes(searchQuery) && !comment.includes(searchQuery)) return false;
+    }
+    return true;
+  });
+
+  if (filteredList.length === 0) {
+    if (emptyTitle) emptyTitle.textContent = 'No se encontraron resultados';
+    if (emptyDesc) emptyDesc.textContent = 'Prueba cambiando los términos de búsqueda o los filtros aplicados.';
     emptyEl?.classList.remove('hidden');
     cardsGrid.classList.add('hidden');
     listContainer.classList.add('hidden');
@@ -100,7 +186,7 @@ const renderDetails = () => {
     cardsGrid.classList.remove('hidden');
     listContainer.classList.add('hidden');
 
-    detailsList.forEach(det => {
+    filteredList.forEach(det => {
       let badgeColors = "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-350";
       if (det.tipo === "Impuestos") {
         badgeColors = "bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-400";
@@ -151,7 +237,7 @@ const renderDetails = () => {
     cardsGrid.classList.add('hidden');
     listContainer.classList.remove('hidden');
 
-    detailsList.forEach(det => {
+    filteredList.forEach(det => {
       let badgeColors = "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-350";
       if (det.tipo === "Impuestos") {
         badgeColors = "bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-400";
@@ -247,10 +333,17 @@ const updateToggleButtonsUI = () => {
   }
 };
 
-export const openDetailsModal = (companyId) => {
+export const openDetailsModal = async (companyId) => {
   currentCompanyIdForDetails = companyId;
   detailsViewMode = 'cards';
   updateToggleButtonsUI();
+
+  const searchInput = document.getElementById('company-details-search');
+  const filterTipoSelect = document.getElementById('company-details-filter-tipo');
+  if (searchInput) searchInput.value = '';
+  if (filterTipoSelect) filterTipoSelect.value = '';
+
+  await populateDetailTypesFilter();
 
   const comp = companiesList.find(c => c.id === companyId);
   const companyName = comp ? comp.razon : `Empresa #${companyId}`;
@@ -353,6 +446,21 @@ export const initDetailsModule = () => {
 
   if (btnCloseDetailModal) btnCloseDetailModal.addEventListener('click', closeDetailFormModal);
   if (btnCancelDetailModal) btnCancelDetailModal.addEventListener('click', closeDetailFormModal);
+
+  const searchInput = document.getElementById('company-details-search');
+  const filterTipoSelect = document.getElementById('company-details-filter-tipo');
+
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      renderDetails();
+    });
+  }
+
+  if (filterTipoSelect) {
+    filterTipoSelect.addEventListener('change', () => {
+      renderDetails();
+    });
+  }
 
   window.openDetailsModal = openDetailsModal;
 

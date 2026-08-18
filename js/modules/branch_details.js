@@ -75,6 +75,62 @@ const loadDetailTypesSelect = async (selectedVal = null) => {
   }
 };
 
+const populateDetailTypesFilter = async () => {
+  const filterSelect = document.getElementById('branch-details-filter-tipo');
+  if (!filterSelect) return;
+
+  filterSelect.innerHTML = '<option value="">Todos los tipos</option>';
+
+  try {
+    let types = cachedDetailTypes;
+    if (types.length === 0) {
+      if (!supabaseUrl || !supabaseKey) {
+        await loadEnv();
+      }
+      const res = await fetch(`${supabaseUrl}tipo_detalle?order=tipo.asc`, {
+        method: 'GET',
+        headers: getHeaders()
+      });
+      if (res.ok) {
+        types = await res.json();
+        cachedDetailTypes = types;
+      }
+    }
+
+    if (types.length > 0) {
+      types.forEach(item => {
+        const val = item.tipo;
+        if (val) {
+          const option = document.createElement('option');
+          option.value = val;
+          option.textContent = val;
+          filterSelect.appendChild(option);
+        }
+      });
+    } else {
+      // Fallback estático
+      const fallbacks = ["Impuestos", "Licencias", "Contacto", "Facturación", "Otros"];
+      fallbacks.forEach(val => {
+        const option = document.createElement('option');
+        option.value = val;
+        option.textContent = val;
+        filterSelect.appendChild(option);
+      });
+    }
+  } catch (err) {
+    console.warn("Error populating detail types filter, using fallback:", err);
+    // Fallback estático
+    const fallbacks = ["Impuestos", "Licencias", "Contacto", "Facturación", "Otros"];
+    fallbacks.forEach(val => {
+      const option = document.createElement('option');
+      option.value = val;
+      option.textContent = val;
+      filterSelect.appendChild(option);
+    });
+  }
+};
+
+
 const renderBranchDetails = () => {
   const cardsGrid = document.getElementById('branch-details-cards-grid');
   const tableBody = document.getElementById('branch-details-table-body');
@@ -86,7 +142,38 @@ const renderBranchDetails = () => {
   cardsGrid.innerHTML = '';
   tableBody.innerHTML = '';
 
+  const emptyTitle = document.getElementById('branch-details-empty-title');
+  const emptyDesc = document.getElementById('branch-details-empty-desc');
+
   if (branchDetailsList.length === 0) {
+    if (emptyTitle) emptyTitle.textContent = 'Sin detalles registrados';
+    if (emptyDesc) emptyDesc.textContent = 'Comienza agregando un nuevo detalle como un impuesto, licencia o información de contacto para esta sucursal.';
+    emptyEl?.classList.remove('hidden');
+    cardsGrid.classList.add('hidden');
+    listContainer.classList.add('hidden');
+    return;
+  }
+
+  // Client-Side Search and Filter Logic
+  const searchInput = document.getElementById('branch-details-search');
+  const filterTipoSelect = document.getElementById('branch-details-filter-tipo');
+
+  const searchQuery = searchInput ? searchInput.value.trim().toLowerCase() : '';
+  const filterTipo = filterTipoSelect ? filterTipoSelect.value : '';
+
+  const filteredList = branchDetailsList.filter(det => {
+    if (filterTipo && det.tipo !== filterTipo) return false;
+    if (searchQuery) {
+      const val = (det.valor || '').toLowerCase();
+      const comment = (det.comentario || '').toLowerCase();
+      if (!val.includes(searchQuery) && !comment.includes(searchQuery)) return false;
+    }
+    return true;
+  });
+
+  if (filteredList.length === 0) {
+    if (emptyTitle) emptyTitle.textContent = 'No se encontraron resultados';
+    if (emptyDesc) emptyDesc.textContent = 'Prueba cambiando los términos de búsqueda o los filtros aplicados.';
     emptyEl?.classList.remove('hidden');
     cardsGrid.classList.add('hidden');
     listContainer.classList.add('hidden');
@@ -99,7 +186,7 @@ const renderBranchDetails = () => {
     cardsGrid.classList.remove('hidden');
     listContainer.classList.add('hidden');
 
-    branchDetailsList.forEach(det => {
+    filteredList.forEach(det => {
       let badgeColors = "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-350";
       if (det.tipo === "Impuestos") {
         badgeColors = "bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-400";
@@ -137,7 +224,7 @@ const renderBranchDetails = () => {
               <span class="px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider rounded-lg ${badgeColors}">${escapeHtml(det.tipo)}</span>
               ${det.orden !== null && det.orden !== undefined ? `<span class="px-1.5 py-0.5 text-[9px] font-bold rounded bg-slate-100 dark:bg-slate-800 text-slate-500 font-mono" title="Orden de visualización">#${det.orden}</span>` : ''}
             </div>
-            <span class="text-[10px] font-semibold text-slate-450 dark:text-slate-500 font-mono">${det.fecha ? det.fecha : ''}</span>
+            <span class="text-[10px] font-semibold text-slate-455 dark:text-slate-500 font-mono">${det.fecha ? det.fecha : ''}</span>
           </div>
           ${det.comentario ? `<p class="text-xs text-slate-650 dark:text-slate-255 leading-relaxed font-medium">${escapeHtml(det.comentario)}</p>` : ''}
           <p class="font-display font-bold text-base text-slate-900 dark:text-white break-words">${escapeHtml(det.valor)}</p>
@@ -150,7 +237,7 @@ const renderBranchDetails = () => {
     cardsGrid.classList.add('hidden');
     listContainer.classList.remove('hidden');
 
-    branchDetailsList.forEach(det => {
+    filteredList.forEach(det => {
       let badgeColors = "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-350";
       if (det.tipo === "Impuestos") {
         badgeColors = "bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-400";
@@ -246,10 +333,17 @@ const updateToggleButtonsUI = () => {
   }
 };
 
-export const openBranchDetailsModal = (branchId) => {
+export const openBranchDetailsModal = async (branchId) => {
   currentBranchIdForDetails = branchId;
   branchDetailsViewMode = 'cards';
   updateToggleButtonsUI();
+
+  const searchInput = document.getElementById('branch-details-search');
+  const filterTipoSelect = document.getElementById('branch-details-filter-tipo');
+  if (searchInput) searchInput.value = '';
+  if (filterTipoSelect) filterTipoSelect.value = '';
+
+  await populateDetailTypesFilter();
 
   const branch = branchesList.find(b => b.id === branchId);
   const branchName = branch ? branch.nombre : `Sucursal #${branchId}`;
@@ -352,6 +446,21 @@ export const initBranchDetailsModule = () => {
 
   if (btnCloseDetailModal) btnCloseDetailModal.addEventListener('click', closeDetailFormModal);
   if (btnCancelDetailModal) btnCancelDetailModal.addEventListener('click', closeDetailFormModal);
+
+  const searchInput = document.getElementById('branch-details-search');
+  const filterTipoSelect = document.getElementById('branch-details-filter-tipo');
+
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      renderBranchDetails();
+    });
+  }
+
+  if (filterTipoSelect) {
+    filterTipoSelect.addEventListener('change', () => {
+      renderBranchDetails();
+    });
+  }
 
   window.openBranchDetailsModal = openBranchDetailsModal;
 
