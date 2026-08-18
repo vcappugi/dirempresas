@@ -115,6 +115,39 @@
         <span class="sidebar-text">Sucursales</span>
       </button>
 
+      <!-- Collapsible Volumetría Menu -->
+      <div class="space-y-1">
+        <button id="btn-toggle-volumetria-submenu"
+          class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all duration-300">
+          <div class="flex items-center gap-4">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+              </path>
+            </svg>
+            <span class="sidebar-text">Volumetría</span>
+          </div>
+          <svg id="arrow-volumetria-submenu" class="w-4 h-4 transition-transform duration-300 transform sidebar-text"
+            fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+
+        <div id="volumetria-submenu" class="hidden pl-9 space-y-1">
+          <button data-view="view-products"
+            class="sidebar-item w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/30 transition-all duration-200">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4">
+              </path>
+            </svg>
+            <span class="sidebar-text">Productos/Servicios</span>
+          </button>
+        </div>
+      </div>
+
       <button data-view="view-revisions" data-tooltip="Revisiones"
         class="sidebar-item w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all duration-300">
         <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -454,11 +487,11 @@
       <div
         class="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 dark:text-slate-400 gap-4">
         <div>
-          &copy; 2026 Empresas S.L. - Panel de Control Administrativo.
+          &copy; 2026 Corporación BEL - Gerencia de Transformacion Digital - Panel de Control Administrativo.
         </div>
         <div class="flex gap-4">
-          <a href="#" class="hover:text-brand transition-colors">Terminología Legal</a>
-          <a href="#" class="hover:text-brand transition-colors">Política de Datos</a>
+          <a href="#" class="hover:text-brand transition-colors">Derechos Reservados</a>
+          <a href="#" class="hover:text-brand transition-colors">Información general</a>
         </div>
       </div>
       <!-- Los modales y overlays correspondientes se cargan de forma dinámica desde los archivos en templates/ -->

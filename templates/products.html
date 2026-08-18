@@ -1,0 +1,121 @@
+<!-- View: Productos (Tab panel, initially hidden) -->
+<section id="view-products" class="dashboard-view hidden space-y-6">
+  <div class="p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-4">
+    <div class="border-b border-slate-100 dark:border-slate-800/80 pb-3">
+      <h2 class="font-display font-bold text-lg text-slate-800 dark:text-white">Listado de Productos/Servicios</h2>
+    </div>
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="relative flex-1 max-w-md">
+        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+        </span>
+        <input type="text" id="products-search" placeholder="Buscar por nombre o descripción..." class="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+      </div>
+      <button id="btn-add-product" class="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-brand hover:bg-brand-light rounded-xl shadow-lg shadow-brand/10 transition-all duration-300">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4.5v15m7.5-7.5h-15"></path>
+        </svg>
+        Añadir Producto
+      </button>
+    </div>
+    
+    <!-- Products Table -->
+    <div class="overflow-x-auto relative">
+      
+      <!-- Loading Indicator -->
+      <div id="products-loading" class="absolute inset-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm z-10 flex items-center justify-center hidden">
+        <svg class="animate-spin h-8 w-8 text-brand" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      </div>
+
+      <table class="w-full text-sm text-left text-slate-500 dark:text-slate-400">
+        <thead class="text-xs text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-950 uppercase tracking-wider">
+          <tr>
+            <th scope="col" class="px-6 py-4">ID</th>
+            <th scope="col" class="px-6 py-4">Nombre</th>
+            <th scope="col" class="px-6 py-4">Descripción</th>
+            <th scope="col" class="px-6 py-4">Fecha Creación</th>
+            <th scope="col" class="px-6 py-4 text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="products-table-body" class="divide-y divide-slate-100 dark:divide-slate-800">
+          <!-- Dynamically loaded rows -->
+        </tbody>
+      </table>
+
+      <!-- Empty State -->
+      <div id="products-empty" class="py-12 text-center hidden">
+        <svg class="w-12 h-12 text-slate-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+        </svg>
+        <p class="text-slate-500">No se encontraron productos o servicios registrados.</p>
+      </div>
+
+      <!-- Products Pagination Controls -->
+      <div id="products-pagination" class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+        <div class="text-xs text-slate-500">
+          Mostrando <span id="products-range-start" class="font-semibold text-slate-700 dark:text-slate-350">0</span> a <span id="products-range-end" class="font-semibold text-slate-700 dark:text-slate-350">0</span> de <span id="products-total-count" class="font-semibold text-slate-700 dark:text-slate-350">0</span> registros
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="products-btn-prev" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-850 disabled:opacity-50 disabled:pointer-events-none transition-all">
+            Anterior
+          </button>
+          <span class="text-xs text-slate-500">Pág. <span id="products-current-page" class="font-semibold text-slate-700 dark:text-slate-350">1</span> de <span id="products-total-pages" class="font-semibold text-slate-700 dark:text-slate-350">1</span></span>
+          <button id="products-btn-next" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-850 disabled:opacity-50 disabled:pointer-events-none transition-all">
+            Siguiente
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- Product Modal for Create/Edit -->
+<div id="product-modal-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm hidden opacity-0 transition-all duration-300">
+  <div id="product-modal-card" class="bg-white dark:bg-slate-900 w-full max-w-lg p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl relative space-y-6 scale-95 opacity-0 transition-all duration-300">
+    
+    <!-- Close Button -->
+    <button id="btn-close-product-modal" class="absolute top-6 right-6 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+
+    <div>
+      <h3 id="product-modal-title" class="font-display font-bold text-xl text-slate-900 dark:text-white">Crear Producto/Servicio</h3>
+      <p class="text-xs text-slate-500 dark:text-slate-400">Todos los campos son editables excepto el ID y la fecha de creación.</p>
+    </div>
+
+    <form id="product-form" class="space-y-5">
+      <input type="hidden" id="product-form-id">
+      
+      <!-- Nombre input -->
+      <div class="relative">
+        <input type="text" id="product-form-nombre" required placeholder=" " class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+        <label for="product-form-nombre" class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Nombre del Producto/Servicio</label>
+      </div>
+
+      <!-- Descripcion input -->
+      <div class="relative">
+        <textarea id="product-form-descripcion" placeholder=" " rows="3" class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300"></textarea>
+        <label for="product-form-descripcion" class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Descripción</label>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center justify-end gap-3 pt-2">
+        <button type="button" id="btn-cancel-product-modal" class="px-5 py-2.5 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-850 transition-colors">
+          Cancelar
+        </button>
+        <button type="submit" id="btn-save-product-modal" class="px-5 py-2.5 text-xs font-semibold rounded-xl text-white bg-brand hover:bg-brand-light shadow-lg shadow-brand/10 transition-all duration-300">
+          Guardar
+        </button>
+      </div>
+    </form>
+
+  </div>
+</div>
