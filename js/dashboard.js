@@ -21,6 +21,8 @@ import { initDetailTypesModule, loadDetailTypes } from './modules/detail_types.j
 import { initRevisionsModule, loadRevisions } from './modules/revisions.js';
 import { initBranchesModule, loadBranches } from './modules/branches.js';
 import { initProductsModule, loadProducts } from './modules/products.js';
+import { initPeriodsModule, loadPeriods } from './modules/periods.js';
+import { initVolumePeriodModule, loadVolumePeriod } from './modules/volume_period.js';
 
 const loadTemplates = async () => {
   const container = document.querySelector('main');
@@ -34,7 +36,9 @@ const loadTemplates = async () => {
     'templates/regions.html',
     'templates/detail_types.html',
     'templates/revisions.html',
-    'templates/products.html'
+    'templates/products.html',
+    'templates/periods.html',
+    'templates/volume_period.html'
   ];
 
   for (const url of templates) {
@@ -98,7 +102,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Fallback if no permissions are configured/loaded in the session
     if (!profile.permissions) {
-      const allowedRead = ['view-dashboard', 'view-companies', 'view-branches', 'view-revisions', 'view-products'];
+      const allowedRead = ['view-dashboard', 'view-companies', 'view-branches', 'view-revisions', 'view-products', 'view-periods', 'view-volume-period'];
       if (action === 'leer') {
         return allowedRead.includes(viewId);
       }
@@ -411,6 +415,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   initRevisionsModule();
   initBranchesModule();
   initProductsModule();
+  initPeriodsModule();
+  initVolumePeriodModule();
 
   // --- Volumetría Sub-menu Handler ---
   const btnToggleVolumetria = document.getElementById('btn-toggle-volumetria-submenu');
@@ -443,7 +449,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     'view-regions': 'Regiones - Empresas',
     'view-detail-types': 'Tipos de Detalles - Empresas',
     'view-settings': 'Ajustes - Empresas',
-    'view-products': 'Productos/Servicios - Empresas'
+    'view-products': 'Productos/Servicios - Empresas',
+    'view-periods': 'Períodos - Empresas',
+    'view-volume-period': 'Volumetría por Período - Empresas'
   };
 
   sidebarItems.forEach((item) => {
@@ -482,6 +490,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (targetViewId === 'view-detail-types') loadDetailTypes();
           if (targetViewId === 'view-revisions') loadRevisions();
           if (targetViewId === 'view-products') loadProducts();
+          if (targetViewId === 'view-periods') loadPeriods();
+          if (targetViewId === 'view-volume-period') loadVolumePeriod();
         } else {
           view.classList.add('hidden');
         }
@@ -635,6 +645,38 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (e) {
           console.error(e);
           showToast('Error al eliminar la revisión.', false);
+          loadingEl?.classList.add('hidden');
+        }
+      } else if (type === 'volume-period') {
+        const loadingEl = document.getElementById('volume-period-loading');
+        loadingEl?.classList.remove('hidden');
+        try {
+          const res = await fetch(`${supabaseUrl}volumne_periodo?id=eq.${id}`, {
+            method: 'DELETE',
+            headers: getHeaders()
+          });
+          if (!res.ok) throw new Error('No se pudo eliminar el registro de volumetría.');
+          showToast('Registro eliminado con éxito.', true);
+          loadVolumePeriod();
+        } catch (e) {
+          console.error(e);
+          showToast('Error al eliminar el registro.', false);
+          loadingEl?.classList.add('hidden');
+        }
+      } else if (type === 'period') {
+        const loadingEl = document.getElementById('periods-loading');
+        loadingEl?.classList.remove('hidden');
+        try {
+          const res = await fetch(`${supabaseUrl}periodos?id=eq.${id}`, {
+            method: 'DELETE',
+            headers: getHeaders()
+          });
+          if (!res.ok) throw new Error('No se pudo eliminar el período.');
+          showToast('Período eliminado con éxito.', true);
+          loadPeriods();
+        } catch (e) {
+          console.error(e);
+          showToast('Error al eliminar el período.', false);
           loadingEl?.classList.add('hidden');
         }
       } else if (type === 'product') {
