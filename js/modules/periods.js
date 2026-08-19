@@ -152,6 +152,85 @@ const updatePeriodsPaginationUI = (startRange, endRange) => {
   if (btnNext) btnNext.disabled = periodsPage >= totalPages;
 };
 
+// ─── Generate Full Year Periods ───────────────────────────────────────────────
+
+export const generateYearPeriods = async (year, format = 'short') => {
+  if (!supabaseUrl || !supabaseKey) await loadEnv();
+  const y = parseInt(year, 10);
+  if (!y || y < 2000 || y > 2099) {
+    throw new Error('Por favor ingresa un año válido entre 2000 y 2099.');
+  }
+
+  const months = [
+    { num: 1, short: 'ene', name: 'Enero' },
+    { num: 2, short: 'feb', name: 'Febrero' },
+    { num: 3, short: 'mar', name: 'Marzo' },
+    { num: 4, short: 'abr', name: 'Abril' },
+    { num: 5, short: 'may', name: 'Mayo' },
+    { num: 6, short: 'jun', name: 'Junio' },
+    { num: 7, short: 'jul', name: 'Julio' },
+    { num: 8, short: 'ago', name: 'Agosto' },
+    { num: 9, short: 'sep', name: 'Septiembre' },
+    { num: 10, short: 'oct', name: 'Octubre' },
+    { num: 11, short: 'nov', name: 'Noviembre' },
+    { num: 12, short: 'dic', name: 'Diciembre' }
+  ];
+
+  // Check existing periods to avoid duplicates
+  const checkRes = await fetch(`${supabaseUrl}periodos?fechadesde=gte.${y}-01-01&fechahasta=lte.${y}-12-31`, {
+    headers: getHeaders()
+  });
+  const existing = checkRes.ok ? await checkRes.json() : [];
+  const existingNames = new Set(existing.map(p => (p.periodo || '').toLowerCase().trim()));
+  const existingStartDates = new Set(existing.map(p => p.fechadesde));
+
+  const periodsToInsert = [];
+
+  for (const m of months) {
+    const mmStr = String(m.num).padStart(2, '0');
+    const fechadesde = `${y}-${mmStr}-01`;
+    const lastDay = new Date(y, m.num, 0).getDate();
+    const fechahasta = `${y}-${mmStr}-${String(lastDay).padStart(2, '0')}`;
+
+    let periodoName = '';
+    if (format === 'full') {
+      periodoName = `${m.name} ${y}`;
+    } else if (format === 'iso') {
+      periodoName = `${y}-${mmStr}`;
+    } else {
+      periodoName = `${m.short}-${y}`;
+    }
+
+    if (existingNames.has(periodoName.toLowerCase()) || existingStartDates.has(fechadesde)) {
+      continue;
+    }
+
+    periodsToInsert.push({
+      periodo: periodoName,
+      fechadesde,
+      fechahasta,
+      comentario: `Mes de ${m.name} del año ${y}`,
+      activo: true
+    });
+  }
+
+  if (periodsToInsert.length === 0) {
+    return { created: 0, total: 12, message: `Todos los meses del año ${y} ya estaban registrados.` };
+  }
+
+  const insertRes = await fetch(`${supabaseUrl}periodos`, {
+    method: 'POST',
+    headers: { ...getHeaders(), 'Prefer': 'return=representation' },
+    body: JSON.stringify(periodsToInsert)
+  });
+
+  if (!insertRes.ok) {
+    throw new Error('Error al registrar los períodos en Supabase.');
+  }
+
+  return { created: periodsToInsert.length, total: 12 };
+};
+
 // ─── Init ─────────────────────────────────────────────────────────────────────
 
 export const initPeriodsModule = () => {
@@ -203,6 +282,73 @@ export const initPeriodsModule = () => {
 
   document.getElementById('btn-close-period-modal')?.addEventListener('click', closeModal);
   document.getElementById('btn-cancel-period-modal')?.addEventListener('click', closeModal);
+
+  // ── Generation Modal Handlers ─────────────────────────────────────────────
+  const genOverlay = document.getElementById('generate-year-periods-modal-overlay');
+  const genCard    = document.getElementById('generate-year-periods-modal-card');
+  const genForm    = document.getElementById('generate-year-periods-form');
+  const btnGenOpen = document.getElementById('btn-generate-year-periods');
+
+  const openGenModal = () => {
+    if (!genOverlay || !genCard) return;
+    const yearInput = document.getElementById('gen-periods-year');
+    if (yearInput && !yearInput.value) {
+      yearInput.value = new Date().getFullYear();
+    }
+    genOverlay.classList.remove('hidden');
+    genOverlay.offsetHeight;
+    genOverlay.classList.remove('opacity-0');
+    genOverlay.classList.add('opacity-100');
+    genCard.classList.remove('scale-95', 'opacity-0');
+    genCard.classList.add('scale-100', 'opacity-100');
+  };
+
+  const closeGenModal = () => {
+    if (!genOverlay || !genCard) return;
+    genOverlay.classList.remove('opacity-100');
+    genOverlay.classList.add('opacity-0');
+    genCard.classList.remove('scale-100', 'opacity-100');
+    genCard.classList.add('scale-95', 'opacity-0');
+    setTimeout(() => genOverlay.classList.add('hidden'), 300);
+  };
+
+  if (btnGenOpen) {
+    btnGenOpen.style.display = window.hasPermission('view-periods', 'escribir') ? 'inline-flex' : 'none';
+    btnGenOpen.addEventListener('click', openGenModal);
+  }
+
+  document.getElementById('btn-close-generate-year-periods-modal')?.addEventListener('click', closeGenModal);
+  document.getElementById('btn-cancel-generate-year-periods-modal')?.addEventListener('click', closeGenModal);
+
+  if (genForm) {
+    genForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const year = document.getElementById('gen-periods-year').value;
+      const format = document.getElementById('gen-periods-format').value;
+      const submitBtn = document.getElementById('btn-submit-generate-year-periods');
+      const origHtml = submitBtn.innerHTML;
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Generando...`;
+
+      try {
+        const result = await generateYearPeriods(year, format);
+        if (result.created > 0) {
+          showToast(`¡Se generaron ${result.created} períodos para el año ${year} con éxito!`, true);
+        } else {
+          showToast(result.message || `No fue necesario crear períodos.`, true);
+        }
+        closeGenModal();
+        loadPeriods();
+      } catch (err) {
+        console.error('Error generating periods:', err);
+        showToast(err.message || 'Error al generar períodos del año.', false);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = origHtml;
+      }
+    });
+  }
 
   // ── Edit ──────────────────────────────────────────────────────────────────
   window.editPeriod = (id) => {
@@ -297,4 +443,7 @@ export const initPeriodsModule = () => {
   });
 };
 
+window.generateYearPeriods = generateYearPeriods;
+
 export { periodsTotalCount, periodsPage, periodsPageSize, periodsSearchQuery };
+

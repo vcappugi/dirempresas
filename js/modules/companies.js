@@ -643,7 +643,7 @@ export const initCompaniesModule = () => {
       document.getElementById('company-form-rif').value = '';
       document.getElementById('company-form-fecha').value = '';
       document.getElementById('company-form-maestro').value = '';
-      document.getElementById('company-form-libro').value = 'activo';
+      document.getElementById('company-form-libro').value = '';
       document.getElementById('company-form-sistema').value = '';
       document.getElementById('company-form-participacion').value = '';
       document.getElementById('company-form-capital').value = '';
@@ -687,6 +687,13 @@ export const initCompaniesModule = () => {
     });
   }
 
+  const btnExportCompanies = document.getElementById('btn-export-companies-excel');
+  if (btnExportCompanies) {
+    btnExportCompanies.addEventListener('click', () => {
+      exportCompaniesToExcel();
+    });
+  }
+
   window.editCompany = async (id) => {
     const comp = companiesList.find(c => c.id === id);
     if (!comp) return;
@@ -697,7 +704,7 @@ export const initCompaniesModule = () => {
     document.getElementById('company-form-rif').value = comp.rif || '';
     document.getElementById('company-form-fecha').value = comp.fecha_apertura || '';
     document.getElementById('company-form-maestro').value = comp.codigo_maestro || '';
-    document.getElementById('company-form-libro').value = comp.estatus_libro || 'activo';
+    document.getElementById('company-form-libro').value = comp.estatus_libro || '';
     document.getElementById('company-form-sistema').value = comp.sistema || '';
     document.getElementById('company-form-participacion').value = comp.participacion || '';
     document.getElementById('company-form-capital').value = comp.capital_suscrito || '';
@@ -732,7 +739,7 @@ export const initCompaniesModule = () => {
       const rif = document.getElementById('company-form-rif').value;
       const fecha_apertura = document.getElementById('company-form-fecha').value;
       const codigo_maestro = document.getElementById('company-form-maestro').value;
-      const estatus_libro = document.getElementById('company-form-libro').value;
+      const estatus_libro = document.getElementById('company-form-libro').value.trim() || null;
       const sistema = document.getElementById('company-form-sistema').value;
       const participacion = document.getElementById('company-form-participacion').value;
       const capital_suscrito = document.getElementById('company-form-capital').value;
@@ -827,6 +834,24 @@ export const initCompaniesModule = () => {
     });
   }
 };
+const getFilteredCompaniesUrl = () => {
+  let queryUrl = `${supabaseUrl}empresa?select=*,usuario:usuario_id(nombre),region:region_id(nombre)`;
+  if (!window.isAdmin) {
+    if (window.userAllowedCompanyIds && window.userAllowedCompanyIds.length > 0) {
+      queryUrl += `&id=in.(${window.userAllowedCompanyIds.join(',')})`;
+    } else {
+      queryUrl += `&id=eq.-1`;
+    }
+  }
+  if (companiesSearchQuery) {
+    const encSearch = encodeURIComponent(companiesSearchQuery);
+    queryUrl += `&or=(razon.ilike.*${encSearch}*,rif.ilike.*${encSearch}*,codigo.ilike.*${encSearch}*)&order=id.asc`;
+  } else {
+    queryUrl += `&order=id.asc`;
+  }
+  return queryUrl;
+};
+
 export const printCompaniesListReport = async () => {
   showToast("Generando Reporte de Listado...", true);
 
@@ -835,16 +860,7 @@ export const printCompaniesListReport = async () => {
       await loadEnv();
     }
 
-    let queryUrl = `${supabaseUrl}empresa?select=*,usuario:usuario_id(nombre),region:region_id(nombre)`;
-    if (!window.isAdmin) {
-      queryUrl += `&usuario_id=eq.${window.userId}`;
-    }
-    if (companiesSearchQuery) {
-      const encSearch = encodeURIComponent(companiesSearchQuery);
-      queryUrl += `&or=(razon.ilike.*${encSearch}*,rif.ilike.*${encSearch}*,codigo.ilike.*${encSearch}*)&order=id.asc`;
-    } else {
-      queryUrl += `&order=id.asc`;
-    }
+    const queryUrl = getFilteredCompaniesUrl();
 
     const res = await fetch(queryUrl, {
       method: 'GET',
@@ -1094,6 +1110,74 @@ export const printCompaniesListReport = async () => {
   }
 };
 
+export const exportCompaniesToExcel = async () => {
+  showToast("Exportando Listado de Empresas a Excel...", true);
+
+  try {
+    if (!supabaseUrl || !supabaseKey) {
+      await loadEnv();
+    }
+
+    const queryUrl = getFilteredCompaniesUrl();
+    const res = await fetch(queryUrl, {
+      method: 'GET',
+      headers: getHeaders()
+    });
+
+    if (!res.ok) throw new Error("No se pudieron obtener las empresas para exportar.");
+    const companies = await res.json();
+
+    if (companies.length === 0) {
+      showToast("No hay registros para exportar.", false);
+      return;
+    }
+
+    let csvContent = "\uFEFF";
+    
+    // Header row
+    csvContent += "ID;Código;Razón Social;RIF;Fecha Apertura;Código Maestro;Estatus Libro;Sistema;Participación (%);Capital Suscrito;Registro Mercantil;Dirección Fiscal;Objeto;Región;Usuario Responsable;Observación;Estatus\n";
+
+    companies.forEach(item => {
+      const id = item.id;
+      const codigo = (item.codigo || '-').replace(/;/g, ',');
+      const razon = (item.razon || '-').replace(/;/g, ',');
+      const rif = (item.rif || '-').replace(/;/g, ',');
+      const fecha = item.fecha_apertura || '-';
+      const maestro = (item.codigo_maestro || '-').replace(/;/g, ',');
+      const libro = (item.estatus_libro || '-').replace(/;/g, ',');
+      const sistema = (item.sistema || '-').replace(/;/g, ',');
+      const part = item.participacion !== null && item.participacion !== undefined ? `${item.participacion}%` : '-';
+      const capital = (item.capital_suscrito || '-').replace(/;/g, ',');
+      const registro = (item.registro_merc || '-').replace(/;/g, ',');
+      const direccion = (item.direccion_fiscal || '-').replace(/;/g, ',').replace(/\n|\r/g, ' ');
+      const objeto = (item.objeto || '-').replace(/;/g, ',').replace(/\n|\r/g, ' ');
+      const region = (item.region ? item.region.nombre : '-').replace(/;/g, ',');
+      const usuario = (item.usuario ? item.usuario.nombre : '-').replace(/;/g, ',');
+      const observacion = (item.observacion || '-').replace(/;/g, ',').replace(/\n|\r/g, ' ');
+      const estatus = item.activo !== false ? 'Activa' : 'Inactiva';
+
+      csvContent += `${id};${codigo};${razon};${rif};${fecha};${maestro};${libro};${sistema};${part};${capital};${registro};${direccion};${objeto};${region};${usuario};${observacion};${estatus}\n`;
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `listado_empresas_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showToast("Exportación de empresas completada con éxito.", true);
+
+  } catch (err) {
+    console.error("Export companies to Excel error:", err);
+    showToast(err.message || 'Error al exportar a Excel.', false);
+  }
+};
+
 window.printCompaniesListReport = printCompaniesListReport;
+window.exportCompaniesToExcel = exportCompaniesToExcel;
 
 export { companiesPage, companiesPageSize, companiesSearchQuery, companiesTotalCount, companiesList };

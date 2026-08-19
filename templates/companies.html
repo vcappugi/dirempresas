@@ -27,6 +27,15 @@
           </svg>
           Imprimir Listado
         </button>
+        <button id="btn-export-companies-excel"
+          class="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-900/40 rounded-xl transition-all duration-300 border border-emerald-200/50 dark:border-emerald-800/50">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+            </path>
+          </svg>
+          Exportar Excel
+        </button>
         <button id="btn-add-company"
           class="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-brand hover:bg-brand-light rounded-xl shadow-lg shadow-brand/10 transition-all duration-300">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -214,13 +223,10 @@
 
         <!-- Estatus Libro -->
         <div class="relative md:col-span-4">
-          <select id="company-form-libro"
-            class="block w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
-            <option value="activo">Activo</option>
-            <option value="inactivo">Inactivo</option>
-          </select>
+          <input type="text" id="company-form-libro" placeholder=" "
+            class="peer block w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
           <label for="company-form-libro"
-            class="absolute left-3 -translate-y-3.5 scale-75 transform text-slate-500 bg-white dark:bg-slate-900 px-1 z-10">Estatus Libro</label>
+            class="absolute left-3 top-2 origin-[0] -translate-y-3.5 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3.5 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1">Estatus Libro</label>
         </div>
 
         <!-- Región (Select dinámico) -->
