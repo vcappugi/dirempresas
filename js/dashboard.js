@@ -25,6 +25,7 @@ import { initPeriodsModule, loadPeriods } from './modules/periods.js';
 import { initVolumePeriodModule, loadVolumePeriod } from './modules/volume_period.js';
 import { initUserRolesModule, loadUserRoles, currentUserIdForRoles } from './modules/user_roles.js';
 import { initUserCompaniesModule, loadUserCompanies, currentUserIdForCompanies } from './modules/user_companies.js';
+import { loadHomeDashboard } from './modules/home_dashboard.js';
 
 const loadTemplates = async () => {
   const container = document.querySelector('main');
@@ -620,6 +621,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           const reveals = view.querySelectorAll('.reveal');
           reveals.forEach(r => r.classList.add('active'));
 
+          if (targetViewId === 'view-dashboard') loadHomeDashboard();
           if (targetViewId === 'view-users') loadUsers();
           if (targetViewId === 'view-roles') loadRoles();
           if (targetViewId === 'view-regions') loadRegions();
@@ -640,6 +642,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
   });
+
+  // Load initial home dashboard data
+  loadHomeDashboard();
+  window.loadHomeDashboard = loadHomeDashboard;
 
   // --- Global Delete Confirmation Routing & Fetch ---
   const btnCancelDelete = document.getElementById('btn-cancel-delete');
