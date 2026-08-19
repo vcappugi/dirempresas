@@ -23,6 +23,8 @@ import { initBranchesModule, loadBranches } from './modules/branches.js';
 import { initProductsModule, loadProducts } from './modules/products.js';
 import { initPeriodsModule, loadPeriods } from './modules/periods.js';
 import { initVolumePeriodModule, loadVolumePeriod } from './modules/volume_period.js';
+import { initUserRolesModule, loadUserRoles, currentUserIdForRoles } from './modules/user_roles.js';
+import { initUserCompaniesModule, loadUserCompanies, currentUserIdForCompanies } from './modules/user_companies.js';
 
 const loadTemplates = async () => {
   const container = document.querySelector('main');
@@ -87,7 +89,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     return '';
   };
-  const isAdmin = getRoleName() === 'admin' || (profile.rol && profile.rol.id === 1);
+  const hasAdminRole = Array.isArray(profile.roles) && profile.roles.some(r => ((r.nombre || '').toLowerCase() === 'admin' || r.id === 1));
+  const isAdmin = getRoleName() === 'admin' || (profile.rol && profile.rol.id === 1) || hasAdminRole;
   
   window.isAdmin = isAdmin;
   window.userId = profile.id;
@@ -99,6 +102,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Admins always have full access to every view
     if (isAdmin) return true;
+
+    // Direct access if allowed via usuarios_empresas
+    if (action === 'leer') {
+      if (viewId === 'view-companies' && window.userAllowedCompanyIds?.length > 0) return true;
+      if (viewId === 'view-branches' && window.userAllowedBranchIds?.length > 0) return true;
+      if (viewId === 'view-volume-period' && window.userAllowedBranchIds?.length > 0) return true;
+      if (viewId === 'view-dashboard') return true;
+    }
+
+    if (action === 'escribir') {
+      if (viewId === 'view-companies' && window.userCompanyAssignments?.some(a => a.edicion === true)) return true;
+      if (viewId === 'view-branches' && window.userCompanyAssignments?.some(a => a.edicion === true)) return true;
+      if (viewId === 'view-volume-period' && window.userCompanyAssignments?.some(a => a.edicion === true)) return true;
+    }
     
     // Fallback if no permissions are configured/loaded in the session
     if (!profile.permissions) {
@@ -144,30 +161,149 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   };
 
-  // Call it immediately to restrict menu items based on DB permissions
-  applySidebarPermissions();
+  window.userCompanyAssignments = [];
+  window.userAllowedCompanyIds = [];
+  window.userFullAccessCompanyIds = [];
+  window.userSpecificBranchIds = [];
+  window.userAllowedBranchIds = [];
 
-  if (!isAdmin) {
-    // Query company associated with the user
+  window.isCompanyAllowed = () => true;
+  window.isBranchAllowed = () => true;
+  window.isVolumetryAllowed = () => true;
+  window.canEditCompany = () => true;
+  window.canEditBranch = () => true;
+
+  const loadUserCompanyPermissions = async () => {
+    if (isAdmin) {
+      window.isCompanyAllowed = () => true;
+      window.isBranchAllowed = () => true;
+      window.isVolumetryAllowed = () => true;
+      window.canEditCompany = () => true;
+      window.canEditBranch = () => true;
+      return;
+    }
+
     try {
-      if (!supabaseUrl || !supabaseKey) {
-        await loadEnv();
+      if (!supabaseUrl || !supabaseKey) await loadEnv();
+      const h = getHeaders();
+
+      // 1. Query usuarios_empresas
+      let ueRows = [];
+      try {
+        let res = await fetch(`${supabaseUrl}usuarios_empresas?select=*`, { headers: h });
+        if (res.ok) {
+          const allRows = await res.json();
+          ueRows = allRows.filter(r => {
+            const rowUser = r.usuario_id ?? r.user_id;
+            return rowUser === profile.id || rowUser === undefined || rowUser === null;
+          });
+        }
+      } catch (e) {
+        console.warn("Could not query usuarios_empresas:", e);
       }
-      const res = await fetch(`${supabaseUrl}empresa?usuario_id=eq.${profile.id}&select=id,razon`, {
-        method: 'GET',
-        headers: getHeaders()
+
+      const activeAssignments = ueRows.filter(r => r.lectura !== false);
+      window.userCompanyAssignments = activeAssignments;
+
+      // 2. Direct empresa assignment fallback (empresa.usuario_id)
+      let directCompanies = [];
+      try {
+        const dRes = await fetch(`${supabaseUrl}empresa?usuario_id=eq.${profile.id}&select=id,razon`, { headers: h });
+        if (dRes.ok) directCompanies = await dRes.json();
+      } catch (e) {}
+
+      if (directCompanies.length > 0) {
+        window.userCompanyId = directCompanies[0].id;
+        window.userCompanyName = directCompanies[0].razon;
+      }
+
+      const allowedCompanySet = new Set();
+      const fullAccessCompanySet = new Set();
+      const specificBranchSet = new Set();
+
+      directCompanies.forEach(c => {
+        allowedCompanySet.add(c.id);
+        fullAccessCompanySet.add(c.id);
       });
-      if (res.ok) {
-        const companies = await res.json();
-        if (companies.length > 0) {
-          window.userCompanyId = companies[0].id;
-          window.userCompanyName = companies[0].razon;
+
+      activeAssignments.forEach(a => {
+        if (a.empresa_id) {
+          allowedCompanySet.add(a.empresa_id);
+          if (!a.sucursal_id) {
+            fullAccessCompanySet.add(a.empresa_id);
+          } else {
+            specificBranchSet.add(a.sucursal_id);
+          }
+        }
+      });
+
+      window.userAllowedCompanyIds = Array.from(allowedCompanySet);
+      window.userFullAccessCompanyIds = Array.from(fullAccessCompanySet);
+      window.userSpecificBranchIds = Array.from(specificBranchSet);
+
+      // 3. Fetch branches for fullAccessCompanyIds to populate all allowed branches
+      const allowedBranchSet = new Set(specificBranchSet);
+      if (window.userFullAccessCompanyIds.length > 0) {
+        try {
+          const compFilter = `empresa_id=in.(${window.userFullAccessCompanyIds.join(',')})`;
+          const bRes = await fetch(`${supabaseUrl}sucursales?${compFilter}&select=id,empresa_id`, { headers: h });
+          if (bRes.ok) {
+            const bData = await bRes.json();
+            bData.forEach(b => allowedBranchSet.add(b.id));
+          }
+        } catch (e) {
+          console.warn("Could not resolve branches for full access companies:", e);
         }
       }
+
+      window.userAllowedBranchIds = Array.from(allowedBranchSet);
+
+      window.isCompanyAllowed = (companyId) => {
+        if (isAdmin) return true;
+        if (!companyId) return false;
+        return window.userAllowedCompanyIds.includes(parseInt(companyId, 10));
+      };
+
+      window.isBranchAllowed = (branchId, companyId = null) => {
+        if (isAdmin) return true;
+        const bId = branchId ? parseInt(branchId, 10) : null;
+        const cId = companyId ? parseInt(companyId, 10) : null;
+        if (bId && window.userAllowedBranchIds.includes(bId)) return true;
+        if (cId && window.userFullAccessCompanyIds.includes(cId)) return true;
+        return false;
+      };
+
+      window.isVolumetryAllowed = (sucursalId) => {
+        if (isAdmin) return true;
+        if (!sucursalId) return false;
+        return window.userAllowedBranchIds.includes(parseInt(sucursalId, 10));
+      };
+
+      window.canEditCompany = (companyId) => {
+        if (isAdmin) return true;
+        const cId = parseInt(companyId, 10);
+        return activeAssignments.some(a => a.empresa_id === cId && a.edicion === true);
+      };
+
+      window.canEditBranch = (branchId, companyId = null) => {
+        if (isAdmin) return true;
+        const bId = branchId ? parseInt(branchId, 10) : null;
+        const cId = companyId ? parseInt(companyId, 10) : null;
+        return activeAssignments.some(a => {
+          if (a.edicion !== true) return false;
+          if (bId && a.sucursal_id === bId) return true;
+          if (cId && a.empresa_id === cId && !a.sucursal_id) return true;
+          return false;
+        });
+      };
+
     } catch (err) {
-      console.error("Error loading user company info:", err);
+      console.error("Error loading user company permissions:", err);
     }
-  }
+  };
+
+  // Load user company/branch permissions immediately
+  await loadUserCompanyPermissions();
 
   // Bind dynamic user profile info
   const userDisplayName = document.getElementById('user-display-name');
@@ -417,6 +553,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   initProductsModule();
   initPeriodsModule();
   initVolumePeriodModule();
+  initUserRolesModule();
+  initUserCompaniesModule();
 
   // --- Volumetría Sub-menu Handler ---
   const btnToggleVolumetria = document.getElementById('btn-toggle-volumetria-submenu');
@@ -613,6 +751,38 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (e) {
           console.error(e);
           showToast('Error al eliminar el detalle.', false);
+          loadingEl?.classList.add('hidden');
+        }
+      } else if (type === 'user_role') {
+        const loadingEl = document.getElementById('user-roles-loading');
+        loadingEl?.classList.remove('hidden');
+        try {
+          const res = await fetch(`${supabaseUrl}user_roles?id=eq.${id}`, {
+            method: 'DELETE',
+            headers: getHeaders()
+          });
+          if (!res.ok) throw new Error("No se pudo desasignar el rol.");
+          showToast('Rol desasignado con éxito.', true);
+          loadUserRoles(currentUserIdForRoles);
+        } catch (e) {
+          console.error(e);
+          showToast('Error al desasignar el rol.', false);
+          loadingEl?.classList.add('hidden');
+        }
+      } else if (type === 'user_company') {
+        const loadingEl = document.getElementById('user-companies-loading');
+        loadingEl?.classList.remove('hidden');
+        try {
+          const res = await fetch(`${supabaseUrl}usuarios_empresas?id=eq.${id}`, {
+            method: 'DELETE',
+            headers: getHeaders()
+          });
+          if (!res.ok) throw new Error("No se pudo eliminar la asignación de empresa.");
+          showToast('Asignación eliminada con éxito.', true);
+          loadUserCompanies(currentUserIdForCompanies);
+        } catch (e) {
+          console.error(e);
+          showToast('Error al eliminar la asignación.', false);
           loadingEl?.classList.add('hidden');
         }
       } else if (type === 'detail_type') {

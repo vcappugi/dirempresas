@@ -24,8 +24,11 @@ export const loadCompaniesForSelect = async (selectedEmpresaId = null) => {
 
     let url = `${supabaseUrl}empresa?activo=eq.true&order=razon.asc`;
     if (!window.isAdmin) {
-      const compId = window.userCompanyId || -1;
-      url = `${supabaseUrl}empresa?id=eq.${compId}&order=razon.asc`;
+      if (window.userAllowedCompanyIds && window.userAllowedCompanyIds.length > 0) {
+        url = `${supabaseUrl}empresa?id=in.(${window.userAllowedCompanyIds.join(',')})&order=razon.asc`;
+      } else {
+        url = `${supabaseUrl}empresa?id=eq.-1`;
+      }
     }
 
     const res = await fetch(url, {
@@ -105,8 +108,11 @@ export const loadCompaniesForFilter = async () => {
 
     let url = `${supabaseUrl}empresa?activo=eq.true&order=razon.asc`;
     if (!window.isAdmin) {
-      const compId = window.userCompanyId || -1;
-      url = `${supabaseUrl}empresa?id=eq.${compId}&order=razon.asc`;
+      if (window.userAllowedCompanyIds && window.userAllowedCompanyIds.length > 0) {
+        url = `${supabaseUrl}empresa?id=in.(${window.userAllowedCompanyIds.join(',')})&order=razon.asc`;
+      } else {
+        url = `${supabaseUrl}empresa?id=eq.-1`;
+      }
     }
 
     const res = await fetch(url, {
@@ -262,9 +268,18 @@ export const loadBranches = async () => {
     let queryUrl = `${supabaseUrl}sucursales?select=*,empresa:empresa_id(razon,participacion),region:region_id(nombre)`;
 
     if (!window.isAdmin) {
-      const compId = window.userCompanyId || -1;
-      queryUrl += `&empresa_id=eq.${compId}`;
-    } else if (branchesFilterEmpresa) {
+      if (!window.userAllowedBranchIds || window.userAllowedBranchIds.length === 0) {
+        branchesList = [];
+        branchesTotalCount = 0;
+        emptyEl?.classList.remove('hidden');
+        updateBranchesPaginationUI(0, 0);
+        loadingEl?.classList.add('hidden');
+        return;
+      }
+      queryUrl += `&id=in.(${window.userAllowedBranchIds.join(',')})`;
+    }
+
+    if (branchesFilterEmpresa) {
       queryUrl += `&empresa_id=eq.${branchesFilterEmpresa}`;
     }
 
@@ -330,7 +345,7 @@ export const loadBranches = async () => {
           }
         }
 
-        const canWrite = window.hasPermission('view-branches', 'escribir');
+        const canWrite = window.hasPermission('view-branches', 'escribir') && (window.isAdmin || window.canEditBranch?.(branch.id, branch.empresa_id));
         
         const btnDetalles = `
           <button onclick="openBranchDetailsModal(${branch.id})" class="inline-flex items-center justify-center p-1.5 rounded-lg text-slate-600 bg-slate-100 hover:bg-slate-200 dark:text-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 transition-all duration-200 shadow-sm border border-slate-200/50 dark:border-slate-700/50" title="Ver Detalles">
@@ -451,7 +466,7 @@ export const initBranchesModule = () => {
   const btnAddBranch = document.getElementById('btn-add-branch');
   const branchForm = document.getElementById('branch-form');
 
-  const openBranchModal = () => {
+  const openBranchModal = (branchId = null, companyId = null) => {
     if (!branchModalOverlay || !branchModalCard) return;
     branchModalOverlay.classList.remove('hidden');
     branchModalOverlay.offsetHeight;
@@ -460,7 +475,7 @@ export const initBranchesModule = () => {
     branchModalCard.classList.remove('scale-95', 'opacity-0');
     branchModalCard.classList.add('scale-100', 'opacity-100');
 
-    const canWrite = window.hasPermission('view-branches', 'escribir');
+    const canWrite = window.hasPermission('view-branches', 'escribir') && (window.isAdmin || (branchId ? window.canEditBranch?.(branchId, companyId) : true));
     const saveBtn = document.getElementById('btn-save-branch-modal');
     if (saveBtn) {
       saveBtn.style.display = canWrite ? 'inline-block' : 'none';
@@ -551,9 +566,9 @@ export const initBranchesModule = () => {
     await loadCompaniesForSelect(branch.empresa_id);
     await loadRegionsForSelect(branch.region_id);
 
-    const canWrite = window.hasPermission('view-branches', 'escribir');
-    document.getElementById('branch-modal-title').textContent = canWrite ? 'Editar Sucursal' : 'Detalles de la Sucursal';
-    openBranchModal();
+    const canWrite = window.hasPermission('view-branches', 'escribir') && (window.isAdmin || window.canEditBranch?.(branch.id, branch.empresa_id));
+    document.getElementById('branch-modal-title').textContent = canWrite ? 'Editar Sucursal' : 'Detalles de la Sucursal (Solo Lectura)';
+    openBranchModal(branch.id, branch.empresa_id);
   };
 
   window.deleteBranch = (id) => {

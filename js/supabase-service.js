@@ -124,25 +124,29 @@ export const login = async (email, password) => {
   // 3. Query user roles and permissions from database
   let roleData = null;
   let permissions = {};
+  let userRolesData = [];
   
   try {
-    const { data: userRolesData, error: userRolesError } = await client
+    const { data, error: userRolesError } = await client
       .from('user_roles')
       .select('*, roles(*)')
       .eq('user_id', userData.id);
 
-    if (!userRolesError && userRolesData && userRolesData.length > 0) {
+    userRolesData = data || [];
+
+    if (!userRolesError && userRolesData.length > 0) {
       // Collect all role IDs assigned to user
       const roleIds = userRolesData.map(ur => ur.roles_id);
       
-      // Use the first role as primary roleData
-      const primaryRole = userRolesData[0].roles;
-      if (primaryRole) {
+      // Check if user has an admin role among their roles
+      const adminRoleObj = userRolesData.find(ur => ur.roles && ((ur.roles.nombre || '').toLowerCase() === 'admin' || ur.roles.id === 1));
+      const chosenRole = adminRoleObj ? adminRoleObj.roles : (userRolesData[0].roles || null);
+      if (chosenRole) {
         roleData = {
-          id: primaryRole.id,
-          nombre: primaryRole.nombre,
-          tipo: primaryRole.tipo,
-          activo: primaryRole.activo
+          id: chosenRole.id,
+          nombre: chosenRole.nombre,
+          tipo: chosenRole.tipo,
+          activo: chosenRole.activo
         };
       }
       
@@ -240,6 +244,7 @@ export const login = async (email, password) => {
     telefono: userData.telefono,
     activo: userData.activo,
     rol: roleData || { id: 3, nombre: "DEALER_MANAGER", tipo: "dealer access", activo: true },
+    roles: (userRolesData || []).map(ur => ur.roles).filter(Boolean),
     empresa: empresaData || { id: 1, razon: "Empresas S.L.", rif: "J123", activo: true },
     permissions: permissions
   };

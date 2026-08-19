@@ -100,7 +100,15 @@ export const loadCompanies = async () => {
     let queryUrl = `${supabaseUrl}empresa?select=*,usuario:usuario_id(nombre),region:region_id(nombre)`;
 
     if (!window.isAdmin) {
-      queryUrl += `&usuario_id=eq.${window.userId}`;
+      if (!window.userAllowedCompanyIds || window.userAllowedCompanyIds.length === 0) {
+        companiesList = [];
+        companiesTotalCount = 0;
+        emptyEl?.classList.remove('hidden');
+        updateCompaniesPaginationUI(0, 0);
+        loadingEl?.classList.add('hidden');
+        return;
+      }
+      queryUrl += `&id=in.(${window.userAllowedCompanyIds.join(',')})`;
     }
 
     if (companiesSearchQuery) {
@@ -155,7 +163,7 @@ export const loadCompanies = async () => {
           }
         }
 
-        const canWrite = window.hasPermission('view-companies', 'escribir');
+        const canWrite = window.hasPermission('view-companies', 'escribir') && (window.isAdmin || window.canEditCompany?.(comp.id));
 
 
         const btnDetalles = `
@@ -592,7 +600,7 @@ export const initCompaniesModule = () => {
   const btnAddCompany = document.getElementById('btn-add-company');
   const companyForm = document.getElementById('company-form');
 
-  const openCompanyModal = () => {
+  const openCompanyModal = (companyId = null) => {
     if (!companyModalOverlay || !companyModalCard) return;
     companyModalOverlay.classList.remove('hidden');
     companyModalOverlay.offsetHeight;
@@ -601,7 +609,7 @@ export const initCompaniesModule = () => {
     companyModalCard.classList.remove('scale-95', 'opacity-0');
     companyModalCard.classList.add('scale-100', 'opacity-100');
 
-    const canWrite = window.hasPermission('view-companies', 'escribir');
+    const canWrite = window.hasPermission('view-companies', 'escribir') && (window.isAdmin || (companyId ? window.canEditCompany?.(companyId) : true));
     const saveBtn = document.getElementById('btn-save-company-modal');
     if (saveBtn) {
       saveBtn.style.display = canWrite ? 'inline-block' : 'none';
@@ -705,9 +713,9 @@ export const initCompaniesModule = () => {
     await loadRegionsForSelect(comp.region_id);
     await loadUsersForSelect(comp.usuario_id);
 
-    const canWrite = window.hasPermission('view-companies', 'escribir');
-    document.getElementById('company-modal-title').textContent = canWrite ? 'Editar Empresa' : 'Detalles de la Empresa';
-    openCompanyModal();
+    const canWrite = window.hasPermission('view-companies', 'escribir') && (window.isAdmin || window.canEditCompany?.(comp.id));
+    document.getElementById('company-modal-title').textContent = canWrite ? 'Editar Empresa' : 'Detalles de la Empresa (Solo Lectura)';
+    openCompanyModal(comp.id);
   };
 
   window.deleteCompany = (id) => {

@@ -32,9 +32,18 @@ const loadLookups = async () => {
   const h = getHeaders();
 
   try {
+    let sucursalesUrl = `${supabaseUrl}sucursales?order=nombre.asc&select=id,nombre`;
+    if (!window.isAdmin) {
+      if (window.userAllowedBranchIds && window.userAllowedBranchIds.length > 0) {
+        sucursalesUrl = `${supabaseUrl}sucursales?id=in.(${window.userAllowedBranchIds.join(',')})&order=nombre.asc&select=id,nombre`;
+      } else {
+        sucursalesUrl = `${supabaseUrl}sucursales?id=eq.-1&select=id,nombre`;
+      }
+    }
+
     const [pRes, sRes, prRes] = await Promise.all([
       fetch(`${supabaseUrl}periodos?order=periodo.asc&activo=eq.true`, { headers: h }),
-      fetch(`${supabaseUrl}sucursales?order=nombre.asc&select=id,nombre`, { headers: h }),
+      fetch(sucursalesUrl, { headers: h }),
       fetch(`${supabaseUrl}producto?order=nombre.asc`, { headers: h })
     ]);
     periodsCache    = pRes.ok  ? await pRes.json()  : [];
@@ -82,13 +91,25 @@ export const loadVolumePeriod = async () => {
   emptyEl?.classList.add('hidden');
 
   if (!supabaseUrl || !supabaseKey) await loadEnv();
-  if (periodsCache.length === 0 && sucursalesCache.length === 0) await loadLookups();
+  await loadLookups();
 
   const start = (vpPage - 1) * vpPageSize;
   const end   = start + vpPageSize - 1;
 
   try {
     let url = `${supabaseUrl}volumne_periodo?order=id.desc`;
+
+    if (!window.isAdmin) {
+      if (!window.userAllowedBranchIds || window.userAllowedBranchIds.length === 0) {
+        vpList = [];
+        vpTotalCount = 0;
+        emptyEl?.classList.remove('hidden');
+        updateVPPaginationUI(0, 0);
+        loadingEl?.classList.add('hidden');
+        return;
+      }
+      url += `&sucursal_id=in.(${window.userAllowedBranchIds.join(',')})`;
+    }
 
     if (vpSearchQuery)    url += `&descripcion=ilike.*${encodeURIComponent(vpSearchQuery)}*`;
     if (vpFilterPeriod)   url += `&periodo_id=eq.${vpFilterPeriod}`;
@@ -108,33 +129,58 @@ export const loadVolumePeriod = async () => {
       emptyEl?.classList.remove('hidden');
       updateVPPaginationUI(0, 0);
     } else {
-      const canWrite = window.hasPermission('view-volume-period', 'escribir');
       vpList.forEach(row => {
+        const canWrite = window.hasPermission('view-volume-period', 'escribir') && (window.isAdmin || window.canEditBranch?.(row.sucursal_id));
+        const btnEditar = `
+          <button onclick="editVolumePeriod(${row.id})" class="inline-flex items-center justify-center p-1.5 rounded-lg text-brand bg-brand/10 hover:bg-brand/20 dark:text-brand-light dark:bg-brand/15 dark:hover:bg-brand/25 transition-all duration-200 shadow-sm border border-brand/20 dark:border-brand/30" title="Editar Registro">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+            </svg>
+          </button>
+        `;
+
+        const btnVer = `
+          <button onclick="editVolumePeriod(${row.id})" class="inline-flex items-center justify-center p-1.5 rounded-lg text-brand bg-brand/10 hover:bg-brand/20 dark:text-brand-light dark:bg-brand/15 dark:hover:bg-brand/25 transition-all duration-200 shadow-sm border border-brand/20 dark:border-brand/30" title="Ver Detalles">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+            </svg>
+          </button>
+        `;
+
+        const btnEliminar = `
+          <button onclick="deleteVolumePeriod(${row.id})" class="inline-flex items-center justify-center p-1.5 rounded-lg text-red-600 bg-red-50 hover:bg-red-100 dark:text-red-400 dark:bg-red-950/20 dark:hover:bg-red-950/40 transition-all duration-200 shadow-sm border border-red-200/40 dark:border-red-800/40" title="Eliminar Registro">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+          </button>
+        `;
+
+        const editDeleteRow = canWrite ? `${btnEditar}${btnEliminar}` : `${btnVer}`;
+
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-100/50 dark:hover:bg-slate-800/30 transition-colors duration-200';
         tr.innerHTML = `
-          <td class="px-6 py-4 font-semibold text-slate-800 dark:text-white font-mono">${row.id}</td>
-          <td class="px-6 py-4">
+          <td class="px-4 py-3 text-left whitespace-nowrap">
+            <div class="flex items-center gap-1.5">
+              ${editDeleteRow}
+            </div>
+          </td>
+          <td class="px-4 py-3 font-semibold text-slate-800 dark:text-white font-mono">${row.id}</td>
+          <td class="px-4 py-3">
             <span class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-400">
               ${escapeHtml(periodLabel(row.periodo_id))}
             </span>
           </td>
-          <td class="px-6 py-4 text-slate-600 dark:text-slate-300 text-xs">${escapeHtml(sucursalLabel(row.sucursal_id))}</td>
-          <td class="px-6 py-4 text-slate-700 dark:text-slate-200 font-medium">${escapeHtml(productLabel(row.producto_id))}</td>
-          <td class="px-6 py-4">
+          <td class="px-4 py-3 text-slate-600 dark:text-slate-300 text-xs">${escapeHtml(sucursalLabel(row.sucursal_id))}</td>
+          <td class="px-4 py-3 text-slate-700 dark:text-slate-200 font-medium">${escapeHtml(productLabel(row.producto_id))}</td>
+          <td class="px-4 py-3">
             <span class="font-semibold text-slate-800 dark:text-white tabular-nums">
               ${row.cantidad !== null ? Number(row.cantidad).toLocaleString('es-VE', { minimumFractionDigits: 2 }) : '-'}
             </span>
           </td>
-          <td class="px-6 py-4 text-slate-500 dark:text-slate-400 font-mono">${fmtDate(row.fecha_registro)}</td>
-          <td class="px-6 py-4 text-slate-500 dark:text-slate-400 max-w-xs truncate">${escapeHtml(row.descripcion || '-')}</td>
-          <td class="px-6 py-4 text-right space-x-1.5">
-            ${canWrite
-              ? `<button onclick="editVolumePeriod(${row.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Editar</button>
-                 <button onclick="deleteVolumePeriod(${row.id})" class="text-red-500 hover:text-red-600 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors">Eliminar</button>`
-              : `<button onclick="editVolumePeriod(${row.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Ver</button>`
-            }
-          </td>
+          <td class="px-4 py-3 text-slate-500 dark:text-slate-400 font-mono">${fmtDate(row.fecha_registro)}</td>
+          <td class="px-4 py-3 text-slate-500 dark:text-slate-400 max-w-xs truncate">${escapeHtml(row.descripcion || '-')}</td>
         `;
         tableBody.appendChild(tr);
       });
@@ -175,7 +221,7 @@ export const initVolumePeriodModule = () => {
   const form    = document.getElementById('volume-period-form');
   const btnAdd  = document.getElementById('btn-add-volume-period');
 
-  const openModal = () => {
+  const openModal = (sucursalId = null) => {
     if (!overlay || !card) return;
     overlay.classList.remove('hidden');
     overlay.offsetHeight;
@@ -184,7 +230,7 @@ export const initVolumePeriodModule = () => {
     card.classList.remove('scale-95', 'opacity-0');
     card.classList.add('scale-100', 'opacity-100');
 
-    const canWrite = window.hasPermission('view-volume-period', 'escribir');
+    const canWrite = window.hasPermission('view-volume-period', 'escribir') && (window.isAdmin || (sucursalId ? window.canEditBranch?.(sucursalId) : true));
     const saveBtn  = document.getElementById('btn-save-volume-period-modal');
     if (saveBtn) saveBtn.style.display = canWrite ? 'inline-block' : 'none';
     form?.querySelectorAll('input, textarea, select').forEach(el => { el.disabled = !canWrite; });
@@ -237,9 +283,9 @@ export const initVolumePeriodModule = () => {
     document.getElementById('vp-form-fecha-registro').value = row.fecha_registro ? row.fecha_registro.split('T')[0] : '';
     document.getElementById('vp-form-descripcion').value    = row.descripcion  ?? '';
 
-    const canWrite = window.hasPermission('view-volume-period', 'escribir');
-    document.getElementById('volume-period-modal-title').textContent = canWrite ? 'Editar Registro de Volumetría' : 'Detalles del Registro';
-    openModal();
+    const canWrite = window.hasPermission('view-volume-period', 'escribir') && (window.isAdmin || window.canEditBranch?.(row.sucursal_id));
+    document.getElementById('volume-period-modal-title').textContent = canWrite ? 'Editar Registro de Volumetría' : 'Detalles del Registro (Solo Lectura)';
+    openModal(row.sucursal_id);
   };
 
   // ── Delete ────────────────────────────────────────────────────────────────

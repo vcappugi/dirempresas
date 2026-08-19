@@ -4,7 +4,7 @@ let usersPage = 1;
 const usersPageSize = 5;
 let usersSearchQuery = "";
 let usersTotalCount = 0;
-let usersList = [];
+export let usersList = [];
 
 export const loadUsers = async () => {
   const loadingEl = document.getElementById('users-loading');
@@ -66,27 +66,66 @@ export const loadUsers = async () => {
           ? `<span class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-400">Activo</span>`
           : `<span class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">Inactivo</span>`;
 
-        const userRole = (user.rol || 'usuario').toLowerCase();
-        const roleBadge = userRole === 'admin'
-          ? `<span class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-400">Admin</span>`
-          : `<span class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400">Usuario</span>`;
+        const canWrite = window.hasPermission('view-users', 'escribir');
+
+        const btnEditar = `
+          <button onclick="editUser(${user.id})" class="inline-flex items-center justify-center p-1.5 rounded-lg text-brand bg-brand/10 hover:bg-brand/20 dark:text-brand-light dark:bg-brand/15 dark:hover:bg-brand/25 transition-all duration-200 shadow-sm border border-brand/20 dark:border-brand/30" title="Editar Usuario">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+            </svg>
+          </button>
+        `;
+
+        const btnVer = `
+          <button onclick="editUser(${user.id})" class="inline-flex items-center justify-center p-1.5 rounded-lg text-brand bg-brand/10 hover:bg-brand/20 dark:text-brand-light dark:bg-brand/15 dark:hover:bg-brand/25 transition-all duration-200 shadow-sm border border-brand/20 dark:border-brand/30" title="Ver Detalles">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+            </svg>
+          </button>
+        `;
+
+        const btnEliminar = `
+          <button onclick="deleteUser(${user.id})" class="inline-flex items-center justify-center p-1.5 rounded-lg text-red-600 bg-red-50 hover:bg-red-100 dark:text-red-400 dark:bg-red-950/20 dark:hover:bg-red-950/40 transition-all duration-200 shadow-sm border border-red-200/40 dark:border-red-800/40" title="Eliminar Usuario">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+          </button>
+        `;
+
+        const btnRoles = `
+          <button onclick="openUserRolesModal(${user.id})" class="inline-flex items-center justify-center p-1.5 rounded-lg text-indigo-600 bg-indigo-50 hover:bg-indigo-100 dark:text-indigo-400 dark:bg-indigo-950/20 dark:hover:bg-indigo-950/40 transition-all duration-200 shadow-sm border border-indigo-200/40 dark:border-indigo-800/40" title="Gestionar Roles">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+            </svg>
+          </button>
+        `;
+
+        const btnCompanies = `
+          <button onclick="openUserCompaniesModal(${user.id})" class="inline-flex items-center justify-center p-1.5 rounded-lg text-emerald-600 bg-emerald-50 hover:bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-950/20 dark:hover:bg-emerald-950/40 transition-all duration-200 shadow-sm border border-emerald-200/40 dark:border-emerald-800/40" title="Empresas y Sucursales Asignadas">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+            </svg>
+          </button>
+        `;
+
+        const editDeleteRow = canWrite ? `${btnEditar}${btnEliminar}` : `${btnVer}`;
 
         const row = document.createElement('tr');
         row.className = 'hover:bg-slate-100/50 dark:hover:bg-slate-800/30 transition-colors duration-200';
         row.innerHTML = `
-          <td class="px-6 py-4 font-semibold text-slate-800 dark:text-slate-200">${escapeHtml(user.nombre)}</td>
-          <td class="px-6 py-4 text-slate-650 dark:text-slate-400">${escapeHtml(user.ci)}</td>
-          <td class="px-6 py-4 text-slate-650 dark:text-slate-400">${escapeHtml(user.mail)}</td>
-          <td class="px-6 py-4 text-slate-650 dark:text-slate-400">${escapeHtml(user.telefono)}</td>
-          <td class="px-6 py-4">${roleBadge}</td>
-          <td class="px-6 py-4">${statusBadge}</td>
-          <td class="px-6 py-4 text-right space-x-1.5">
-            ${window.hasPermission('view-users', 'escribir')
-              ? `<button onclick="editUser(${user.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Editar</button>
-                 <button onclick="deleteUser(${user.id})" class="text-red-500 hover:text-red-650 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors">Eliminar</button>`
-              : `<button onclick="editUser(${user.id})" class="text-brand hover:text-brand-light text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand/10 transition-colors">Ver</button>`
-            }
+          <td class="px-4 py-3 text-left whitespace-nowrap">
+            <div class="flex items-center gap-1.5">
+              ${btnRoles}
+              ${btnCompanies}
+              ${editDeleteRow}
+            </div>
           </td>
+          <td class="px-4 py-3 font-semibold text-slate-800 dark:text-slate-200">${escapeHtml(user.nombre)}</td>
+          <td class="px-4 py-3 text-slate-600 dark:text-slate-400 font-mono">${escapeHtml(user.ci)}</td>
+          <td class="px-4 py-3 text-slate-600 dark:text-slate-400">${escapeHtml(user.mail)}</td>
+          <td class="px-4 py-3 text-slate-600 dark:text-slate-400">${escapeHtml(user.telefono)}</td>
+          <td class="px-4 py-3">${statusBadge}</td>
         `;
         tableBody.appendChild(row);
       });
@@ -96,7 +135,7 @@ export const loadUsers = async () => {
     console.error("Error loading users:", err);
     tableBody.innerHTML = `
       <tr>
-        <td colspan="7" class="px-6 py-10 text-center text-red-500 font-semibold">
+        <td colspan="6" class="px-6 py-10 text-center text-red-500 font-semibold">
           ${err.message || 'Error cargando usuarios.'}
         </td>
       </tr>
@@ -135,6 +174,7 @@ export const initUsersModule = () => {
   const btnCancelModal = document.getElementById('btn-cancel-modal');
   const btnAddUser = document.getElementById('btn-add-user');
   const userForm = document.getElementById('user-form');
+  const btnManageRoles = document.getElementById('btn-manage-user-roles');
 
   const openModal = () => {
     if (!modalOverlay || !modalCard) return;
@@ -181,10 +221,10 @@ export const initUsersModule = () => {
       document.getElementById('form-clave').value = '';
       document.getElementById('form-clave').required = true;
       document.getElementById('form-activo').checked = true;
-      document.getElementById('form-rol').value = '';
 
       document.getElementById('modal-title').textContent = 'Crear Usuario';
       document.getElementById('password-hint').classList.add('hidden');
+      if (btnManageRoles) btnManageRoles.classList.add('hidden');
       
       openModal();
     });
@@ -192,6 +232,16 @@ export const initUsersModule = () => {
 
   if (btnCloseModal) btnCloseModal.addEventListener('click', closeModal);
   if (btnCancelModal) btnCancelModal.addEventListener('click', closeModal);
+
+  if (btnManageRoles) {
+    btnManageRoles.addEventListener('click', () => {
+      const userId = parseInt(document.getElementById('form-id').value, 10);
+      if (userId) {
+        closeModal();
+        window.openUserRolesModal?.(userId);
+      }
+    });
+  }
 
   window.editUser = (id) => {
     const user = usersList.find(u => u.id === id);
@@ -205,11 +255,11 @@ export const initUsersModule = () => {
     document.getElementById('form-clave').value = '';
     document.getElementById('form-clave').required = false;
     document.getElementById('form-activo').checked = user.activo === true;
-    document.getElementById('form-rol').value = user.rol || '';
 
     const canWrite = window.hasPermission('view-users', 'escribir');
     document.getElementById('modal-title').textContent = canWrite ? 'Editar Usuario' : 'Detalles del Usuario';
     document.getElementById('password-hint').classList.remove('hidden');
+    if (btnManageRoles) btnManageRoles.classList.remove('hidden');
     
     openModal();
   };
@@ -229,12 +279,6 @@ export const initUsersModule = () => {
       const telefono = document.getElementById('form-telefono').value;
       const clave = document.getElementById('form-clave').value;
       const activo = document.getElementById('form-activo').checked;
-      const rol = document.getElementById('form-rol').value;
-
-      if (!rol) {
-        showToast("Por favor, seleccione un rol para el usuario.", false);
-        return;
-      }
 
       const saveBtn = document.getElementById('btn-save-modal');
       const originalBtnText = saveBtn.innerHTML;
@@ -248,7 +292,7 @@ export const initUsersModule = () => {
       `;
 
       try {
-        const userData = { nombre, ci, mail, telefono, activo, rol };
+        const userData = { nombre, ci, mail, telefono, activo };
 
         if (clave) {
           const bcryptLib = window.bcrypt || dcodeIO.bcrypt;
