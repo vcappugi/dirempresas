@@ -9,7 +9,7 @@
     </div>
 
     <!-- Filters & Action Bar -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div class="relative flex-1 max-w-md">
         <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
           <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -18,12 +18,32 @@
         </span>
         <input type="text" id="sales-search" placeholder="Buscar por cliente, vendedor o nro. factura..." class="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
       </div>
-      <button id="btn-add-sale" class="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-brand hover:bg-brand-light rounded-xl shadow-lg shadow-brand/10 transition-all duration-300">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4.5v15m7.5-7.5h-15"></path>
-        </svg>
-        Registrar Venta
-      </button>
+      
+      <div class="flex flex-wrap items-center gap-2.5">
+        <!-- Descargar Plantilla CSV -->
+        <button id="btn-download-sales-template" class="inline-flex items-center gap-2 px-3.5 py-2.5 text-xs font-semibold rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all duration-200 shadow-sm" title="Descargar plantilla Excel / CSV con formato y ejemplos">
+          <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+          </svg>
+          <span>Descargar Plantilla CSV</span>
+        </button>
+
+        <!-- Importar CSV -->
+        <button id="btn-import-sales-csv" class="inline-flex items-center gap-2 px-3.5 py-2.5 text-xs font-semibold rounded-xl border border-emerald-500/40 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-all duration-200 shadow-sm" title="Importar archivo CSV de ventas">
+          <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+          </svg>
+          <span>Importar Ventas CSV</span>
+        </button>
+
+        <!-- Registrar Venta -->
+        <button id="btn-add-sale" class="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-brand hover:bg-brand-light rounded-xl shadow-lg shadow-brand/10 transition-all duration-300">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4.5v15m7.5-7.5h-15"></path>
+          </svg>
+          <span>Registrar Venta</span>
+        </button>
+      </div>
     </div>
     
     <!-- Sales Table -->
@@ -186,5 +206,116 @@
         </button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Modal de Importación Masiva CSV de Ventas -->
+<div id="sales-import-modal-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/65 backdrop-blur-sm hidden opacity-0 transition-all duration-300 p-4">
+  <div id="sales-import-modal-card" class="bg-white dark:bg-slate-900 w-full max-w-4xl p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl relative space-y-6 scale-95 opacity-0 transition-all duration-300 max-h-[92vh] flex flex-col">
+    
+    <!-- Close Button -->
+    <button id="btn-close-sales-import-modal" class="absolute top-6 right-6 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+
+    <!-- Header -->
+    <div class="border-b border-slate-100 dark:border-slate-800 pb-3">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 mb-2">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+        </svg>
+        Migración de Datos
+      </div>
+      <h3 class="font-display font-bold text-xl text-slate-900 dark:text-white">Importar Ventas desde Archivo CSV</h3>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">El sistema relacionará automáticamente cada venta con su modelo, línea, familia y período correspondiente.</p>
+    </div>
+
+    <!-- Content Area (Scrollable) -->
+    <div class="space-y-5 overflow-y-auto flex-1 pr-1">
+      
+      <!-- Drag & Drop Zone -->
+      <div id="sales-dropzone" class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-brand dark:hover:border-brand rounded-2xl p-6 text-center cursor-pointer transition-all bg-slate-50/50 dark:bg-slate-950/50 group">
+        <input type="file" id="sales-csv-file-input" accept=".csv, .txt" class="hidden">
+        <div class="w-12 h-12 rounded-2xl bg-brand/10 text-brand dark:text-brand-light flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+        </div>
+        <p class="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-1">Haga clic o arrastre su archivo CSV aquí</p>
+        <p class="text-xs text-slate-500 dark:text-slate-400">Archivos delimitados por punto y coma (;) o coma (,). Codificación UTF-8 / ANSI.</p>
+      </div>
+
+      <!-- File Loaded Info & Parse Stats -->
+      <div id="sales-import-summary" class="hidden p-4 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-semibold text-xs text-slate-800 dark:text-white" id="sales-import-filename">archivo.csv</span>
+            <span class="text-[11px] text-slate-500 dark:text-slate-400" id="sales-import-filesize">(0 KB)</span>
+          </div>
+          <div class="flex items-center gap-3 text-xs">
+            <span class="text-emerald-600 dark:text-emerald-400 font-semibold" id="sales-import-valid-count">0 Válidas</span>
+            <span class="text-amber-500 font-semibold" id="sales-import-warning-count">0 Con Advertencias</span>
+            <span class="text-red-500 font-semibold" id="sales-import-error-count">0 Errores</span>
+          </div>
+        </div>
+
+        <!-- Progress Bar (Hidden by default, shown during upload) -->
+        <div id="sales-import-progress-container" class="hidden space-y-1">
+          <div class="flex justify-between text-xs text-slate-500">
+            <span>Guardando registros en la base de datos...</span>
+            <span id="sales-import-progress-pct">0%</span>
+          </div>
+          <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
+            <div id="sales-import-progress-bar" class="bg-brand h-2 rounded-full transition-all duration-200" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preview Table Container -->
+      <div id="sales-import-preview-section" class="hidden space-y-2">
+        <div class="flex items-center justify-between">
+          <h4 class="font-display font-semibold text-xs text-slate-700 dark:text-slate-300 uppercase tracking-wider">Vista Previa de Registros a Migrar</h4>
+          <span class="text-[11px] text-slate-400">Verifique los datos y relaciones detectadas</span>
+        </div>
+        <div class="overflow-x-auto max-h-60 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
+          <table class="w-full text-xs text-left text-slate-600 dark:text-slate-400">
+            <thead class="text-[11px] uppercase bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 sticky top-0 border-b border-slate-200 dark:border-slate-800">
+              <tr>
+                <th class="px-3 py-2">Estado</th>
+                <th class="px-3 py-2">Fecha</th>
+                <th class="px-3 py-2">Factura</th>
+                <th class="px-3 py-2">Modelo Detectado</th>
+                <th class="px-3 py-2">Período</th>
+                <th class="px-3 py-2">Cliente</th>
+                <th class="px-3 py-2 text-center">Cant.</th>
+                <th class="px-3 py-2 text-right">Precio Venta</th>
+                <th class="px-3 py-2">Vendedor</th>
+                <th class="px-3 py-2 text-right">Comisión</th>
+              </tr>
+            </thead>
+            <tbody id="sales-import-preview-body" class="divide-y divide-slate-100 dark:divide-slate-800">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Modal Footer Actions -->
+    <div class="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
+      <button type="button" id="btn-cancel-sales-import" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+        Cancelar
+      </button>
+      <button type="button" id="btn-process-sales-import" disabled class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold text-white bg-brand hover:bg-brand-light disabled:opacity-50 disabled:pointer-events-none shadow-lg shadow-brand/20 transition-all duration-300">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+        </svg>
+        <span>Procesar e Importar</span>
+      </button>
+    </div>
+
   </div>
 </div>

@@ -52,7 +52,7 @@ const loadTemplates = async () => {
 
   for (const url of templates) {
     try {
-      const res = await fetch(url);
+      const res = await fetch(`${url}?v=${Date.now()}`, { cache: 'no-store' });
       if (res.ok) {
         const html = await res.text();
         const temp = document.createElement('div');
