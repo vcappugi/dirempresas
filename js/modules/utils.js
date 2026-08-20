@@ -1,59 +1,43 @@
-export let supabaseUrl = "";
-export let supabaseKey = "";
+export const DEFAULT_SUPABASE_URL = "https://isiotbgafkdcdarlzhib.supabase.co/rest/v1/";
+export const DEFAULT_SUPABASE_KEY = "sb_publishable_o2-jG0NGzvPicurmCbMj7w_7DZMDlv3";
+
+export let supabaseUrl = DEFAULT_SUPABASE_URL;
+export let supabaseKey = DEFAULT_SUPABASE_KEY;
 export let itemToDeleteId = null;
 export let itemToDeleteType = "";
 
 export const loadEnv = async () => {
   try {
     const res = await fetch('.env');
-    if (!res.ok) throw new Error("No se pudo obtener el archivo .env");
-    const text = await res.text();
-    const env = {};
-    
-    text.split(/\r?\n/).forEach(line => {
-      const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
-      if (match) {
-        let key = match[1];
-        let val = match[2] ? match[2].trim() : '';
-        if (val.startsWith('"') && val.endsWith('"')) val = val.slice(1, -1);
-        if (val.startsWith("'") && val.endsWith("'")) val = val.slice(1, -1);
-        env[key] = val;
-      }
-    });
-    
-    supabaseUrl = env['DBSUPABASE'] || env['DB_SUPABASE'] || "";
-    supabaseKey = env['APKEY'] || "";
-  } catch (e) {
-    console.warn("No se pudo cargar el archivo .env, intentando obtener variables desde la API de Vercel:", e);
-    try {
-      const res = await fetch('/api/config');
-      if (res.ok) {
-        const env = await res.json();
-        supabaseUrl = env.DBSUPABASE || env.DB_SUPABASE || "";
-        supabaseKey = env.APKEY || "";
-      }
-    } catch (apiError) {
-      console.error("Error al obtener variables de entorno desde /api/config:", apiError);
-    }
-    
-    // Fallback secundario estático
-    if (!supabaseUrl || !supabaseKey) {
-      try {
-        if (typeof process !== 'undefined' && process.env) {
-          supabaseUrl = process.env.DBSUPABASE || process.env.DB_SUPABASE || process.env.NEXT_PUBLIC_DB_SUPABASE || "";
-          supabaseKey = process.env.APKEY || process.env.NEXT_PUBLIC_APKEY || "";
-        } else if (typeof import.meta !== 'undefined' && import.meta.env) {
-          supabaseUrl = import.meta.env.DBSUPABASE || import.meta.env.DB_SUPABASE || import.meta.env.VITE_DB_SUPABASE || "";
-          supabaseKey = import.meta.env.APKEY || import.meta.env.VITE_APKEY || "";
-        } else if (typeof window !== 'undefined' && window.process?.env) {
-          supabaseUrl = window.process.env.DBSUPABASE || window.process.env.DB_SUPABASE || "";
-          supabaseKey = window.process.env.APKEY || "";
+    if (res.ok) {
+      const text = await res.text();
+      const env = {};
+      
+      text.split(/\r?\n/).forEach(line => {
+        const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
+        if (match) {
+          let key = match[1];
+          let val = match[2] ? match[2].trim() : '';
+          if (val.startsWith('"') && val.endsWith('"')) val = val.slice(1, -1);
+          if (val.startsWith("'") && val.endsWith("'")) val = val.slice(1, -1);
+          env[key] = val;
         }
-      } catch (envError) {
-        console.error("Error al acceder a las variables de entorno de Vercel/System:", envError);
+      });
+      
+      if (env['DBSUPABASE'] || env['DB_SUPABASE']) {
+        supabaseUrl = env['DBSUPABASE'] || env['DB_SUPABASE'];
+      }
+      if (env['APKEY']) {
+        supabaseKey = env['APKEY'];
       }
     }
+  } catch (e) {
+    // Expected when running inside native Android APK or offline
   }
+
+  // Fallback to static credentials if not loaded from .env
+  if (!supabaseUrl) supabaseUrl = DEFAULT_SUPABASE_URL;
+  if (!supabaseKey) supabaseKey = DEFAULT_SUPABASE_KEY;
 };
 
 export const getHeaders = () => {

@@ -1,0 +1,337 @@
+import { supabaseUrl, supabaseKey, loadEnv, getHeaders, showToast, escapeHtml, openDeleteModal } from './utils.js';
+
+let rolesPage = 1;
+const rolesPageSize = 5;
+let rolesSearchQuery = "";
+let rolesTotalCount = 0;
+export let rolesList = [];
+
+export const loadRoles = async () => {
+  const loadingEl = document.getElementById('roles-loading');
+  const tableBody = document.getElementById('roles-table-body');
+  const emptyEl = document.getElementById('roles-empty');
+
+  if (!tableBody) return;
+
+  loadingEl?.classList.remove('hidden');
+  tableBody.innerHTML = '';
+  emptyEl?.classList.add('hidden');
+
+  if (!supabaseUrl || !supabaseKey) {
+    await loadEnv();
+  }
+
+  const start = (rolesPage - 1) * rolesPageSize;
+  const end = start + rolesPageSize - 1;
+
+  try {
+    let queryUrl = `${supabaseUrl}roles`;
+
+    if (rolesSearchQuery) {
+      const encSearch = encodeURIComponent(rolesSearchQuery);
+      queryUrl += `?or=(nombre.ilike.*${encSearch}*,tipo.ilike.*${encSearch}*)&order=id.asc`;
+    } else {
+      queryUrl += `?order=id.asc`;
+    }
+
+    const headers = getHeaders();
+    headers["Prefer"] = "count=exact";
+    headers["Range"] = `${start}-${end}`;
+
+    const res = await fetch(queryUrl, {
+      method: 'GET',
+      headers: headers
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status} - No se pudo conectar a la base de datos.`);
+    
+    rolesList = await res.json();
+
+    const contentRange = res.headers.get('content-range');
+    if (contentRange) {
+      const parts = contentRange.split('/');
+      if (parts.length > 1) {
+        rolesTotalCount = parseInt(parts[1], 10);
+      }
+    } else {
+      rolesTotalCount = rolesList.length;
+    }
+
+    if (rolesList.length === 0) {
+      emptyEl?.classList.remove('hidden');
+      updateRolesPaginationUI(0, 0);
+    } else {
+      rolesList.forEach(role => {
+        const statusBadge = role.activo
+          ? `<span class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-400">Activo</span>`
+          : `<span class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">Inactivo</span>`;
+
+        const canWrite = window.hasPermission('view-roles', 'escribir');
+
+        const btnPermisos = `
+          <button onclick="openRolePermissionsModal(${role.id})" class="inline-flex items-center justify-center p-1.5 rounded-lg text-slate-600 bg-slate-100 hover:bg-slate-200 dark:text-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 transition-all duration-200 shadow-sm border border-slate-200/50 dark:border-slate-700/50" title="Permisos">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+            </svg>
+          </button>
+        `;
+
+        const btnEditar = `
+          <button onclick="editRole(${role.id})" class="inline-flex items-center justify-center p-1.5 rounded-lg text-brand bg-brand/10 hover:bg-brand/20 dark:text-brand-light dark:bg-brand/15 dark:hover:bg-brand/25 transition-all duration-200 shadow-sm border border-brand/20 dark:border-brand/30" title="Editar Rol">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+            </svg>
+          </button>
+        `;
+
+        const btnVer = `
+          <button onclick="editRole(${role.id})" class="inline-flex items-center justify-center p-1.5 rounded-lg text-brand bg-brand/10 hover:bg-brand/20 dark:text-brand-light dark:bg-brand/15 dark:hover:bg-brand/25 transition-all duration-200 shadow-sm border border-brand/20 dark:border-brand/30" title="Ver Detalles">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+            </svg>
+          </button>
+        `;
+
+        const btnEliminar = `
+          <button onclick="deleteRole(${role.id})" class="inline-flex items-center justify-center p-1.5 rounded-lg text-red-600 bg-red-50 hover:bg-red-100 dark:text-red-400 dark:bg-red-950/20 dark:hover:bg-red-950/40 transition-all duration-200 shadow-sm border border-red-200/40 dark:border-red-800/40" title="Eliminar Rol">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+          </button>
+        `;
+
+        const editDeleteRow = canWrite ? `${btnEditar}${btnEliminar}` : `${btnVer}`;
+
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-slate-100/50 dark:hover:bg-slate-800/30 transition-colors duration-200';
+        row.innerHTML = `
+          <td class="px-4 py-3 text-left whitespace-nowrap">
+            <div class="flex items-center gap-1.5">
+              ${btnPermisos}
+              ${editDeleteRow}
+            </div>
+          </td>
+          <td class="px-4 py-3 font-semibold text-slate-800 dark:text-white">${escapeHtml(role.nombre)}</td>
+          <td class="px-4 py-3 text-slate-600 dark:text-slate-400">${escapeHtml(role.tipo)}</td>
+          <td class="px-4 py-3">${statusBadge}</td>
+        `;
+        tableBody.appendChild(row);
+      });
+      updateRolesPaginationUI(start + 1, start + rolesList.length);
+    }
+  } catch (err) {
+    console.error("Error loading roles:", err);
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="4" class="px-6 py-10 text-center text-red-500 font-semibold">
+          ${err.message || 'Error cargando roles.'}
+        </td>
+      </tr>
+    `;
+    updateRolesPaginationUI(0, 0);
+  } finally {
+    loadingEl?.classList.add('hidden');
+  }
+};
+
+const updateRolesPaginationUI = (startRange, endRange) => {
+  const rangeStartEl = document.getElementById('roles-range-start');
+  const rangeEndEl = document.getElementById('roles-range-end');
+  const totalCountEl = document.getElementById('roles-total-count');
+  const currentPageEl = document.getElementById('roles-current-page');
+  const totalPagesEl = document.getElementById('roles-total-pages');
+  const btnPrev = document.getElementById('roles-btn-prev');
+  const btnNext = document.getElementById('roles-btn-next');
+
+  const totalPages = Math.ceil(rolesTotalCount / rolesPageSize) || 1;
+
+  if (rangeStartEl) rangeStartEl.textContent = startRange;
+  if (rangeEndEl) rangeEndEl.textContent = endRange;
+  if (totalCountEl) totalCountEl.textContent = rolesTotalCount;
+  if (currentPageEl) currentPageEl.textContent = rolesPage;
+  if (totalPagesEl) totalPagesEl.textContent = totalPages;
+
+  if (btnPrev) btnPrev.disabled = rolesPage <= 1;
+  if (btnNext) btnNext.disabled = rolesPage >= totalPages;
+};
+
+export const initRolesModule = () => {
+  const roleModalOverlay = document.getElementById('role-modal-overlay');
+  const roleModalCard = document.getElementById('role-modal-card');
+  const btnCloseRoleModal = document.getElementById('btn-close-role-modal');
+  const btnCancelRoleModal = document.getElementById('btn-cancel-role-modal');
+  const btnAddRole = document.getElementById('btn-add-role');
+  const roleForm = document.getElementById('role-form');
+
+  const openRoleModal = () => {
+    if (!roleModalOverlay || !roleModalCard) return;
+    roleModalOverlay.classList.remove('hidden');
+    roleModalOverlay.offsetHeight;
+    roleModalOverlay.classList.remove('opacity-0');
+    roleModalOverlay.classList.add('opacity-100');
+    roleModalCard.classList.remove('scale-95', 'opacity-0');
+    roleModalCard.classList.add('scale-100', 'opacity-100');
+
+    const canWrite = window.hasPermission('view-roles', 'escribir');
+    const saveBtn = document.getElementById('btn-save-role-modal');
+    if (saveBtn) {
+      saveBtn.style.display = canWrite ? 'inline-block' : 'none';
+    }
+    if (roleForm) {
+      const inputs = roleForm.querySelectorAll('input, select, textarea');
+      inputs.forEach(input => {
+        input.disabled = !canWrite;
+      });
+    }
+  };
+
+  const closeRoleModal = () => {
+    if (!roleModalOverlay || !roleModalCard) return;
+    roleModalOverlay.classList.remove('opacity-100');
+    roleModalOverlay.classList.add('opacity-0');
+    roleModalCard.classList.remove('scale-100', 'opacity-100');
+    roleModalCard.classList.add('scale-95', 'opacity-0');
+    setTimeout(() => {
+      roleModalOverlay.classList.add('hidden');
+    }, 300);
+  };
+
+  if (btnAddRole) {
+    const canWrite = window.hasPermission('view-roles', 'escribir');
+    btnAddRole.style.display = canWrite ? 'inline-flex' : 'none';
+    btnAddRole.addEventListener('click', () => {
+      document.getElementById('role-form-id').value = '';
+      document.getElementById('role-form-nombre').value = '';
+      document.getElementById('role-form-tipo').value = '';
+      document.getElementById('role-form-activo').checked = true;
+
+      const permsBtn = document.getElementById('btn-manage-role-permissions');
+      if (permsBtn) permsBtn.classList.add('hidden');
+
+      document.getElementById('role-modal-title').textContent = 'Crear Rol';
+      openRoleModal();
+    });
+  }
+
+  if (btnCloseRoleModal) btnCloseRoleModal.addEventListener('click', closeRoleModal);
+  if (btnCancelRoleModal) btnCancelRoleModal.addEventListener('click', closeRoleModal);
+
+  const btnManagePermissions = document.getElementById('btn-manage-role-permissions');
+  if (btnManagePermissions) {
+    btnManagePermissions.addEventListener('click', () => {
+      const roleId = document.getElementById('role-form-id').value;
+      if (roleId) {
+        closeRoleModal();
+        window.openRolePermissionsModal?.(parseInt(roleId, 10));
+      }
+    });
+  }
+
+  window.editRole = (id) => {
+    const role = rolesList.find(r => r.id === id);
+    if (!role) return;
+
+    document.getElementById('role-form-id').value = role.id;
+    document.getElementById('role-form-nombre').value = role.nombre || '';
+    document.getElementById('role-form-tipo').value = role.tipo || '';
+    document.getElementById('role-form-activo').checked = role.activo === true;
+
+    const permsBtn = document.getElementById('btn-manage-role-permissions');
+    if (permsBtn) permsBtn.classList.remove('hidden');
+
+    const canWrite = window.hasPermission('view-roles', 'escribir');
+    document.getElementById('role-modal-title').textContent = canWrite ? 'Editar Rol' : 'Detalles del Rol';
+    openRoleModal();
+  };
+
+  window.deleteRole = (id) => {
+    openDeleteModal(id, 'role');
+  };
+
+  if (roleForm) {
+    roleForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const id = document.getElementById('role-form-id').value;
+      const nombre = document.getElementById('role-form-nombre').value;
+      const tipo = document.getElementById('role-form-tipo').value;
+      const activo = document.getElementById('role-form-activo').checked;
+
+      const saveBtn = document.getElementById('btn-save-role-modal');
+      const originalBtnText = saveBtn.innerHTML;
+
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = `
+        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg> Guardando...
+      `;
+
+      try {
+        const roleData = { nombre, tipo, activo };
+
+        let url = `${supabaseUrl}roles`;
+        let method = 'POST';
+
+        if (id) {
+          url = `${supabaseUrl}roles?id=eq.${id}`;
+          method = 'PATCH';
+        }
+
+        const res = await fetch(url, {
+          method: method,
+          headers: getHeaders(),
+          body: JSON.stringify(roleData)
+        });
+
+        if (!res.ok) throw new Error("Fallo al guardar datos del rol en Supabase.");
+
+        showToast(id ? 'Rol actualizado con éxito.' : 'Rol creado con éxito.', true);
+        closeRoleModal();
+        loadRoles();
+      } catch (err) {
+        console.error("Save role error:", err);
+        showToast(err.message || 'Error al guardar los datos del rol.', false);
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = originalBtnText;
+      }
+    });
+  }
+
+  // Roles Controls
+  const rolesSearchInput = document.getElementById('roles-search');
+  if (rolesSearchInput) {
+    let debounceTimer;
+    rolesSearchInput.addEventListener('input', (e) => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        rolesSearchQuery = e.target.value.trim();
+        rolesPage = 1;
+        loadRoles();
+      }, 300);
+    });
+  }
+
+  const rolesBtnPrev = document.getElementById('roles-btn-prev');
+  const rolesBtnNext = document.getElementById('roles-btn-next');
+  if (rolesBtnPrev) {
+    rolesBtnPrev.addEventListener('click', () => {
+      if (rolesPage > 1) {
+        rolesPage--;
+        loadRoles();
+      }
+    });
+  }
+  if (rolesBtnNext) {
+    rolesBtnNext.addEventListener('click', () => {
+      const totalPages = Math.ceil(rolesTotalCount / rolesPageSize);
+      if (rolesPage < totalPages) {
+        rolesPage++;
+        loadRoles();
+      }
+    });
+  }
+};

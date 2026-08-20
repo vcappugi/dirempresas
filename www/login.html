@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acceso Administrativo - Empresas</title>
+
+  <!-- SEO & Fonts & Mobile App Manifest -->
+  <meta name="description"
+    content="Página de inicio de sesión administrativo con tema de color corporativo personalizable.">
+  <meta name="theme-color" content="#355a31">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Custom dynamic theme configuration -->
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              light: 'var(--color-brand-light, #528a4c)',
+              DEFAULT: 'var(--color-brand, #355a31)',
+              dark: 'var(--color-brand-dark, #223a20)',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Outfit', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+
+  <!-- bcryptjs library for client-side password verification -->
+  <script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
+</head>
+
+<body
+  class="relative bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300 font-sans min-h-screen flex flex-col justify-between">
+
+  <!-- Background image with medium opacity -->
+  <div class="fixed inset-0 -z-10 pointer-events-none">
+    <img src="images/bel_backg.jpg" alt="" class="w-full h-full object-cover opacity-50 dark:opacity-30 blur-md scale-110">
+  </div>
+
+  <!-- Header / Top Bar (Simplificado con Theme Toggle) -->
+  <header class="w-full max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-brand flex items-center justify-center text-white shadow-lg shadow-brand/10">
+        <div
+          class="w-10 h-10 rounded-xl bg-white overflow-hidden flex items-center justify-center shadow-lg shadow-black/20 border border-slate-800 transition-all duration-300">
+          <img src="images/BEL_LOGO.jpg" alt="BEL Logo" class="w-full h-full object-contain p-1">
+        </div>
+      </div>
+      <span class="font-display font-bold text-lg tracking-tight">
+        Directorio de Empresas BEL<span class="text-brand">.</span>
+      </span>
+    </div>
+
+    <!-- Theme Toggle -->
+    <button id="theme-toggle"
+      class="p-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 transition-all">
+      <svg id="theme-toggle-dark-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"
+        xmlns="http://www.w3.org/2000/svg">
+        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+      </svg>
+      <svg id="theme-toggle-light-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"
+        xmlns="http://www.w3.org/2000/svg">
+        <path
+          d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464a1 1 0 10-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 100 2h1z"
+          fill-rule="evenodd" clip-rule="evenodd"></path>
+      </svg>
+    </button>
+  </header>
+
+  <!-- Login Form Main Card Section -->
+  <main class="flex-1 flex items-center justify-center p-6">
+    <div
+      class="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-2xl relative space-y-6">
+
+      <div class="text-center space-y-2">
+        <h1 class="font-display font-bold text-2xl text-slate-900 dark:text-white">Acceso al Panel</h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Ingresa tus credenciales para administrar usuarios y
+          roles.</p>
+      </div>
+
+      <!-- Error Alert Message -->
+      <div id="error-alert"
+        class="hidden flex items-start p-4 text-sm text-red-800 border border-red-200 rounded-2xl bg-red-50 dark:bg-slate-950/40 dark:text-red-400 dark:border-red-900/60"
+        role="alert">
+        <svg class="w-5 h-5 flex-shrink-0 mr-3" fill="currentColor" viewBox="0 0 20 20"
+          xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd"
+            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+            clip-rule="evenodd"></path>
+        </svg>
+        <span id="error-message" class="font-medium">Mensaje de error</span>
+      </div>
+
+      <form id="login-form" class="space-y-5">
+
+        <!-- Email Input -->
+        <div class="relative">
+          <input type="text" id="email" required placeholder=" "
+            class="peer block w-full px-4 py-3.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+          <label for="email"
+            class="absolute left-4 top-3.5 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Correo
+            Electrónico o Usuario</label>
+          <p id="email-validation" class="text-[10px] text-red-500 mt-1 hidden">Por favor ingresa un correo o usuario
+            válido.</p>
+        </div>
+
+        <!-- Password Input -->
+        <div class="relative">
+          <input type="password" id="password" required placeholder=" "
+            class="peer block w-full px-4 py-3.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+          <label for="password"
+            class="absolute left-4 top-3.5 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Contraseña
+            (Clave)</label>
+          <p id="password-validation" class="text-[10px] text-red-500 mt-1 hidden">La contraseña no puede estar vacía.
+          </p>
+        </div>
+
+        <!-- Remember Me Checkbox -->
+        <div class="flex items-center justify-between pt-1">
+          <label class="flex items-center text-xs text-slate-500 dark:text-slate-400 cursor-pointer">
+            <input type="checkbox" id="remember"
+              class="mr-2 text-brand focus:ring-brand rounded border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-900">
+            Recordar sesión
+          </label>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" id="btn-login-submit"
+          class="w-full py-3.5 text-sm font-semibold text-white bg-brand hover:bg-brand-light focus:ring-4 focus:ring-brand-200 rounded-xl transition-all shadow-lg shadow-brand/15 flex items-center justify-center">
+          Iniciar Sesión
+        </button>
+
+      </form>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="w-full max-w-7xl mx-auto px-6 py-6 text-center text-xs text-slate-400 dark:text-slate-500">
+    &copy; 2026 Empresas S.L. - Sistema de Acceso Seguro. Todos los derechos reservados.
+  </footer>
+
+  <!-- Scripts -->
+  <script type="module" src="js/login.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,24 @@
+{
+  "name": "Empresas - Gestión y Volumetría",
+  "short_name": "Empresas",
+  "description": "Sistema integral de gestión de empresas, sucursales y volumetría",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#355a31",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "./images/BEL_LOGO.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./images/BEL_LOGO.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}

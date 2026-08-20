@@ -21,6 +21,9 @@ import { initDetailTypesModule, loadDetailTypes } from './modules/detail_types.j
 import { initRevisionsModule, loadRevisions } from './modules/revisions.js';
 import { initBranchesModule, loadBranches } from './modules/branches.js';
 import { initProductsModule, loadProducts } from './modules/products.js';
+import { initModelsModule, loadModels } from './modules/models.js';
+import { initSalesModule, loadSales } from './modules/ventas.js';
+import { initSalesDashboardModule, loadSalesDashboard } from './modules/sales_dashboard.js';
 import { initPeriodsModule, loadPeriods } from './modules/periods.js';
 import { initVolumePeriodModule, loadVolumePeriod } from './modules/volume_period.js';
 import { initUserRolesModule, loadUserRoles, currentUserIdForRoles } from './modules/user_roles.js';
@@ -40,6 +43,9 @@ const loadTemplates = async () => {
     'templates/detail_types.html',
     'templates/revisions.html',
     'templates/products.html',
+    'templates/models.html',
+    'templates/ventas.html',
+    'templates/sales_dashboard.html',
     'templates/periods.html',
     'templates/volume_period.html'
   ];
@@ -120,7 +126,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Fallback if no permissions are configured/loaded in the session
     if (!profile.permissions) {
-      const allowedRead = ['view-dashboard', 'view-companies', 'view-branches', 'view-revisions', 'view-products', 'view-periods', 'view-volume-period'];
+      const allowedRead = ['view-dashboard', 'view-companies', 'view-branches', 'view-revisions', 'view-products', 'view-models', 'view-sales', 'view-ventas', 'view-sales-dashboard', 'view-periods', 'view-volume-period'];
       if (action === 'leer') {
         return allowedRead.includes(viewId);
       }
@@ -552,6 +558,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   initRevisionsModule();
   initBranchesModule();
   initProductsModule();
+  initModelsModule();
+  initSalesModule();
+  initSalesDashboardModule();
   initPeriodsModule();
   initVolumePeriodModule();
   initUserRolesModule();
@@ -589,6 +598,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     'view-detail-types': 'Tipos de Detalles - Empresas',
     'view-settings': 'Ajustes - Empresas',
     'view-products': 'Productos/Servicios - Empresas',
+    'view-models': 'Modelos - Empresas',
+    'view-sales': 'Ventas - Empresas',
+    'view-ventas': 'Ventas - Empresas',
+    'view-sales-dashboard': 'Dashboard Volumetría - Empresas',
     'view-periods': 'Períodos - Empresas',
     'view-volume-period': 'Volumetría por Período - Empresas'
   };
@@ -630,6 +643,9 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (targetViewId === 'view-detail-types') loadDetailTypes();
           if (targetViewId === 'view-revisions') loadRevisions();
           if (targetViewId === 'view-products') loadProducts();
+          if (targetViewId === 'view-models') loadModels();
+          if (targetViewId === 'view-sales' || targetViewId === 'view-ventas') loadSales();
+          if (targetViewId === 'view-sales-dashboard') loadSalesDashboard();
           if (targetViewId === 'view-periods') loadPeriods();
           if (targetViewId === 'view-volume-period') loadVolumePeriod();
         } else {
@@ -869,6 +885,38 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (e) {
           console.error(e);
           showToast('Error al eliminar el producto/servicio.', false);
+          loadingEl?.classList.add('hidden');
+        }
+      } else if (type === 'model') {
+        const loadingEl = document.getElementById('models-loading');
+        loadingEl?.classList.remove('hidden');
+        try {
+          const res = await fetch(`${supabaseUrl}modelos?id=eq.${id}`, {
+            method: 'DELETE',
+            headers: getHeaders()
+          });
+          if (!res.ok) throw new Error("No se pudo eliminar el modelo.");
+          showToast('Modelo eliminado con éxito.', true);
+          loadModels();
+        } catch (e) {
+          console.error(e);
+          showToast('Error al eliminar el modelo.', false);
+          loadingEl?.classList.add('hidden');
+        }
+      } else if (type === 'sale') {
+        const loadingEl = document.getElementById('sales-loading');
+        loadingEl?.classList.remove('hidden');
+        try {
+          const res = await fetch(`${supabaseUrl}ventas?id=eq.${id}`, {
+            method: 'DELETE',
+            headers: getHeaders()
+          });
+          if (!res.ok) throw new Error("No se pudo eliminar la venta.");
+          showToast('Venta eliminada con éxito.', true);
+          loadSales();
+        } catch (e) {
+          console.error(e);
+          showToast('Error al eliminar la venta.', false);
           loadingEl?.classList.add('hidden');
         }
       } else if (type === 'branch') {

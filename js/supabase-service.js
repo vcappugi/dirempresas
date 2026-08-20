@@ -1,12 +1,17 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-let supabaseUrl = "";
-let supabaseKey = "";
+export const DEFAULT_SUPABASE_REST_URL = "https://isiotbgafkdcdarlzhib.supabase.co/rest/v1/";
+export const DEFAULT_SUPABASE_URL = "https://isiotbgafkdcdarlzhib.supabase.co";
+export const DEFAULT_SUPABASE_KEY = "sb_publishable_o2-jG0NGzvPicurmCbMj7w_7DZMDlv3";
+
+let supabaseUrl = DEFAULT_SUPABASE_URL;
+let supabaseKey = DEFAULT_SUPABASE_KEY;
 let supabase = null;
 
-// Load environment variables asynchronously from .env
+// Load environment variables asynchronously from .env with fallback
 const loadEnv = async () => {
   const setSupabaseUrl = (restUrl) => {
+    if (!restUrl) return;
     if (restUrl.endsWith('/rest/v1/')) {
       supabaseUrl = restUrl.replace('/rest/v1/', '');
     } else if (restUrl.endsWith('/rest/v1')) {
@@ -18,57 +23,28 @@ const loadEnv = async () => {
 
   try {
     const res = await fetch('.env');
-    if (!res.ok) throw new Error("No se pudo obtener el archivo .env");
-    const text = await res.text();
-    const env = {};
-    text.split('\n').forEach(line => {
-      const parts = line.split('=');
-      if (parts.length >= 2) {
-        const key = parts[0].trim();
-        const value = parts[1].trim().replace(/^['"]|['"]$/g, '');
-        env[key] = value;
-      }
-    });
-    
-    let restUrl = env['DBSUPABASE'] || env['DB_SUPABASE'] || "";
-    setSupabaseUrl(restUrl);
-    supabaseKey = env['APKEY'] || "";
-  } catch (e) {
-    console.warn("No se pudo cargar el archivo .env en auth, intentando obtener variables desde la API de Vercel:", e);
-    let restUrl = "";
-    try {
-      const res = await fetch('/api/config');
-      if (res.ok) {
-        const env = await res.json();
-        restUrl = env.DBSUPABASE || env.DB_SUPABASE || "";
-        supabaseKey = env.APKEY || "";
-      }
-    } catch (apiError) {
-      console.error("Error al obtener variables de entorno en auth desde /api/config:", apiError);
-    }
-    
-    // Fallback secundario estático
-    if (!restUrl || !supabaseKey) {
-      try {
-        if (typeof process !== 'undefined' && process.env) {
-          restUrl = process.env.DBSUPABASE || process.env.DB_SUPABASE || process.env.NEXT_PUBLIC_DB_SUPABASE || "";
-          supabaseKey = process.env.APKEY || process.env.NEXT_PUBLIC_APKEY || "";
-        } else if (typeof import.meta !== 'undefined' && import.meta.env) {
-          restUrl = import.meta.env.DBSUPABASE || import.meta.env.DB_SUPABASE || import.meta.env.VITE_DB_SUPABASE || "";
-          supabaseKey = import.meta.env.APKEY || import.meta.env.VITE_APKEY || "";
-        } else if (typeof window !== 'undefined' && window.process?.env) {
-          restUrl = window.process.env.DBSUPABASE || window.process.env.DB_SUPABASE || "";
-          supabaseKey = window.process.env.APKEY || "";
+    if (res.ok) {
+      const text = await res.text();
+      const env = {};
+      text.split('\n').forEach(line => {
+        const parts = line.split('=');
+        if (parts.length >= 2) {
+          const key = parts[0].trim();
+          const value = parts[1].trim().replace(/^['"]|['"]$/g, '');
+          env[key] = value;
         }
-      } catch (envError) {
-        console.error("Error al acceder a las variables de entorno en auth:", envError);
-      }
+      });
+      
+      let restUrl = env['DBSUPABASE'] || env['DB_SUPABASE'] || "";
+      if (restUrl) setSupabaseUrl(restUrl);
+      if (env['APKEY']) supabaseKey = env['APKEY'];
     }
-    
-    if (restUrl) {
-      setSupabaseUrl(restUrl);
-    }
+  } catch (e) {
+    // Expected when running inside native Android APK or offline
   }
+
+  if (!supabaseUrl) supabaseUrl = DEFAULT_SUPABASE_URL;
+  if (!supabaseKey) supabaseKey = DEFAULT_SUPABASE_KEY;
 };
 
 export const getSupabaseClient = async () => {

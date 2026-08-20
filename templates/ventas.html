@@ -1,0 +1,190 @@
+<!-- View: Ventas (Tab panel, initially hidden) -->
+<section id="view-sales" class="dashboard-view hidden space-y-6">
+  <div class="p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-4">
+    <div class="border-b border-slate-100 dark:border-slate-800/80 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+      <div>
+        <h2 class="font-display font-bold text-lg text-slate-800 dark:text-white">Listado de Ventas</h2>
+        <p class="text-xs text-slate-500 dark:text-slate-400">Control y registro de transacciones, facturas, clientes, modelos y comisiones.</p>
+      </div>
+    </div>
+
+    <!-- Filters & Action Bar -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="relative flex-1 max-w-md">
+        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+        </span>
+        <input type="text" id="sales-search" placeholder="Buscar por cliente, vendedor o nro. factura..." class="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+      </div>
+      <button id="btn-add-sale" class="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-brand hover:bg-brand-light rounded-xl shadow-lg shadow-brand/10 transition-all duration-300">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4.5v15m7.5-7.5h-15"></path>
+        </svg>
+        Registrar Venta
+      </button>
+    </div>
+    
+    <!-- Sales Table -->
+    <div class="overflow-x-auto relative rounded-2xl border border-slate-100 dark:border-slate-800">
+      
+      <!-- Loading Indicator -->
+      <div id="sales-loading" class="absolute inset-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm z-10 flex items-center justify-center hidden">
+        <svg class="animate-spin h-8 w-8 text-brand" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      </div>
+
+      <table class="w-full text-sm text-left text-slate-500 dark:text-slate-400">
+        <thead class="text-xs text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-950 uppercase tracking-wider">
+          <tr>
+            <th scope="col" class="px-4 py-3 min-w-[100px] text-left">Acciones</th>
+            <th scope="col" class="px-4 py-3 min-w-[50px]">ID</th>
+            <th scope="col" class="px-4 py-3 min-w-[100px]">Fecha</th>
+            <th scope="col" class="px-4 py-3 min-w-[120px]">Nro. Factura</th>
+            <th scope="col" class="px-4 py-3 min-w-[160px]">Modelo</th>
+            <th scope="col" class="px-4 py-3 min-w-[110px]">Período</th>
+            <th scope="col" class="px-4 py-3 min-w-[150px]">Cliente</th>
+            <th scope="col" class="px-4 py-3 min-w-[70px] text-center">Cant.</th>
+            <th scope="col" class="px-4 py-3 min-w-[120px] text-right">Precio Venta</th>
+            <th scope="col" class="px-4 py-3 min-w-[130px]">Vendedor</th>
+            <th scope="col" class="px-4 py-3 min-w-[120px] text-right">Comisión Vend.</th>
+            <th scope="col" class="px-4 py-3 min-w-[100px]">Creado</th>
+          </tr>
+        </thead>
+        <tbody id="sales-table-body" class="divide-y divide-slate-100 dark:divide-slate-800 font-normal">
+          <!-- Dynamically loaded rows -->
+        </tbody>
+      </table>
+
+      <!-- Empty State -->
+      <div id="sales-empty" class="py-12 text-center hidden">
+        <svg class="w-12 h-12 text-slate-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+        </svg>
+        <p class="text-slate-500">No se encontraron ventas registradas.</p>
+      </div>
+
+      <!-- Sales Pagination Controls -->
+      <div id="sales-pagination" class="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50">
+        <div class="text-xs text-slate-500">
+          Mostrando <span id="sales-range-start" class="font-semibold text-slate-700 dark:text-slate-300">0</span> a <span id="sales-range-end" class="font-semibold text-slate-700 dark:text-slate-300">0</span> de <span id="sales-total-count" class="font-semibold text-slate-700 dark:text-slate-300">0</span> registros
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="sales-btn-prev" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-semibold hover:bg-white dark:hover:bg-slate-850 disabled:opacity-50 disabled:pointer-events-none transition-all">
+            Anterior
+          </button>
+          <span class="text-xs text-slate-500">Pág. <span id="sales-current-page" class="font-semibold text-slate-700 dark:text-slate-300">1</span> de <span id="sales-total-pages" class="font-semibold text-slate-700 dark:text-slate-300">1</span></span>
+          <button id="sales-btn-next" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-semibold hover:bg-white dark:hover:bg-slate-850 disabled:opacity-50 disabled:pointer-events-none transition-all">
+            Siguiente
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- Sale Modal for Create/Edit -->
+<div id="sale-modal-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm hidden opacity-0 transition-all duration-300 p-4">
+  <div id="sale-modal-card" class="bg-white dark:bg-slate-900 w-full max-w-2xl p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl relative space-y-6 scale-95 opacity-0 transition-all duration-300 max-h-[90vh] overflow-y-auto">
+    
+    <!-- Close Button -->
+    <button id="btn-close-sale-modal" class="absolute top-6 right-6 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+
+    <div>
+      <h3 id="sale-modal-title" class="font-display font-bold text-xl text-slate-900 dark:text-white">Registrar Venta</h3>
+      <p class="text-xs text-slate-500 dark:text-slate-400">Complete todos los datos de la transacción, factura, modelo, período y vendedor.</p>
+    </div>
+
+    <form id="sale-form" class="space-y-4">
+      <input type="hidden" id="sale-form-id">
+      
+      <!-- Fila 1: Fecha, Nro. Factura y Período -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <!-- Fecha -->
+        <div>
+          <label for="sale-form-fecha" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Fecha de Venta *</label>
+          <input type="date" id="sale-form-fecha" required class="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+        </div>
+
+        <!-- Nro. Factura -->
+        <div>
+          <label for="sale-form-nro-factura" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Nro. Factura</label>
+          <input type="text" id="sale-form-nro-factura" placeholder="Ej: FAC-001245" class="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+        </div>
+
+        <!-- Período -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label for="sale-form-periodo" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Período *</label>
+            <span class="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded">Auto</span>
+          </div>
+          <select id="sale-form-periodo" required class="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+            <option value="">-- Seleccionar Período --</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Fila 2: Modelo, Cantidad y Precio de Venta -->
+      <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <!-- Modelo (2 cols) -->
+        <div class="sm:col-span-2">
+          <label for="sale-form-modelo" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Modelo *</label>
+          <select id="sale-form-modelo" required class="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+            <option value="">-- Seleccionar Modelo --</option>
+          </select>
+        </div>
+
+        <!-- Cantidad (1 col) -->
+        <div>
+          <label for="sale-form-cantidad" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Cantidad *</label>
+          <input type="number" id="sale-form-cantidad" min="1" step="1" value="1" required class="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+        </div>
+
+        <!-- Precio de Venta (1 col) -->
+        <div>
+          <label for="sale-form-precio-venta" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Precio Venta ($)</label>
+          <input type="number" step="0.01" id="sale-form-precio-venta" placeholder="0.00" class="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+        </div>
+      </div>
+
+      <!-- Fila 3: Cliente -->
+      <div>
+        <label for="sale-form-cliente" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Nombre del Cliente / Razón Social *</label>
+        <input type="text" id="sale-form-cliente" required placeholder="Ej: Inversiones Los Andes, C.A." class="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+      </div>
+
+      <!-- Fila 4: Vendedor y Comisión Vendedor -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Vendedor -->
+        <div>
+          <label for="sale-form-vendedor" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Vendedor / Asesor</label>
+          <input type="text" id="sale-form-vendedor" placeholder="Ej: Carlos Pérez" class="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+        </div>
+
+        <!-- Comisión Vendedor -->
+        <div>
+          <label for="sale-form-comision" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Comisión Vendedor ($)</label>
+          <input type="number" step="0.01" id="sale-form-comision" placeholder="0.00" class="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+        <button type="button" id="btn-cancel-sale" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+          Cancelar
+        </button>
+        <button type="submit" id="btn-save-sale" class="px-5 py-2.5 rounded-xl text-xs font-semibold text-white bg-brand hover:bg-brand-light shadow-lg shadow-brand/20 transition-all duration-300">
+          Guardar Venta
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

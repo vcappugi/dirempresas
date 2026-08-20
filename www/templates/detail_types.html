@@ -1,0 +1,127 @@
+<!-- View: Tipos de Detalles (Tab panel, initially hidden) -->
+<section id="view-detail-types" class="dashboard-view hidden space-y-6">
+  <div class="p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-4">
+    <div class="border-b border-slate-100 dark:border-slate-800/80 pb-3">
+      <h2 class="font-display font-bold text-lg text-slate-800 dark:text-white">Listado de Tipos de Detalles</h2>
+    </div>
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="relative flex-1 max-w-md">
+        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+        </span>
+        <input type="text" id="detail-types-search" placeholder="Buscar por tipo..." class="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-955 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+      </div>
+      <button id="btn-add-detail-type" class="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-brand hover:bg-brand-light rounded-xl shadow-lg shadow-brand/10 transition-all duration-300">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4.5v15m7.5-7.5h-15"></path>
+        </svg>
+        Añadir Tipo de Detalle
+      </button>
+    </div>
+    
+    <!-- Detail Types Table -->
+    <div class="overflow-x-auto relative">
+      
+      <!-- Loading Indicator -->
+      <div id="detail-types-loading" class="absolute inset-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm z-10 flex items-center justify-center hidden">
+        <svg class="animate-spin h-8 w-8 text-brand" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      </div>
+
+      <table class="w-full text-sm text-left text-slate-500 dark:text-slate-400">
+        <thead class="text-xs text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-950 uppercase tracking-wider">
+          <tr>
+            <th scope="col" class="px-4 py-3 min-w-[100px] text-left">Acciones</th>
+            <th scope="col" class="px-4 py-3 min-w-[60px]">ID</th>
+            <th scope="col" class="px-4 py-3 min-w-[180px]">Tipo</th>
+            <th scope="col" class="px-4 py-3 min-w-[200px]">Descripción</th>
+            <th scope="col" class="px-4 py-3 min-w-[80px]">Orden</th>
+          </tr>
+        </thead>
+        <tbody id="detail-types-table-body" class="divide-y divide-slate-100 dark:divide-slate-800">
+          <!-- Dynamically loaded rows -->
+        </tbody>
+      </table>
+
+      <!-- Empty State -->
+      <div id="detail-types-empty" class="py-12 text-center hidden">
+        <svg class="w-12 h-12 text-slate-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+        </svg>
+        <p class="text-slate-500">No se encontraron tipos de detalles registrados.</p>
+      </div>
+
+      <!-- Detail Types Pagination Controls -->
+      <div id="detail-types-pagination" class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+        <div class="text-xs text-slate-500">
+          Mostrando <span id="detail-types-range-start" class="font-semibold text-slate-700 dark:text-slate-350">0</span> a <span id="detail-types-range-end" class="font-semibold text-slate-700 dark:text-slate-350">0</span> de <span id="detail-types-total-count" class="font-semibold text-slate-700 dark:text-slate-350">0</span> registros
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="detail-types-btn-prev" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-850 disabled:opacity-50 disabled:pointer-events-none transition-all">
+            Anterior
+          </button>
+          <span class="text-xs text-slate-500">Pág. <span id="detail-types-current-page" class="font-semibold text-slate-700 dark:text-slate-350">1</span> de <span id="detail-types-total-pages" class="font-semibold text-slate-700 dark:text-slate-350">1</span></span>
+          <button id="detail-types-btn-next" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-850 disabled:opacity-50 disabled:pointer-events-none transition-all">
+            Siguiente
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- Detail Type Modal for Create/Edit -->
+<div id="detail-type-modal-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm hidden opacity-0 transition-all duration-300">
+  <div id="detail-type-modal-card" class="bg-white dark:bg-slate-900 w-full max-w-lg p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl relative space-y-6 scale-95 opacity-0 transition-all duration-300">
+    
+    <!-- Close Button -->
+    <button id="btn-close-detail-type-modal" class="absolute top-6 right-6 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+
+    <div>
+      <h3 id="detail-type-modal-title" class="font-display font-bold text-xl text-slate-900 dark:text-white">Crear Tipo de Detalle</h3>
+      <p class="text-xs text-slate-500 dark:text-slate-400">Todos los campos son editables excepto el ID y la fecha de creación.</p>
+    </div>
+
+    <form id="detail-type-form" class="space-y-5">
+      <input type="hidden" id="detail-type-form-id">
+      
+      <!-- Tipo input -->
+      <div class="relative">
+        <input type="text" id="detail-type-form-tipo" required placeholder=" " class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+        <label for="detail-type-form-tipo" class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Tipo de Detalle</label>
+      </div>
+
+      <!-- Descripción input -->
+      <div class="relative">
+        <input type="text" id="detail-type-form-descripcion" placeholder=" " class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+        <label for="detail-type-form-descripcion" class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Descripción</label>
+      </div>
+
+      <!-- Orden input -->
+      <div class="relative">
+        <input type="number" id="detail-type-form-orden" placeholder=" " class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
+        <label for="detail-type-form-orden" class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Orden</label>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex gap-4 pt-3">
+        <button type="button" id="btn-cancel-detail-type-modal" class="flex-1 py-3 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-350 dark:hover:bg-slate-700 rounded-xl transition-all">
+          Cancelar
+        </button>
+        <button type="submit" id="btn-save-detail-type-modal" class="flex-1 py-3 text-sm font-semibold text-white bg-brand hover:bg-brand-light focus:ring-4 focus:ring-brand-200 rounded-xl transition-all shadow-lg shadow-brand/10">
+          Guardar
+        </button>
+      </div>
+    </form>
+
+  </div>
+</div>

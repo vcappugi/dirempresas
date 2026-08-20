@@ -11,3 +11,7 @@ Desktop.ini
 .idea/
 .vscode/
 *.log
+
+node_modules/
+android/build/
+android/app/build/

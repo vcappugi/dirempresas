@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Empresas</title>
+
+  <!-- SEO & Fonts & Mobile App Manifest -->
+  <meta name="description" content="Panel de control administrativo e interactivo con tema de color personalizable.">
+  <meta name="theme-color" content="#355a31">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Custom dynamic theme configuration -->
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              light: 'var(--color-brand-light, #528a4c)',
+              DEFAULT: 'var(--color-brand, #355a31)', // Fallback to corporate green
+              dark: 'var(--color-brand-dark, #223a20)',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Outfit', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+
+  <!-- bcryptjs library for client-side password hashing -->
+  <script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
+
+  <!-- Chart.js for interactive analytics and visualizations -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+
+<body
+  class="relative bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300 font-sans min-h-screen">
+
+  <!-- Background image with medium opacity -->
+  <div class="fixed inset-0 -z-10 pointer-events-none">
+    <img src="images/bel_backg.jpg" alt="" class="w-full h-full object-cover opacity-50 dark:opacity-30 blur-md scale-110">
+  </div>
+
+  <!-- Mobile Sidebar Backdrop Overlay -->
+  <div id="sidebar-backdrop" class="fixed inset-0 z-20 bg-slate-950/50 backdrop-blur-sm hidden md:hidden"></div>
+
+  <!-- Sidebar (Left Menu) -->
+  <aside id="sidebar"
+    class="sidebar-transition fixed inset-y-0 left-0 z-30 w-64 bg-slate-900 text-slate-100 flex flex-col justify-between border-r border-slate-800 md:translate-x-0 -translate-x-full">
+
+    <!-- Top Brand Logo -->
+    <div class="h-20 flex items-center justify-between px-6 border-b border-slate-800">
+      <a href="index.html" class="flex items-center gap-3 group">
+        <div
+          class="w-10 h-10 rounded-xl bg-white overflow-hidden flex items-center justify-center shadow-lg shadow-black/20 border border-slate-800 transition-all duration-300">
+          <img src="images/BEL_LOGO.jpg" alt="BEL Logo" class="w-full h-full object-contain p-1">
+        </div>
+        <span class="sidebar-text font-display font-bold text-lg tracking-tight transition-all duration-300">
+          Empresas<span class="text-brand">.</span>
+        </span>
+      </a>
+
+      <!-- Desktop Sidebar Toggle Button -->
+      <button id="toggle-sidebar-btn"
+        class="hidden md:flex items-center justify-center p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors">
+        <svg id="collapse-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Navigation Menu Items -->
+    <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+
+      <button data-view="view-dashboard" data-tooltip="Dashboard"
+        class="sidebar-item active-item w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 hover:bg-slate-800/50">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 00-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z">
+          </path>
+        </svg>
+        <span class="sidebar-text">Dashboard</span>
+      </button>
+
+      <button data-view="view-companies" data-tooltip="Empresas"
+        class="sidebar-item w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all duration-300">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
+          </path>
+        </svg>
+        <span class="sidebar-text">Empresas</span>
+      </button>
+
+      <button data-view="view-branches" data-tooltip="Sucursales"
+        class="sidebar-item w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all duration-300">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">
+          </path>
+        </svg>
+        <span class="sidebar-text">Sucursales</span>
+      </button>
+
+      <!-- Collapsible Volumetría Menu -->
+      <div class="space-y-1">
+        <button id="btn-toggle-volumetria-submenu"
+          class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all duration-300">
+          <div class="flex items-center gap-4">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+              </path>
+            </svg>
+            <span class="sidebar-text">Volumetría</span>
+          </div>
+          <svg id="arrow-volumetria-submenu" class="w-4 h-4 transition-transform duration-300 transform sidebar-text"
+            fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+
+        <div id="volumetria-submenu" class="hidden pl-9 space-y-1">
+          <button data-view="view-products"
+            class="sidebar-item w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/30 transition-all duration-200">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4">
+              </path>
+            </svg>
+            <span class="sidebar-text">Productos/Servicios</span>
+          </button>
+
+          <button data-view="view-models"
+            class="sidebar-item w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/30 transition-all duration-200">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+              </path>
+            </svg>
+            <span class="sidebar-text">Modelos</span>
+          </button>
+
+          <button data-view="view-sales"
+            class="sidebar-item w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/30 transition-all duration-200">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z">
+              </path>
+            </svg>
+            <span class="sidebar-text">Ventas</span>
+          </button>
+
+          <button data-view="view-sales-dashboard"
+            class="sidebar-item w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/30 transition-all duration-200">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+              </path>
+            </svg>
+            <span class="sidebar-text">Dashboard Volumetría</span>
+          </button>
+        </div>
+      </div>
+
+      <button data-view="view-revisions" data-tooltip="Revisiones"
+        class="sidebar-item w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all duration-300">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4">
+          </path>
+        </svg>
+        <span class="sidebar-text">Revisiones</span>
+      </button> <!-- Collapsible Configuración Menu -->
+      <div class="space-y-1">
+        <button id="btn-toggle-settings-submenu"
+          class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all duration-300">
+          <div class="flex items-center gap-4">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+              </path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+            <span class="sidebar-text">Configuración</span>
+          </div>
+          <svg id="arrow-settings-submenu" class="w-4 h-4 transition-transform duration-300 transform sidebar-text"
+            fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+
+        <div id="settings-submenu" class="hidden pl-9 space-y-1">
+          <button data-view="view-users"
+            class="sidebar-item w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/30 transition-all duration-200">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
+              </path>
+            </svg>
+            <span class="sidebar-text">Usuarios</span>
+          </button>
+
+          <button data-view="view-roles"
+            class="sidebar-item w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/30 transition-all duration-200">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
+              </path>
+            </svg>
+            <span class="sidebar-text">Roles</span>
+          </button>
+
+          <button data-view="view-regions"
+            class="sidebar-item w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/30 transition-all duration-200">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+            <span class="sidebar-text">Regiones</span>
+          </button>
+
+          <button data-view="view-detail-types"
+            class="sidebar-item w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/30 transition-all duration-200">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+              </path>
+            </svg>
+            <span class="sidebar-text">Tipos de Detalles</span>
+          </button>
+
+          <button data-view="view-periods"
+            class="sidebar-item w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/30 transition-all duration-200">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+              </path>
+            </svg>
+            <span class="sidebar-text">Períodos</span>
+          </button>
+
+          <button data-view="view-settings"
+            class="sidebar-item w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/30 transition-all duration-200">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+              </path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+            <span class="sidebar-text">Ajustes Generales</span>
+          </button>
+        </div>
+      </div>
+
+    </nav>
+
+    <!-- Bottom User Profile Summary -->
+    <div class="p-4 border-t border-slate-800 flex flex-col gap-3">
+      <div class="flex items-center gap-3">
+        <img id="user-avatar" src="https://ui-avatars.com/api/?name=Admin+Empresas&background=355a31&color=fff"
+          alt="Avatar usuario" class="w-9 h-9 rounded-full">
+        <div class="sidebar-text flex-1 overflow-hidden transition-all duration-300">
+          <p id="user-display-name" class="text-sm font-semibold truncate">Admin Empresas</p>
+          <p id="user-display-email" class="text-xs text-slate-500 truncate">admin@empresas.com</p>
+        </div>
+      </div>
+      <button id="btn-logout"
+        class="w-full flex items-center gap-3 px-3 py-2 text-xs font-semibold text-slate-400 hover:text-white hover:bg-red-950/20 hover:border-red-900 rounded-lg border border-transparent transition-all">
+        <svg class="w-4 h-4 text-slate-450" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+        </svg>
+        <span class="sidebar-text">Cerrar Sesión</span>
+      </button>
+    </div>
+
+  </aside>
+
+  <!-- Main Application Wrapper -->
+  <div id="main-content" class="main-content-transition md:ml-64 min-h-screen flex flex-col justify-between">
+
+    <!-- Header -->
+    <header
+      class="sticky top-0 z-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors duration-300">
+      <div class="h-20 px-6 flex items-center justify-between">
+
+        <!-- Left: Search Bar & Toggle Drawer -->
+        <div class="flex items-center gap-4 flex-1">
+          <!-- Mobile Hamburger Toggle -->
+          <button id="mobile-toggle-sidebar-btn"
+            class="md:hidden flex items-center justify-center p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+          </button>
+
+          <!-- Desktop Search input -->
+          <div class="relative hidden sm:block w-72">
+            <input type="text"
+              class="w-full px-4 py-2 pl-10 text-sm border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/50 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+              placeholder="Buscar reportes o clientes...">
+            <svg class="absolute left-3.5 top-3 w-4 h-4 text-slate-400" fill="none" stroke="currentColor"
+              viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+          </div>
+
+          <!-- Associated Company Badge -->
+          <div
+            class="hidden md:flex items-center gap-2 px-3 py-1.5 bg-brand/10 border border-brand/20 text-brand rounded-xl text-xs font-semibold">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
+              </path>
+            </svg>
+            <span id="company-display-name">Cargando empresa...</span>
+          </div>
+        </div>
+
+        <!-- Right: Actions, theme toggle, notifications, and profile menu -->
+        <div class="flex items-center gap-4">
+
+          <!-- Theme Switcher Button -->
+          <button id="theme-toggle"
+            class="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+            <svg id="theme-toggle-light-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20"
+              xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464a1 1 0 10-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 100 2h1z"
+                fill-rule="evenodd" clip-rule="evenodd"></path>
+            </svg>
+            <svg id="theme-toggle-dark-icon" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"
+              xmlns="http://www.w3.org/2000/svg">
+              <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+            </svg>
+          </button>
+
+          <!-- Notifications Trigger -->
+          <div class="relative">
+            <button id="notification-button"
+              class="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+              <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+                </path>
+              </svg>
+            </button>
+
+            <!-- Notifications Dropdown Menu -->
+            <div id="notification-dropdown"
+              class="hidden absolute right-0 mt-3 w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-50 py-2">
+              <div class="px-4 py-2 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                <span class="font-semibold text-sm">Notificaciones</span>
+                <span class="text-xs text-brand font-medium">Marcar leídas</span>
+              </div>
+              <div class="divide-y divide-slate-100 dark:divide-slate-800">
+                <a href="#" class="block px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                  <p class="text-xs font-semibold text-slate-800 dark:text-slate-200">Nuevo reporte de eficiencia
+                    disponible</p>
+                  <p class="text-[10px] text-slate-400 mt-1">Hace 10 minutos</p>
+                </a>
+                <a href="#" class="block px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                  <p class="text-xs text-slate-600 dark:text-slate-400">Cliente <span
+                      class="font-semibold">TecnoSostenible</span> actualizó su perfil.</p>
+                  <p class="text-[10px] text-slate-400 mt-1">Hace 2 horas</p>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- User Menu Dropdown Trigger -->
+          <div class="relative">
+            <button id="user-menu-button"
+              class="flex items-center gap-2 focus:outline-none p-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+              <img class="w-8 h-8 rounded-lg"
+                src="https://ui-avatars.com/api/?name=Admin+Empresas&background=355a31&color=fff" alt="Avatar">
+              <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </button>
+
+            <!-- User Dropdown Menu -->
+            <div id="user-dropdown"
+              class="hidden absolute right-0 mt-3 w-52 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-50 py-2">
+              <div class="px-4 py-2 border-b border-slate-100 dark:border-slate-800">
+                <p class="text-xs text-slate-400">Rol de usuario</p>
+                <p class="text-sm font-semibold">Administrador Principal</p>
+              </div>
+              <a href="#"
+                class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-850">Mi
+                Perfil</a>
+              <button data-view="view-settings"
+                class="sidebar-item w-full text-left block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-850">Ajustes</button>
+              <hr class="border-slate-100 dark:border-slate-800 my-2">
+              <a href="index.html"
+                class="block px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 font-medium">Cerrar
+                Sesión</a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6">
+
+      <!-- View: Dashboard (Default) -->
+      <section id="view-dashboard" class="dashboard-view space-y-6">
+        <div id="home-dashboard-loading" class="py-20 flex flex-col items-center justify-center space-y-4">
+          <svg class="animate-spin h-10 w-10 text-brand" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">Cargando métricas y estadísticas...</p>
+        </div>
+      </section>
+
+      <!-- Las vistas modulares (Empresas, Usuarios, Roles, Regiones) se cargan dinámicamente desde la carpeta templates/ -->
+
+      <!-- View: Settings (Tab panel, initially hidden) -->
+      <section id="view-settings" class="dashboard-view hidden space-y-6">
+        <div
+          class="p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-6">
+          <h2 class="font-display font-bold text-xl">Ajustes Generales del Panel</h2>
+
+          <!-- Accent Theme Switcher Interface Section -->
+          <div class="space-y-3">
+            <h3 class="text-sm font-semibold uppercase text-slate-500 dark:text-slate-400 tracking-wider">Tema de Color
+              Corporativo</h3>
+            <p class="text-xs text-slate-400">Selecciona el color de acento principal. El tema base siempre iniciará con
+              el verde corporativo de la empresa.</p>
+
+            <div class="flex flex-wrap gap-4 pt-2">
+
+              <!-- Green button (Default) -->
+              <button data-theme="green"
+                class="theme-selector-btn flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-sm font-semibold bg-white dark:bg-slate-950 transition-all focus:outline-none">
+                <span class="w-3.5 h-3.5 rounded-full bg-[#355a31]"></span>
+                Verde Corporativo (Base)
+              </button>
+
+              <!-- Blue button -->
+              <button data-theme="blue"
+                class="theme-selector-btn flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-sm font-semibold bg-white dark:bg-slate-950 transition-all focus:outline-none">
+                <span class="w-3.5 h-3.5 rounded-full bg-[#1e3a8a]"></span>
+                Azul Clásico
+              </button>
+
+              <!-- Emerald button -->
+              <button data-theme="emerald"
+                class="theme-selector-btn flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-sm font-semibold bg-white dark:bg-slate-950 transition-all focus:outline-none">
+                <span class="w-3.5 h-3.5 rounded-full bg-[#065f46]"></span>
+                Verde Esmeralda
+              </button>
+
+              <!-- Indigo button -->
+              <button data-theme="indigo"
+                class="theme-selector-btn flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-sm font-semibold bg-white dark:bg-slate-950 transition-all focus:outline-none">
+                <span class="w-3.5 h-3.5 rounded-full bg-[#3730a3]"></span>
+                Índigo
+              </button>
+
+            </div>
+          </div>
+
+          <hr class="border-slate-200 dark:border-slate-800">
+
+          <!-- Other Settings placeholder -->
+          <div class="space-y-4">
+            <h3 class="text-sm font-semibold uppercase text-slate-500 dark:text-slate-400 tracking-wider font-display">
+              Ajustes de Perfil</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block mb-2 text-xs font-medium text-slate-500">Nombre de la Empresa</label>
+                <input type="text"
+                  class="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950"
+                  value="Empresas S.L.">
+              </div>
+              <div>
+                <label class="block mb-2 text-xs font-medium text-slate-500">Idioma Predeterminado</label>
+                <select
+                  class="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300">
+                  <option selected>Español</option>
+                  <option>English</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer
+      class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-6 transition-colors duration-300">
+      <div
+        class="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 dark:text-slate-400 gap-4">
+        <div>
+          &copy; 2026 Corporación BEL - Gerencia de Transformacion Digital - Panel de Control Administrativo.
+        </div>
+        <div class="flex gap-4">
+          <a href="#" class="hover:text-brand transition-colors">Derechos Reservados</a>
+          <a href="#" class="hover:text-brand transition-colors">Información general</a>
+        </div>
+      </div>
+      <!-- Los modales y overlays correspondientes se cargan de forma dinámica desde los archivos en templates/ -->
+    </footer>
+
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="delete-confirm-modal"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm hidden opacity-0 transition-all duration-300">
+    <div id="delete-confirm-card"
+      class="bg-white dark:bg-slate-900 w-full max-w-md p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl relative space-y-4 scale-95 opacity-0 transition-all duration-300">
+      <h3 id="delete-confirm-title" class="font-display font-bold text-lg text-slate-900 dark:text-white">¿Eliminar
+        Registro?</h3>
+      <p id="delete-confirm-desc" class="text-sm text-slate-500 dark:text-slate-400">Esta acción no se puede deshacer.
+        El registro será eliminado permanentemente de la base de datos.</p>
+
+      <div class="flex gap-4 pt-2">
+        <button id="btn-cancel-delete"
+          class="flex-1 py-2.5 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-350 dark:hover:bg-slate-700 rounded-xl transition-all">
+          Cancelar
+        </button>
+        <button id="btn-confirm-delete"
+          class="flex-1 py-2.5 text-sm font-semibold text-white bg-red-500 hover:bg-red-650 rounded-xl transition-all shadow-lg shadow-red-500/20">
+          Eliminar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Scripts -->
+  <script type="module" src="js/dashboard.js"></script>
+</body>
+
+</html>

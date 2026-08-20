@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Empresas</string>
+    <string name="title_activity_main">Empresas</string>
+    <string name="package_name">com.empresas.app</string>
+    <string name="custom_url_scheme">com.empresas.app</string>
+</resources>
