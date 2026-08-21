@@ -3,6 +3,15 @@ import { supabaseUrl, supabaseKey, loadEnv, getHeaders, showToast, escapeHtml, o
 let salesPage = 1;
 const salesPageSize = 10;
 let salesSearchQuery = "";
+let salesFilterFactura = "";
+let salesFilterCliente = "";
+let salesFilterProducto = "";
+let salesFilterModelo = "";
+let salesFilterEdo = "";
+let salesFilterRegion = "";
+let salesFilterDesde = "";
+let salesFilterHasta = "";
+
 let salesTotalCount = 0;
 let salesList = [];
 let modelosList = [];
@@ -12,6 +21,8 @@ let familiasList = [];
 let productosList = [];
 let modalidadesList = [];
 let sucursalesList = [];
+let regionesList = [];
+let edosList = [];
 let parsedImportRows = [];
 
 // Helper to format currency
@@ -70,10 +81,32 @@ export const loadModalidadesCatalog = async () => {
 export const loadSucursalesCatalog = async () => {
   if (!supabaseUrl || !supabaseKey) await loadEnv();
   try {
-    const res = await fetch(`${supabaseUrl}sucursales?order=nombre.asc`, { method: 'GET', headers: getHeaders() });
+    const res = await fetch(`${supabaseUrl}sucursales?order=nombre.asc&limit=1000`, { method: 'GET', headers: getHeaders() });
     if (res.ok) sucursalesList = await res.json();
   } catch (e) {
     console.warn("Error cargando catálogo de sucursales:", e);
+  }
+};
+
+// Fetch and cache Regiones catalog
+export const loadRegionesCatalog = async () => {
+  if (!supabaseUrl || !supabaseKey) await loadEnv();
+  try {
+    const res = await fetch(`${supabaseUrl}region?order=nombre.asc&limit=500`, { method: 'GET', headers: getHeaders() });
+    if (res.ok) regionesList = await res.json();
+  } catch (e) {
+    console.warn("Error cargando catálogo de regiones:", e);
+  }
+};
+
+// Fetch and cache Edos catalog
+export const loadEdosCatalog = async () => {
+  if (!supabaseUrl || !supabaseKey) await loadEnv();
+  try {
+    const res = await fetch(`${supabaseUrl}edo?order=nombre.asc&limit=100`, { method: 'GET', headers: getHeaders() });
+    if (res.ok) edosList = await res.json();
+  } catch (e) {
+    console.warn("Error cargando catálogo de estados:", e);
   }
 };
 
@@ -106,6 +139,97 @@ export const loadPeriodosCatalog = async () => {
     }
   } catch (e) {
     console.warn("Error cargando catálogo de períodos:", e);
+  }
+};
+
+// Populate Sales List Filter Dropdowns
+export const populateSalesFilterDropdowns = async () => {
+  const filterProducto = document.getElementById('sales-filter-producto');
+  const filterEdo = document.getElementById('sales-filter-edo');
+
+  if (productosList.length === 0) await loadProductosCatalog();
+  if (modelosList.length === 0) await loadModelosCatalog();
+  if (edosList.length === 0) await loadEdosCatalog();
+  if (regionesList.length === 0) await loadRegionesCatalog();
+
+  if (filterProducto) {
+    const curVal = filterProducto.value;
+    filterProducto.innerHTML = '<option value="">Todos los Productos</option>';
+    productosList.forEach(pr => {
+      filterProducto.innerHTML += `<option value="${pr.id}" ${curVal == pr.id ? 'selected' : ''}>${escapeHtml(pr.nombre || `Producto #${pr.id}`)}</option>`;
+    });
+  }
+
+  populateSalesFilterModelosDropdown(filterProducto?.value || '', true);
+
+  if (filterEdo) {
+    const curVal = filterEdo.value;
+    filterEdo.innerHTML = '<option value="">Todos los Estados</option>';
+    edosList.forEach(e => {
+      filterEdo.innerHTML += `<option value="${e.id}" ${curVal == e.id ? 'selected' : ''}>${escapeHtml(e.nombre)}</option>`;
+    });
+  }
+
+  populateSalesFilterRegionesDropdown(filterEdo?.value || '', true);
+};
+
+export const populateSalesFilterModelosDropdown = (selectedProductoId = '', preserveVal = true) => {
+  const filterModelo = document.getElementById('sales-filter-modelo');
+  if (!filterModelo) return;
+
+  const curVal = preserveVal ? filterModelo.value : '';
+  filterModelo.innerHTML = '<option value="">Todos los Modelos</option>';
+
+  let modelsToShow = modelosList;
+  if (selectedProductoId) {
+    modelsToShow = modelosList.filter(m => String(m.producto_id) === String(selectedProductoId));
+  }
+
+  modelsToShow.forEach(m => {
+    const isSel = (curVal && String(curVal) === String(m.id)) ? 'selected' : '';
+    filterModelo.innerHTML += `<option value="${m.id}" ${isSel}>${escapeHtml(m.modelo || `Modelo #${m.id}`)}</option>`;
+  });
+};
+
+export const populateSalesFilterRegionesDropdown = (selectedEdoId = '', preserveVal = true) => {
+  const filterRegion = document.getElementById('sales-filter-region');
+  if (!filterRegion) return;
+
+  const curVal = preserveVal ? filterRegion.value : '';
+  filterRegion.innerHTML = '<option value="">Todas las Regiones</option>';
+
+  let regionsToShow = regionesList;
+  if (selectedEdoId) {
+    regionsToShow = regionesList.filter(r => String(r.edo_id) === String(selectedEdoId));
+  }
+
+  regionsToShow.forEach(r => {
+    const edoObj = edosList.find(e => String(e.id) === String(r.edo_id));
+    const label = (edoObj && !selectedEdoId) ? `${r.nombre} (${edoObj.nombre})` : r.nombre;
+    const isSel = (curVal && String(curVal) === String(r.id)) ? 'selected' : '';
+    filterRegion.innerHTML += `<option value="${r.id}" ${isSel}>${escapeHtml(label)}</option>`;
+  });
+};
+
+export const updateSalesActiveFiltersBadge = () => {
+  const badge = document.getElementById('sales-active-filters-badge');
+  if (!badge) return;
+
+  let count = 0;
+  if (salesFilterFactura) count++;
+  if (salesFilterCliente) count++;
+  if (salesFilterProducto) count++;
+  if (salesFilterModelo) count++;
+  if (salesFilterEdo) count++;
+  if (salesFilterRegion) count++;
+  if (salesFilterDesde) count++;
+  if (salesFilterHasta) count++;
+
+  if (count > 0) {
+    badge.textContent = `${count} ${count === 1 ? 'filtro activo' : 'filtros activos'}`;
+    badge.classList.remove('hidden');
+  } else {
+    badge.classList.add('hidden');
   }
 };
 
@@ -443,18 +567,66 @@ export const loadSales = async () => {
   if (periodosList.length === 0) await loadPeriodosCatalog();
   if (productosList.length === 0) await loadProductosCatalog();
   if (sucursalesList.length === 0) await loadSucursalesCatalog();
+  if (regionesList.length === 0) await loadRegionesCatalog();
+  if (edosList.length === 0) await loadEdosCatalog();
+
+  updateSalesActiveFiltersBadge();
 
   const start = (salesPage - 1) * salesPageSize;
   const end = start + salesPageSize - 1;
 
   try {
-    let queryUrl = `${supabaseUrl}ventas`;
+    let queryUrl = `${supabaseUrl}ventas?order=fecha.desc,id.desc`;
 
     if (salesSearchQuery) {
       const encSearch = encodeURIComponent(salesSearchQuery);
-      queryUrl += `?or=(cliente.ilike.*${encSearch}*,vendedor.ilike.*${encSearch}*,nro_factura.ilike.*${encSearch}*)&order=fecha.desc,id.desc`;
-    } else {
-      queryUrl += `?order=fecha.desc,id.desc`;
+      queryUrl += `&or=(cliente.ilike.*${encSearch}*,vendedor.ilike.*${encSearch}*,nro_factura.ilike.*${encSearch}*)`;
+    }
+
+    if (salesFilterFactura) {
+      const encFact = encodeURIComponent(salesFilterFactura);
+      queryUrl += `&nro_factura=ilike.*${encFact}*`;
+    }
+
+    if (salesFilterCliente) {
+      const encCli = encodeURIComponent(salesFilterCliente);
+      queryUrl += `&cliente=ilike.*${encCli}*`;
+    }
+
+    if (salesFilterModelo) {
+      queryUrl += `&modelo_id=eq.${salesFilterModelo}`;
+    } else if (salesFilterProducto) {
+      const modIds = modelosList.filter(m => String(m.producto_id) === String(salesFilterProducto)).map(m => m.id);
+      if (modIds.length > 0) {
+        queryUrl += `&modelo_id=in.(${modIds.join(',')})`;
+      } else {
+        queryUrl += `&modelo_id=eq.-1`;
+      }
+    }
+
+    if (salesFilterRegion) {
+      const sucIds = sucursalesList.filter(s => String(s.region_id) === String(salesFilterRegion)).map(s => s.id);
+      if (sucIds.length > 0) {
+        queryUrl += `&sucursal_id=in.(${sucIds.join(',')})`;
+      } else {
+        queryUrl += `&sucursal_id=eq.-1`;
+      }
+    } else if (salesFilterEdo) {
+      const regIds = regionesList.filter(r => String(r.edo_id) === String(salesFilterEdo)).map(r => r.id);
+      const sucIds = sucursalesList.filter(s => regIds.includes(s.region_id)).map(s => s.id);
+      if (sucIds.length > 0) {
+        queryUrl += `&sucursal_id=in.(${sucIds.join(',')})`;
+      } else {
+        queryUrl += `&sucursal_id=eq.-1`;
+      }
+    }
+
+    if (salesFilterDesde) {
+      queryUrl += `&fecha=gte.${salesFilterDesde}`;
+    }
+
+    if (salesFilterHasta) {
+      queryUrl += `&fecha=lte.${salesFilterHasta}`;
     }
 
     const headers = getHeaders();
@@ -1765,6 +1937,155 @@ export const initSalesModule = () => {
         salesPage++;
         loadSales();
       }
+    });
+  }
+
+  // Collapsible Filters Panel Toggle
+  const btnToggleFilters = document.getElementById('btn-toggle-sales-filters');
+  const headerFilters = document.getElementById('sales-filters-header');
+  const panelFilters = document.getElementById('sales-filters-panel');
+  const chevronFilters = document.getElementById('sales-filters-chevron');
+  const toggleText = document.getElementById('sales-filters-toggle-text');
+
+  const toggleSalesFilters = () => {
+    if (!panelFilters) return;
+    const isHidden = panelFilters.classList.toggle('hidden');
+    if (isHidden) {
+      chevronFilters?.classList.remove('rotate-180');
+      if (toggleText) toggleText.textContent = 'Mostrar Filtros';
+    } else {
+      chevronFilters?.classList.add('rotate-180');
+      if (toggleText) toggleText.textContent = 'Ocultar Filtros';
+    }
+  };
+
+  if (btnToggleFilters) {
+    btnToggleFilters.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleSalesFilters();
+    });
+  }
+  if (headerFilters) {
+    headerFilters.addEventListener('click', toggleSalesFilters);
+  }
+
+  // Populate Filter Selects
+  populateSalesFilterDropdowns();
+
+  // Advanced Filter Inputs & Selects
+  const filterFacturaInput = document.getElementById('sales-filter-factura');
+  const filterClienteInput = document.getElementById('sales-filter-cliente');
+  const filterProductoSelect = document.getElementById('sales-filter-producto');
+  const filterModeloSelect = document.getElementById('sales-filter-modelo');
+  const filterEdoSelect = document.getElementById('sales-filter-edo');
+  const filterRegionSelect = document.getElementById('sales-filter-region');
+  const filterDesdeInput = document.getElementById('sales-filter-desde');
+  const filterHastaInput = document.getElementById('sales-filter-hasta');
+  const btnResetFilters = document.getElementById('btn-sales-reset-filters');
+
+  let filterTimeout = null;
+  if (filterFacturaInput) {
+    filterFacturaInput.addEventListener('input', (e) => {
+      clearTimeout(filterTimeout);
+      filterTimeout = setTimeout(() => {
+        salesFilterFactura = e.target.value.trim();
+        salesPage = 1;
+        loadSales();
+      }, 350);
+    });
+  }
+
+  if (filterClienteInput) {
+    filterClienteInput.addEventListener('input', (e) => {
+      clearTimeout(filterTimeout);
+      filterTimeout = setTimeout(() => {
+        salesFilterCliente = e.target.value.trim();
+        salesPage = 1;
+        loadSales();
+      }, 350);
+    });
+  }
+
+  if (filterProductoSelect) {
+    filterProductoSelect.addEventListener('change', (e) => {
+      salesFilterProducto = e.target.value;
+      salesFilterModelo = "";
+      populateSalesFilterModelosDropdown(salesFilterProducto, false);
+      salesPage = 1;
+      loadSales();
+    });
+  }
+
+  if (filterModeloSelect) {
+    filterModeloSelect.addEventListener('change', (e) => {
+      salesFilterModelo = e.target.value;
+      salesPage = 1;
+      loadSales();
+    });
+  }
+
+  if (filterEdoSelect) {
+    filterEdoSelect.addEventListener('change', (e) => {
+      salesFilterEdo = e.target.value;
+      salesFilterRegion = "";
+      populateSalesFilterRegionesDropdown(salesFilterEdo, false);
+      salesPage = 1;
+      loadSales();
+    });
+  }
+
+  if (filterRegionSelect) {
+    filterRegionSelect.addEventListener('change', (e) => {
+      salesFilterRegion = e.target.value;
+      salesPage = 1;
+      loadSales();
+    });
+  }
+
+  if (filterDesdeInput) {
+    filterDesdeInput.addEventListener('change', (e) => {
+      salesFilterDesde = e.target.value;
+      salesPage = 1;
+      loadSales();
+    });
+  }
+
+  if (filterHastaInput) {
+    filterHastaInput.addEventListener('change', (e) => {
+      salesFilterHasta = e.target.value;
+      salesPage = 1;
+      loadSales();
+    });
+  }
+
+  if (btnResetFilters) {
+    btnResetFilters.addEventListener('click', () => {
+      salesFilterFactura = "";
+      salesFilterCliente = "";
+      salesFilterProducto = "";
+      salesFilterModelo = "";
+      salesFilterEdo = "";
+      salesFilterRegion = "";
+      salesFilterDesde = "";
+      salesFilterHasta = "";
+      salesSearchQuery = "";
+
+      if (filterFacturaInput) filterFacturaInput.value = "";
+      if (filterClienteInput) filterClienteInput.value = "";
+      if (filterProductoSelect) filterProductoSelect.value = "";
+      if (filterModeloSelect) filterModeloSelect.value = "";
+      if (filterEdoSelect) filterEdoSelect.value = "";
+      if (filterRegionSelect) filterRegionSelect.value = "";
+      if (filterDesdeInput) filterDesdeInput.value = "";
+      if (filterHastaInput) filterHastaInput.value = "";
+      if (searchInput) searchInput.value = "";
+
+      populateSalesFilterModelosDropdown("", false);
+      populateSalesFilterRegionesDropdown("", false);
+
+      salesPage = 1;
+      loadSales();
+      showToast('Filtros de ventas restablecidos.', true);
     });
   }
 

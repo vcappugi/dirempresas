@@ -22,7 +22,7 @@ import { initRevisionsModule, loadRevisions } from './modules/revisions.js';
 import { initBranchesModule, loadBranches } from './modules/branches.js';
 import { initProductsModule, loadProducts } from './modules/products.js';
 import { initModelsModule, loadModels } from './modules/models.js';
-import { initSalesModule, loadSales } from './modules/ventas.js?v=20260821_3';
+import { initSalesModule, loadSales } from './modules/ventas.js?v=20260821_7';
 import { initSalesDashboardModule, loadSalesDashboard } from './modules/sales_dashboard.js?v=20260821_6';
 import { initPeriodsModule, loadPeriods } from './modules/periods.js';
 import { initVolumePeriodModule, loadVolumePeriod } from './modules/volume_period.js';
