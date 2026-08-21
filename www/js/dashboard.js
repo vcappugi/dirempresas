@@ -566,6 +566,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   initUserRolesModule();
   initUserCompaniesModule();
 
+  // --- Empresas y Sucursales Sub-menu Handler ---
+  const btnToggleEmpresas = document.getElementById('btn-toggle-empresas-submenu');
+  const empresasSubmenu = document.getElementById('empresas-submenu');
+  const arrowEmpresas = document.getElementById('arrow-empresas-submenu');
+  if (btnToggleEmpresas && empresasSubmenu && arrowEmpresas) {
+    btnToggleEmpresas.addEventListener('click', () => {
+      const isHidden = empresasSubmenu.classList.contains('hidden');
+      if (isHidden) {
+        empresasSubmenu.classList.remove('hidden');
+        arrowEmpresas.classList.add('rotate-180');
+      } else {
+        empresasSubmenu.classList.add('hidden');
+        arrowEmpresas.classList.remove('rotate-180');
+      }
+    });
+  }
+
   // --- Volumetría Sub-menu Handler ---
   const btnToggleVolumetria = document.getElementById('btn-toggle-volumetria-submenu');
   const volumetriaSubmenu = document.getElementById('volumetria-submenu');
