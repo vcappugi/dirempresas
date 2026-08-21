@@ -154,12 +154,32 @@
 
       <!-- Fila 2: Modelo, Cantidad y Precio de Venta -->
       <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <!-- Modelo (2 cols) -->
+        <!-- Modelo (2 cols) con Selector y Modal de Búsqueda -->
         <div class="sm:col-span-2">
-          <label for="sale-form-modelo" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Modelo *</label>
-          <select id="sale-form-modelo" required class="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
-            <option value="">-- Seleccionar Modelo --</option>
-          </select>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Modelo *</label>
+            <button type="button" id="btn-open-model-picker" class="inline-flex items-center gap-1 text-[11px] font-semibold text-brand dark:text-brand-light hover:underline">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+              Buscar Modelo
+            </button>
+          </div>
+          <input type="hidden" id="sale-form-modelo" required>
+          
+          <!-- Display Card for Selected Model -->
+          <div id="sale-form-model-selected-display" class="flex items-center justify-between p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950 cursor-pointer hover:border-brand transition-all">
+            <div class="flex items-center gap-2 overflow-hidden">
+              <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 flex items-center justify-center flex-shrink-0 text-xs font-bold" id="sale-form-model-id-badge">#--</div>
+              <div class="truncate">
+                <div class="text-xs font-bold text-slate-900 dark:text-white truncate" id="sale-form-model-name-display">Haga clic para buscar modelo...</div>
+                <div class="text-[10px] text-slate-400 truncate" id="sale-form-model-details-display">Búsqueda por código, nombre o producto</div>
+              </div>
+            </div>
+            <button type="button" id="btn-trigger-model-picker" class="px-2.5 py-1 rounded-lg text-xs font-semibold text-brand bg-brand/10 hover:bg-brand/20 transition-colors flex-shrink-0">
+              Buscar
+            </button>
+          </div>
         </div>
 
         <!-- Cantidad (1 col) -->
@@ -319,3 +339,92 @@
 
   </div>
 </div>
+
+<!-- Modal de Búsqueda y Selección de Modelos -->
+<div id="model-picker-modal-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm hidden opacity-0 transition-all duration-300 p-4">
+  <div id="model-picker-modal-card" class="bg-white dark:bg-slate-900 w-full max-w-4xl p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl relative space-y-5 scale-95 opacity-0 transition-all duration-300 max-h-[90vh] flex flex-col">
+    
+    <!-- Close Button -->
+    <button id="btn-close-model-picker" class="absolute top-6 right-6 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+
+    <!-- Header -->
+    <div class="border-b border-slate-100 dark:border-slate-800 pb-3">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-brand/10 text-brand dark:text-brand-light mb-1.5">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+        </svg>
+        Catálogo de Modelos
+      </div>
+      <h3 class="font-display font-bold text-xl text-slate-900 dark:text-white">Seleccionar Modelo para Venta</h3>
+      <p class="text-xs text-slate-500 dark:text-slate-400">Busque de forma instantánea por código ID, nombre del modelo, producto, línea o familia.</p>
+    </div>
+
+    <!-- Search & Filter Bar -->
+    <div class="flex flex-col sm:flex-row items-center gap-3">
+      <!-- Search Input -->
+      <div class="relative flex-1 w-full">
+        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
+          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+        </span>
+        <input type="text" id="model-picker-search-input" placeholder="Buscar por código (#12), nombre de modelo, producto..." class="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+      </div>
+
+      <!-- Filter by Product -->
+      <div class="w-full sm:w-56">
+        <select id="model-picker-product-filter" class="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+          <option value="">Todos los Productos</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 px-1">
+      <span id="model-picker-stats">Mostrando 0 modelos</span>
+      <span class="text-[11px] italic">Haga clic en una fila o en "Seleccionar" para elegir el modelo</span>
+    </div>
+
+    <!-- Table of Models (Scrollable) -->
+    <div class="overflow-y-auto max-h-[50vh] flex-1 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-inner">
+      <table class="w-full text-xs text-left text-slate-600 dark:text-slate-400">
+        <thead class="text-[11px] uppercase bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 sticky top-0 z-10 border-b border-slate-200 dark:border-slate-800 shadow-sm">
+          <tr>
+            <th class="px-4 py-2.5 min-w-[70px]">Código</th>
+            <th class="px-4 py-2.5 min-w-[200px]">Nombre del Modelo</th>
+            <th class="px-4 py-2.5 min-w-[140px]">Producto</th>
+            <th class="px-4 py-2.5 min-w-[140px]">Línea / Familia</th>
+            <th class="px-4 py-2.5 text-right min-w-[120px]">Precio Sugerido</th>
+            <th class="px-4 py-2.5 text-right min-w-[120px]">Comisión Vend.</th>
+            <th class="px-4 py-2.5 text-center min-w-[100px]">Acción</th>
+          </tr>
+        </thead>
+        <tbody id="model-picker-table-body" class="divide-y divide-slate-100 dark:divide-slate-800 font-normal">
+          <!-- Dynamically populated -->
+        </tbody>
+      </table>
+
+      <!-- Empty State -->
+      <div id="model-picker-empty" class="py-12 text-center hidden">
+        <svg class="w-12 h-12 text-slate-400 mx-auto mb-2 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+        </svg>
+        <p class="text-xs text-slate-500">No se encontraron modelos con los criterios de búsqueda.</p>
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
+      <span class="text-slate-400">Presione <kbd class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[10px]">Esc</kbd> para cerrar</span>
+      <button type="button" id="btn-cancel-model-picker" class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+        Cerrar
+      </button>
+    </div>
+
+  </div>
+</div>
+

@@ -9,6 +9,7 @@ let modelosList = [];
 let periodosList = [];
 let lineasList = [];
 let familiasList = [];
+let productosList = [];
 let parsedImportRows = [];
 
 // Helper to format currency
@@ -41,11 +42,22 @@ export const loadFamiliasCatalog = async () => {
   }
 };
 
-// Fetch and cache Modelos catalog
+// Fetch and cache Productos catalog
+export const loadProductosCatalog = async () => {
+  if (!supabaseUrl || !supabaseKey) await loadEnv();
+  try {
+    const res = await fetch(`${supabaseUrl}producto?order=nombre.asc`, { method: 'GET', headers: getHeaders() });
+    if (res.ok) productosList = await res.json();
+  } catch (e) {
+    console.warn("Error cargando catálogo de productos:", e);
+  }
+};
+
+// Fetch and cache Modelos catalog (Ensure fetching ALL models up to 1000)
 export const loadModelosCatalog = async () => {
   if (!supabaseUrl || !supabaseKey) await loadEnv();
   try {
-    const res = await fetch(`${supabaseUrl}modelos?order=modelo.asc`, {
+    const res = await fetch(`${supabaseUrl}modelos?order=modelo.asc&limit=1000`, {
       method: 'GET',
       headers: getHeaders()
     });
@@ -82,7 +94,6 @@ export const findPeriodForDate = (dateStr) => {
   if (isoDate.includes('/')) {
     const p = isoDate.split('/');
     if (p.length === 3) {
-      // Assuming DD/MM/YYYY -> YYYY-MM-DD
       isoDate = `${p[2]}-${p[1].padStart(2, '0')}-${p[0].padStart(2, '0')}`;
     }
   }
@@ -139,21 +150,221 @@ export const autoSelectPeriodFromDate = () => {
   }
 };
 
-// Populate Selects in Sale Modal
-const populateSaleSelects = async (selectedModelo = null, selectedPeriodo = null) => {
-  if (modelosList.length === 0) await loadModelosCatalog();
-  if (periodosList.length === 0) await loadPeriodosCatalog();
+// ─── MODEL PICKER MODAL & SELECTION ──────────────────────────────────────────
+export const openModelPickerModal = async () => {
+  const overlay = document.getElementById('model-picker-modal-overlay');
+  const card = document.getElementById('model-picker-modal-card');
+  const searchInput = document.getElementById('model-picker-search-input');
+  const productFilter = document.getElementById('model-picker-product-filter');
 
-  const modeloSelect = document.getElementById('sale-form-modelo');
-  const periodoSelect = document.getElementById('sale-form-periodo');
+  if (!overlay || !card) return;
 
-  if (modeloSelect) {
-    modeloSelect.innerHTML = '<option value="">-- Seleccionar Modelo --</option>';
-    modelosList.forEach(m => {
-      const isSel = selectedModelo && String(selectedModelo) === String(m.id) ? 'selected' : '';
-      modeloSelect.innerHTML += `<option value="${m.id}" ${isSel}>${escapeHtml(m.modelo || 'Modelo #' + m.id)}</option>`;
+  await Promise.all([
+    loadModelosCatalog(),
+    loadProductosCatalog(),
+    loadLineasCatalog(),
+    loadFamiliasCatalog()
+  ]);
+
+  if (productFilter) {
+    productFilter.innerHTML = '<option value="">Todos los Productos</option>';
+    productosList.forEach(pr => {
+      productFilter.innerHTML += `<option value="${pr.id}">${escapeHtml(pr.nombre || 'Producto #' + pr.id)}</option>`;
     });
   }
+
+  if (searchInput) searchInput.value = '';
+  renderModelPickerList();
+
+  overlay.classList.remove('hidden');
+  setTimeout(() => {
+    overlay.classList.remove('opacity-0');
+    card.classList.remove('opacity-0', 'scale-95');
+    card.classList.add('opacity-100', 'scale-100');
+    searchInput?.focus();
+  }, 10);
+};
+
+export const closeModelPickerModal = () => {
+  const overlay = document.getElementById('model-picker-modal-overlay');
+  const card = document.getElementById('model-picker-modal-card');
+
+  if (!overlay || !card) return;
+
+  card.classList.remove('opacity-100', 'scale-100');
+  card.classList.add('opacity-0', 'scale-95');
+  overlay.classList.add('opacity-0');
+
+  setTimeout(() => {
+    overlay.classList.add('hidden');
+  }, 300);
+};
+
+export const renderModelPickerList = () => {
+  const searchInput = document.getElementById('model-picker-search-input');
+  const productFilter = document.getElementById('model-picker-product-filter');
+  const tableBody = document.getElementById('model-picker-table-body');
+  const emptyEl = document.getElementById('model-picker-empty');
+  const statsEl = document.getElementById('model-picker-stats');
+
+  if (!tableBody) return;
+
+  const q = (searchInput?.value || '').toLowerCase().trim();
+  const selectedProd = productFilter?.value || '';
+
+  const filtered = modelosList.filter(m => {
+    if (selectedProd && String(m.producto_id) !== String(selectedProd)) return false;
+
+    if (q) {
+      const idMatch = String(m.id).includes(q) || `#${m.id}`.includes(q);
+      const nameMatch = (m.modelo || '').toLowerCase().includes(q);
+      
+      const prodObj = productosList.find(p => String(p.id) === String(m.producto_id));
+      const prodMatch = prodObj && (prodObj.nombre || '').toLowerCase().includes(q);
+
+      const lineaObj = lineasList.find(l => String(l.id) === String(m.linea));
+      const lineaMatch = lineaObj && (lineaObj.nombre || '').toLowerCase().includes(q);
+
+      const famObj = familiasList.find(f => String(f.id) === String(m.familia));
+      const famMatch = famObj && (famObj.nombre || '').toLowerCase().includes(q);
+
+      return idMatch || nameMatch || prodMatch || lineaMatch || famMatch;
+    }
+    return true;
+  });
+
+  tableBody.innerHTML = '';
+
+  if (statsEl) {
+    statsEl.textContent = `Mostrando ${filtered.length} de ${modelosList.length} modelos`;
+  }
+
+  if (filtered.length === 0) {
+    emptyEl?.classList.remove('hidden');
+  } else {
+    emptyEl?.classList.add('hidden');
+    filtered.forEach(m => {
+      const prodObj = productosList.find(p => String(p.id) === String(m.producto_id));
+      const prodName = prodObj ? prodObj.nombre : '-';
+
+      const lineaObj = lineasList.find(l => String(l.id) === String(m.linea));
+      const lineaName = lineaObj ? lineaObj.nombre : '-';
+
+      const famObj = familiasList.find(f => String(f.id) === String(m.familia));
+      const famName = famObj ? famObj.nombre : '-';
+
+      const tr = document.createElement('tr');
+      tr.className = 'hover:bg-brand/5 dark:hover:bg-brand/10 transition-colors cursor-pointer group';
+      tr.onclick = (e) => {
+        if (e.target.tagName !== 'BUTTON') selectModelForSale(m.id);
+      };
+
+      tr.innerHTML = `
+        <td class="px-4 py-2.5 font-mono font-bold text-slate-800 dark:text-slate-200">#${m.id}</td>
+        <td class="px-4 py-2.5 font-bold text-slate-900 dark:text-white group-hover:text-brand transition-colors">
+          ${escapeHtml(m.modelo || '-')}
+        </td>
+        <td class="px-4 py-2.5">
+          ${m.producto_id ? `
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300">
+              ${escapeHtml(prodName)}
+            </span>
+          ` : '<span class="text-slate-400">-</span>'}
+        </td>
+        <td class="px-4 py-2.5 text-slate-600 dark:text-slate-400">
+          ${escapeHtml(lineaName)} ${famName !== '-' ? `/ ${escapeHtml(famName)}` : ''}
+        </td>
+        <td class="px-4 py-2.5 text-right font-semibold text-slate-900 dark:text-slate-100">
+          ${formatCurrency(m.precio_sugerido)}
+        </td>
+        <td class="px-4 py-2.5 text-right font-semibold text-emerald-600 dark:text-emerald-400">
+          ${formatCurrency(m.comision_vendedor1)}
+        </td>
+        <td class="px-4 py-2.5 text-center">
+          <button type="button" onclick="selectModelForSale(${m.id})" class="px-3 py-1 text-xs font-semibold text-white bg-brand hover:bg-brand-light rounded-lg shadow-sm transition-all duration-200">
+            Seleccionar
+          </button>
+        </td>
+      `;
+      tableBody.appendChild(tr);
+    });
+  }
+};
+
+export const selectModelForSale = (modelId) => {
+  const model = modelosList.find(m => m.id === modelId);
+  if (!model) return;
+
+  const hiddenInput = document.getElementById('sale-form-modelo');
+  const badgeEl = document.getElementById('sale-form-model-id-badge');
+  const nameEl = document.getElementById('sale-form-model-name-display');
+  const detailsEl = document.getElementById('sale-form-model-details-display');
+  const precioInput = document.getElementById('sale-form-precio-venta');
+  const comisionInput = document.getElementById('sale-form-comision');
+
+  if (hiddenInput) hiddenInput.value = model.id;
+  if (badgeEl) badgeEl.textContent = `#${model.id}`;
+  if (nameEl) nameEl.textContent = model.modelo || `Modelo #${model.id}`;
+
+  const prodObj = productosList.find(p => String(p.id) === String(model.producto_id));
+  const lineaObj = lineasList.find(l => String(l.id) === String(model.linea));
+  
+  let detailsText = prodObj ? `Producto: ${prodObj.nombre}` : '';
+  if (lineaObj) detailsText += ` | Línea: ${lineaObj.nombre}`;
+  if (model.precio_sugerido) detailsText += ` | Sugerido: $${model.precio_sugerido}`;
+  if (detailsEl) detailsEl.textContent = detailsText || 'Modelo seleccionado';
+
+  // Auto-fill price and commission if currently empty or 0
+  if (precioInput && (!precioInput.value || precioInput.value === '0')) {
+    if (model.precio_sugerido) precioInput.value = model.precio_sugerido;
+  }
+  if (comisionInput && (!comisionInput.value || comisionInput.value === '0')) {
+    if (model.comision_vendedor1) comisionInput.value = model.comision_vendedor1;
+  }
+
+  closeModelPickerModal();
+};
+
+export const updateSelectedModelDisplay = (modelId) => {
+  const hiddenInput = document.getElementById('sale-form-modelo');
+  const badgeEl = document.getElementById('sale-form-model-id-badge');
+  const nameEl = document.getElementById('sale-form-model-name-display');
+  const detailsEl = document.getElementById('sale-form-model-details-display');
+
+  if (!modelId) {
+    if (hiddenInput) hiddenInput.value = '';
+    if (badgeEl) badgeEl.textContent = '#--';
+    if (nameEl) nameEl.textContent = 'Haga clic para buscar modelo...';
+    if (detailsEl) detailsEl.textContent = 'Búsqueda por código, nombre o producto';
+    return;
+  }
+
+  const model = modelosList.find(m => String(m.id) === String(modelId));
+  if (hiddenInput) hiddenInput.value = modelId;
+
+  if (model) {
+    if (badgeEl) badgeEl.textContent = `#${model.id}`;
+    if (nameEl) nameEl.textContent = model.modelo || `Modelo #${model.id}`;
+
+    const prodObj = productosList.find(p => String(p.id) === String(model.producto_id));
+    const lineaObj = lineasList.find(l => String(l.id) === String(model.linea));
+    
+    let detailsText = prodObj ? `Producto: ${prodObj.nombre}` : '';
+    if (lineaObj) detailsText += ` | Línea: ${lineaObj.nombre}`;
+    if (model.precio_sugerido) detailsText += ` | Sugerido: $${model.precio_sugerido}`;
+    if (detailsEl) detailsEl.textContent = detailsText || 'Modelo seleccionado';
+  } else {
+    if (badgeEl) badgeEl.textContent = `#${modelId}`;
+    if (nameEl) nameEl.textContent = `Modelo #${modelId}`;
+    if (detailsEl) detailsEl.textContent = 'Modelo cargado';
+  }
+};
+
+// Populate Selects in Sale Modal
+const populateSaleSelects = async (selectedPeriodo = null) => {
+  if (periodosList.length === 0) await loadPeriodosCatalog();
+
+  const periodoSelect = document.getElementById('sale-form-periodo');
 
   if (periodoSelect) {
     periodoSelect.innerHTML = '<option value="">-- Seleccionar Período --</option>';
@@ -186,6 +397,7 @@ export const loadSales = async () => {
   // Pre-load catalogs
   if (modelosList.length === 0) await loadModelosCatalog();
   if (periodosList.length === 0) await loadPeriodosCatalog();
+  if (productosList.length === 0) await loadProductosCatalog();
 
   const start = (salesPage - 1) * salesPageSize;
   const end = start + salesPageSize - 1;
@@ -370,6 +582,12 @@ export const openSaleModal = async (sale = null) => {
   const vendedorInput = document.getElementById('sale-form-vendedor');
   const comisionInput = document.getElementById('sale-form-comision');
 
+  await Promise.all([
+    loadModelosCatalog(),
+    loadProductosCatalog(),
+    loadLineasCatalog()
+  ]);
+
   if (sale) {
     title.textContent = canWrite ? 'Editar Venta' : 'Detalles de la Venta';
     if (idInput) idInput.value = sale.id;
@@ -381,7 +599,8 @@ export const openSaleModal = async (sale = null) => {
     if (vendedorInput) vendedorInput.value = sale.vendedor || '';
     if (comisionInput) comisionInput.value = sale.comision_vendedor ?? '';
 
-    await populateSaleSelects(sale.modelo_id, sale.periodo_id);
+    updateSelectedModelDisplay(sale.modelo_id);
+    await populateSaleSelects(sale.periodo_id);
   } else {
     title.textContent = 'Registrar Venta';
     if (idInput) idInput.value = '';
@@ -391,6 +610,7 @@ export const openSaleModal = async (sale = null) => {
     if (fechaInput) fechaInput.value = today;
     if (cantidadInput) cantidadInput.value = 1;
 
+    updateSelectedModelDisplay(null);
     await populateSaleSelects();
     autoSelectPeriodFromDate();
   }
@@ -440,7 +660,7 @@ export const saveSale = async (e) => {
   const idInput = document.getElementById('sale-form-id');
   const fechaInput = document.getElementById('sale-form-fecha');
   const nroFacturaInput = document.getElementById('sale-form-nro-factura');
-  const modeloSelect = document.getElementById('sale-form-modelo');
+  const modeloHiddenInput = document.getElementById('sale-form-modelo');
   const periodoSelect = document.getElementById('sale-form-periodo');
   const clienteInput = document.getElementById('sale-form-cliente');
   const cantidadInput = document.getElementById('sale-form-cantidad');
@@ -451,7 +671,7 @@ export const saveSale = async (e) => {
   const id = idInput?.value ? parseInt(idInput.value, 10) : null;
   const fecha = fechaInput?.value || new Date().toISOString().split('T')[0];
   const nro_factura = nroFacturaInput?.value?.trim() || null;
-  const modelo_id = modeloSelect?.value ? parseInt(modeloSelect.value, 10) : null;
+  const modelo_id = modeloHiddenInput?.value ? parseInt(modeloHiddenInput.value, 10) : null;
   let periodo_id = periodoSelect?.value ? parseInt(periodoSelect.value, 10) : null;
   const cliente = clienteInput?.value?.trim();
   const cantidad = cantidadInput?.value ? parseInt(cantidadInput.value, 10) : 1;
@@ -464,7 +684,7 @@ export const saveSale = async (e) => {
   }
 
   if (!modelo_id) {
-    showToast('Debe seleccionar un modelo.', false);
+    showToast('Debe buscar y seleccionar un modelo.', false);
     return;
   }
 
@@ -585,7 +805,6 @@ export const downloadSalesCsvTemplate = async () => {
     'comision_vendedor'
   ];
 
-  // Provide realistic example models
   const exModel1 = modelosList[0]?.modelo || 'ARENA SPORT MT';
   const exModel2 = modelosList[1]?.modelo || 'ARENA SPORT AT';
   const exPer = periodosList[0]?.periodo || 'feb-2026';
@@ -597,7 +816,6 @@ export const downloadSalesCsvTemplate = async () => {
     `2026-02-22;FAC-001026;${exModel1};CHERY;TIGGO;;Constructora Horizonte;1;22900.00;Roberto Silva;150.00`
   ];
 
-  // UTF-8 BOM so Excel opens with proper accents and structure
   const csvContent = '\uFEFF' + rows.join('\r\n');
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
@@ -628,7 +846,6 @@ export const openSalesImportModal = async () => {
   if (summaryEl) summaryEl.classList.add('hidden');
   if (processBtn) processBtn.disabled = true;
 
-  // Pre-load catalogs for extended relation resolution
   await Promise.all([
     loadModelosCatalog(),
     loadPeriodosCatalog(),
@@ -666,7 +883,6 @@ const parseCsvText = (text) => {
   let inQuotes = false;
   let currentToken = '';
 
-  // Determine delimiter: detect semicolon, comma or tab from header
   const firstLine = text.split(/\r\n|\n|\r/)[0] || '';
   let delimiter = ';';
   if ((firstLine.match(/;/g) || []).length < (firstLine.match(/,/g) || []).length) {
@@ -675,7 +891,6 @@ const parseCsvText = (text) => {
     delimiter = '\t';
   }
 
-  // Remove BOM if present
   let cleanText = text.replace(/^\uFEFF/, '');
 
   for (let i = 0; i < cleanText.length; i++) {
@@ -685,7 +900,7 @@ const parseCsvText = (text) => {
     if (char === '"') {
       if (inQuotes && nextChar === '"') {
         currentToken += '"';
-        i++; // skip escaped quote
+        i++;
       } else {
         inQuotes = !inQuotes;
       }
@@ -745,7 +960,6 @@ export const handleSalesCsvFile = (file) => {
 
     const rawHeaders = rawRows[0].map(h => h.toLowerCase().trim().replace(/[\s_-]+/g, ''));
     
-    // Map expected column indexes
     const colIdx = {
       fecha: rawHeaders.findIndex(h => h.includes('fecha') || h === 'date'),
       nro_factura: rawHeaders.findIndex(h => h.includes('factura') || h.includes('invoice') || h.includes('nro')),
@@ -781,7 +995,6 @@ export const handleSalesCsvFile = (file) => {
       let vendedorRaw = colIdx.vendedor !== -1 ? r[colIdx.vendedor] : '';
       let comisionRaw = colIdx.comision !== -1 ? r[colIdx.comision] : '';
 
-      // Normalize date (YYYY-MM-DD)
       let parsedFecha = '';
       if (fechaRaw) {
         if (fechaRaw.includes('/')) {
@@ -803,18 +1016,15 @@ export const handleSalesCsvFile = (file) => {
         parsedFecha = new Date().toISOString().split('T')[0];
       }
 
-      // Resolve Modelo (Extended Matching)
       let matchedModel = null;
       if (modeloRaw) {
         const cleanMod = modeloRaw.toLowerCase().trim();
         matchedModel = modelosList.find(m => (m.modelo || '').toLowerCase().trim() === cleanMod);
         if (!matchedModel) {
-          // Partial match
           matchedModel = modelosList.find(m => (m.modelo || '').toLowerCase().includes(cleanMod) || cleanMod.includes((m.modelo || '').toLowerCase()));
         }
       }
 
-      // Resolve Periodo (By code or auto by date)
       let matchedPeriodId = null;
       let periodMatchName = '';
       if (periodoRaw) {
@@ -834,7 +1044,6 @@ export const handleSalesCsvFile = (file) => {
         }
       }
 
-      // Extended Linea & Familia resolution
       let extendedLineaName = lineaRaw || '-';
       let extendedFamiliaName = familiaRaw || '-';
       if (matchedModel) {
@@ -848,7 +1057,6 @@ export const handleSalesCsvFile = (file) => {
         }
       }
 
-      // Resolve Price & Commission
       let finalCantidad = parseInt(cantidadRaw, 10) || 1;
       let finalPrecio = parseFloat(precioRaw.replace(',', '.').replace(/[^0-9.]/g, ''));
       if (isNaN(finalPrecio) && matchedModel && matchedModel.precio_sugerido) {
@@ -860,7 +1068,6 @@ export const handleSalesCsvFile = (file) => {
         finalComision = parseFloat(matchedModel.comision_vendedor1);
       }
 
-      // Determine validation status
       let status = 'valid';
       let statusMsg = 'Listo para migrar';
 
@@ -908,7 +1115,6 @@ export const handleSalesCsvFile = (file) => {
     if (warningCountEl) warningCountEl.textContent = `${warningCount} Con Sugerencias`;
     if (errorCountEl) errorCountEl.textContent = `${errorCount} Errores`;
 
-    // Render Preview Table
     if (previewBody) {
       previewBody.innerHTML = '';
       parsedImportRows.slice(0, 100).forEach(r => {
@@ -1058,11 +1264,52 @@ export const initSalesModule = () => {
   const form = document.getElementById('sale-form');
   const searchInput = document.getElementById('sales-search');
   const fechaInput = document.getElementById('sale-form-fecha');
-  const modeloSelect = document.getElementById('sale-form-modelo');
-  const precioVentaInput = document.getElementById('sale-form-precio-venta');
-  const comisionInput = document.getElementById('sale-form-comision');
   const btnPrev = document.getElementById('sales-btn-prev');
   const btnNext = document.getElementById('sales-btn-next');
+
+  // Model Picker Trigger & Modal Elements
+  const openModelPickerBtn = document.getElementById('btn-open-model-picker');
+  const triggerModelPickerBtn = document.getElementById('btn-trigger-model-picker');
+  const modelDisplayCard = document.getElementById('sale-form-model-selected-display');
+  const closeModelPickerBtn = document.getElementById('btn-close-model-picker');
+  const cancelModelPickerBtn = document.getElementById('btn-cancel-model-picker');
+  const modelPickerOverlay = document.getElementById('model-picker-modal-overlay');
+  const modelPickerSearchInput = document.getElementById('model-picker-search-input');
+  const modelPickerProductFilter = document.getElementById('model-picker-product-filter');
+
+  const openPickerHandler = () => {
+    if (!window.hasPermission('view-sales', 'escribir') && !window.hasPermission('view-ventas', 'escribir')) {
+      return;
+    }
+    openModelPickerModal();
+  };
+
+  if (openModelPickerBtn) openModelPickerBtn.addEventListener('click', openPickerHandler);
+  if (triggerModelPickerBtn) triggerModelPickerBtn.addEventListener('click', openPickerHandler);
+  if (modelDisplayCard) modelDisplayCard.addEventListener('click', (e) => {
+    if (e.target.id !== 'btn-trigger-model-picker') openPickerHandler();
+  });
+
+  if (closeModelPickerBtn) closeModelPickerBtn.addEventListener('click', closeModelPickerModal);
+  if (cancelModelPickerBtn) cancelModelPickerBtn.addEventListener('click', closeModelPickerModal);
+
+  if (modelPickerOverlay) {
+    modelPickerOverlay.addEventListener('click', (e) => {
+      if (e.target === modelPickerOverlay) closeModelPickerModal();
+    });
+  }
+
+  let pickerSearchTimeout = null;
+  if (modelPickerSearchInput) {
+    modelPickerSearchInput.addEventListener('input', () => {
+      clearTimeout(pickerSearchTimeout);
+      pickerSearchTimeout = setTimeout(renderModelPickerList, 250);
+    });
+  }
+
+  if (modelPickerProductFilter) {
+    modelPickerProductFilter.addEventListener('change', renderModelPickerList);
+  }
 
   // CSV Import/Export Buttons & Modal Elements
   const downloadTemplateBtn = document.getElementById('btn-download-sales-template');
@@ -1147,28 +1394,6 @@ export const initSalesModule = () => {
     });
   }
 
-  // Auto-fill suggested price and commission when a model is selected
-  if (modeloSelect) {
-    modeloSelect.addEventListener('change', () => {
-      const modId = modeloSelect.value;
-      if (modId) {
-        const found = modelosList.find(m => String(m.id) === String(modId));
-        if (found) {
-          if (precioVentaInput && (precioVentaInput.value === '' || precioVentaInput.value === '0')) {
-            if (found.precio_sugerido) {
-              precioVentaInput.value = found.precio_sugerido;
-            }
-          }
-          if (comisionInput && (comisionInput.value === '' || comisionInput.value === '0')) {
-            if (found.comision_vendedor1) {
-              comisionInput.value = found.comision_vendedor1;
-            }
-          }
-        }
-      }
-    });
-  }
-
   let searchTimeout = null;
   if (searchInput) {
     searchInput.addEventListener('input', (e) => {
@@ -1203,4 +1428,5 @@ export const initSalesModule = () => {
   // Expose global functions for onclick handlers
   window.editSale = editSale;
   window.deleteSale = deleteSale;
+  window.selectModelForSale = selectModelForSale;
 };

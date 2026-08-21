@@ -28,7 +28,8 @@ const itemsToCopy = [
   'css',
   'js',
   'images',
-  'templates'
+  'templates',
+  'Empresas.apk'
 ];
 
 itemsToCopy.forEach(item => {
