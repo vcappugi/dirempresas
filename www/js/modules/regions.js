@@ -1,10 +1,43 @@
 import { supabaseUrl, supabaseKey, loadEnv, getHeaders, showToast, escapeHtml, openDeleteModal } from './utils.js';
 
 let regionsPage = 1;
-const regionsPageSize = 5;
+const regionsPageSize = 10;
 let regionsSearchQuery = "";
 let regionsTotalCount = 0;
 let regionsList = [];
+let edosList = [];
+
+// Fetch and cache Estados catalog
+export const loadEdosCatalog = async () => {
+  if (!supabaseUrl || !supabaseKey) await loadEnv();
+  try {
+    const res = await fetch(`${supabaseUrl}edo?order=nombre.asc`, {
+      method: 'GET',
+      headers: getHeaders()
+    });
+    if (res.ok) {
+      edosList = await res.json();
+    }
+  } catch (e) {
+    console.warn("Error cargando catálogo de estados (edo):", e);
+  }
+};
+
+// Populate EDO select dropdown
+export const populateEdoSelect = async (selectedEdoId = null) => {
+  const edoSelect = document.getElementById('region-form-edo');
+  if (!edoSelect) return;
+
+  if (edosList.length === 0) {
+    await loadEdosCatalog();
+  }
+
+  edoSelect.innerHTML = '<option value="">-- Seleccionar Estado --</option>';
+  edosList.forEach(e => {
+    const isSelected = selectedEdoId && String(selectedEdoId) === String(e.id) ? 'selected' : '';
+    edoSelect.innerHTML += `<option value="${e.id}" ${isSelected}>${escapeHtml(e.nombre)}</option>`;
+  });
+};
 
 export const loadRegions = async () => {
   const loadingEl = document.getElementById('regions-loading');
@@ -19,6 +52,10 @@ export const loadRegions = async () => {
 
   if (!supabaseUrl || !supabaseKey) {
     await loadEnv();
+  }
+
+  if (edosList.length === 0) {
+    await loadEdosCatalog();
   }
 
   const start = (regionsPage - 1) * regionsPageSize;
@@ -66,6 +103,14 @@ export const loadRegions = async () => {
           ? `<span class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-400">Activa</span>`
           : `<span class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">Inactiva</span>`;
 
+        const edoObj = edosList.find(e => String(e.id) === String(reg.edo_id));
+        const edoBadge = edoObj
+          ? `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/40">
+              <svg class="w-3 h-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+              ${escapeHtml(edoObj.nombre)}
+            </span>`
+          : `<span class="text-slate-400 italic text-xs">Sin Estado</span>`;
+
         const canWrite = window.hasPermission('view-regions', 'escribir');
 
         const btnEditar = `
@@ -104,7 +149,8 @@ export const loadRegions = async () => {
             </div>
           </td>
           <td class="px-4 py-3 font-semibold text-slate-800 dark:text-white font-mono">${reg.id}</td>
-          <td class="px-4 py-3 text-slate-650 dark:text-slate-200 font-medium">${escapeHtml(reg.nombre)}</td>
+          <td class="px-4 py-3 text-slate-700 dark:text-slate-200 font-medium">${escapeHtml(reg.nombre)}</td>
+          <td class="px-4 py-3">${edoBadge}</td>
           <td class="px-4 py-3">${statusBadge}</td>
         `;
         tableBody.appendChild(row);
@@ -115,7 +161,7 @@ export const loadRegions = async () => {
     console.error("Error loading regions:", err);
     tableBody.innerHTML = `
       <tr>
-        <td colspan="4" class="px-6 py-10 text-center text-red-500 font-semibold">
+        <td colspan="5" class="px-6 py-10 text-center text-red-500 font-semibold">
           ${err.message || 'Error cargando regiones.'}
         </td>
       </tr>
@@ -191,10 +237,12 @@ export const initRegionsModule = () => {
   if (btnAddRegion) {
     const canWrite = window.hasPermission('view-regions', 'escribir');
     btnAddRegion.style.display = canWrite ? 'inline-flex' : 'none';
-    btnAddRegion.addEventListener('click', () => {
+    btnAddRegion.addEventListener('click', async () => {
       document.getElementById('region-form-id').value = '';
       document.getElementById('region-form-nombre').value = '';
       document.getElementById('region-form-activo').checked = true;
+
+      await populateEdoSelect(null);
 
       document.getElementById('region-modal-title').textContent = 'Crear Región';
       openRegionModal();
@@ -204,13 +252,15 @@ export const initRegionsModule = () => {
   if (btnCloseRegionModal) btnCloseRegionModal.addEventListener('click', closeRegionModal);
   if (btnCancelRegionModal) btnCancelRegionModal.addEventListener('click', closeRegionModal);
 
-  window.editRegion = (id) => {
+  window.editRegion = async (id) => {
     const reg = regionsList.find(r => r.id === id);
     if (!reg) return;
 
     document.getElementById('region-form-id').value = reg.id;
     document.getElementById('region-form-nombre').value = reg.nombre || '';
     document.getElementById('region-form-activo').checked = reg.activo === true;
+
+    await populateEdoSelect(reg.edo_id);
 
     const canWrite = window.hasPermission('view-regions', 'escribir');
     document.getElementById('region-modal-title').textContent = canWrite ? 'Editar Región' : 'Detalles de la Región';
@@ -226,7 +276,9 @@ export const initRegionsModule = () => {
       e.preventDefault();
 
       const id = document.getElementById('region-form-id').value;
-      const nombre = document.getElementById('region-form-nombre').value;
+      const nombre = document.getElementById('region-form-nombre').value.trim();
+      const edoSelect = document.getElementById('region-form-edo');
+      const edo_id = edoSelect && edoSelect.value ? parseInt(edoSelect.value, 10) : null;
       const activo = document.getElementById('region-form-activo').checked;
 
       const saveBtn = document.getElementById('btn-save-region-modal');
@@ -241,7 +293,7 @@ export const initRegionsModule = () => {
       `;
 
       try {
-        const regionData = { nombre, activo };
+        const regionData = { nombre, activo, edo_id };
 
         let url = `${supabaseUrl}region`;
         let method = 'POST';

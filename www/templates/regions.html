@@ -37,8 +37,9 @@
           <tr>
             <th scope="col" class="px-4 py-3 min-w-[100px] text-left">Acciones</th>
             <th scope="col" class="px-4 py-3 min-w-[60px]">ID</th>
-            <th scope="col" class="px-4 py-3 min-w-[200px]">Nombre</th>
-            <th scope="col" class="px-4 py-3 min-w-[100px]">Estado</th>
+            <th scope="col" class="px-4 py-3 min-w-[180px]">Nombre</th>
+            <th scope="col" class="px-4 py-3 min-w-[160px]">Estado / Entidad</th>
+            <th scope="col" class="px-4 py-3 min-w-[100px]">Estatus</th>
           </tr>
         </thead>
         <tbody id="regions-table-body" class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -88,19 +89,27 @@
 
     <div>
       <h3 id="region-modal-title" class="font-display font-bold text-xl text-slate-900 dark:text-white">Crear Región</h3>
-      <p class="text-xs text-slate-500 dark:text-slate-400">Todos los campos son editables excepto el ID y la fecha de creación.</p>
+      <p class="text-xs text-slate-500 dark:text-slate-400">Complete los datos de la región geográfica y su estado correspondiente.</p>
     </div>
 
-    <form id="region-form" class="space-y-5">
+    <form id="region-form" class="space-y-4">
       <input type="hidden" id="region-form-id">
       
       <!-- Nombre input -->
-      <div class="relative">
-        <input type="text" id="region-form-nombre" required placeholder=" " class="peer block w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300">
-        <label for="region-form-nombre" class="absolute left-4 top-3 origin-[0] -translate-y-4 scale-75 transform text-slate-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-brand bg-white dark:bg-slate-900 px-1.5">Nombre de la Región</label>
+      <div>
+        <label for="region-form-nombre" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Nombre de la Región *</label>
+        <input type="text" id="region-form-nombre" required placeholder="Ej: Lara / Barquisimeto" class="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
       </div>
 
-      <!-- Activo toggle/switch (Premium styling) -->
+      <!-- Estado / Entidad select -->
+      <div>
+        <label for="region-form-edo" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Estado / Entidad (EDO) *</label>
+        <select id="region-form-edo" required class="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+          <option value="">-- Seleccionar Estado --</option>
+        </select>
+      </div>
+
+      <!-- Activo toggle/switch -->
       <div class="flex items-center justify-between p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40">
         <div class="space-y-0.5">
           <span class="text-sm font-semibold">Estado Activo</span>
@@ -114,11 +123,11 @@
 
       <!-- Action Buttons -->
       <div class="flex gap-4 pt-3">
-        <button type="button" id="btn-cancel-region-modal" class="flex-1 py-3 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-350 dark:hover:bg-slate-700 rounded-xl transition-all">
+        <button type="button" id="btn-cancel-region-modal" class="flex-1 py-2.5 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-350 dark:hover:bg-slate-700 rounded-xl transition-all">
           Cancelar
         </button>
-        <button type="submit" id="btn-save-region-modal" class="flex-1 py-3 text-sm font-semibold text-white bg-brand hover:bg-brand-light focus:ring-4 focus:ring-brand-200 rounded-xl transition-all shadow-lg shadow-brand/10">
-          Guardar
+        <button type="submit" id="btn-save-region-modal" class="flex-1 py-2.5 text-sm font-semibold text-white bg-brand hover:bg-brand-light focus:ring-4 focus:ring-brand-200 rounded-xl transition-all shadow-lg shadow-brand/10">
+          Guardar Región
         </button>
       </div>
     </form>

@@ -10,6 +10,8 @@ let periodosList = [];
 let lineasList = [];
 let familiasList = [];
 let productosList = [];
+let modalidadesList = [];
+let sucursalesList = [];
 let parsedImportRows = [];
 
 // Helper to format currency
@@ -53,6 +55,28 @@ export const loadProductosCatalog = async () => {
   }
 };
 
+// Fetch and cache Modalidad de Venta catalog
+export const loadModalidadesCatalog = async () => {
+  if (!supabaseUrl || !supabaseKey) await loadEnv();
+  try {
+    const res = await fetch(`${supabaseUrl}modalidad_venta?order=nombre.asc`, { method: 'GET', headers: getHeaders() });
+    if (res.ok) modalidadesList = await res.json();
+  } catch (e) {
+    console.warn("Error cargando catálogo de modalidades de venta:", e);
+  }
+};
+
+// Fetch and cache Sucursales catalog
+export const loadSucursalesCatalog = async () => {
+  if (!supabaseUrl || !supabaseKey) await loadEnv();
+  try {
+    const res = await fetch(`${supabaseUrl}sucursales?order=nombre.asc`, { method: 'GET', headers: getHeaders() });
+    if (res.ok) sucursalesList = await res.json();
+  } catch (e) {
+    console.warn("Error cargando catálogo de sucursales:", e);
+  }
+};
+
 // Fetch and cache Modelos catalog (Ensure fetching ALL models up to 1000)
 export const loadModelosCatalog = async () => {
   if (!supabaseUrl || !supabaseKey) await loadEnv();
@@ -82,6 +106,41 @@ export const loadPeriodosCatalog = async () => {
     }
   } catch (e) {
     console.warn("Error cargando catálogo de períodos:", e);
+  }
+};
+
+// Populate Periodos, Modalidad and Sucursal selects in modal form
+export const populateSaleSelects = async (selectedPeriodoId = null, selectedModalidadId = null, selectedSucursalId = null) => {
+  const periodoSelect = document.getElementById('sale-form-periodo');
+  const modalidadSelect = document.getElementById('sale-form-modalidad-venta');
+  const sucursalSelect = document.getElementById('sale-form-sucursal');
+
+  if (periodosList.length === 0) await loadPeriodosCatalog();
+  if (modalidadesList.length === 0) await loadModalidadesCatalog();
+  if (sucursalesList.length === 0) await loadSucursalesCatalog();
+
+  if (periodoSelect) {
+    periodoSelect.innerHTML = '<option value="">-- Seleccionar Período --</option>';
+    periodosList.forEach(p => {
+      const isSel = (selectedPeriodoId && String(selectedPeriodoId) === String(p.id)) ? 'selected' : '';
+      periodoSelect.innerHTML += `<option value="${p.id}" ${isSel}>${escapeHtml(p.periodo || `P#${p.id}`)}</option>`;
+    });
+  }
+
+  if (modalidadSelect) {
+    modalidadSelect.innerHTML = '<option value="">-- Seleccionar Modalidad --</option>';
+    modalidadesList.forEach(m => {
+      const isSel = (selectedModalidadId && String(selectedModalidadId) === String(m.id)) ? 'selected' : '';
+      modalidadSelect.innerHTML += `<option value="${m.id}" ${isSel}>${escapeHtml(m.nombre || `Mod#${m.id}`)}</option>`;
+    });
+  }
+
+  if (sucursalSelect) {
+    sucursalSelect.innerHTML = '<option value="">-- Seleccionar Sucursal --</option>';
+    sucursalesList.forEach(s => {
+      const isSel = (selectedSucursalId && String(selectedSucursalId) === String(s.id)) ? 'selected' : '';
+      sucursalSelect.innerHTML += `<option value="${s.id}" ${isSel}>${escapeHtml(s.nombre || `Sucursal #${s.id}`)}</option>`;
+    });
   }
 };
 
@@ -301,6 +360,7 @@ export const selectModelForSale = (modelId) => {
   const detailsEl = document.getElementById('sale-form-model-details-display');
   const precioInput = document.getElementById('sale-form-precio-venta');
   const comisionInput = document.getElementById('sale-form-comision');
+  const comision2Input = document.getElementById('sale-form-comision2');
 
   if (hiddenInput) hiddenInput.value = model.id;
   if (badgeEl) badgeEl.textContent = `#${model.id}`;
@@ -314,12 +374,15 @@ export const selectModelForSale = (modelId) => {
   if (model.precio_sugerido) detailsText += ` | Sugerido: $${model.precio_sugerido}`;
   if (detailsEl) detailsEl.textContent = detailsText || 'Modelo seleccionado';
 
-  // Auto-fill price and commission if currently empty or 0
+  // Auto-fill price and commissions if currently empty or 0
   if (precioInput && (!precioInput.value || precioInput.value === '0')) {
     if (model.precio_sugerido) precioInput.value = model.precio_sugerido;
   }
   if (comisionInput && (!comisionInput.value || comisionInput.value === '0')) {
     if (model.comision_vendedor1) comisionInput.value = model.comision_vendedor1;
+  }
+  if (comision2Input && (!comision2Input.value || comision2Input.value === '0')) {
+    if (model.comision_vendedor2) comision2Input.value = model.comision_vendedor2;
   }
 
   closeModelPickerModal();
@@ -360,25 +423,6 @@ export const updateSelectedModelDisplay = (modelId) => {
   }
 };
 
-// Populate Selects in Sale Modal
-const populateSaleSelects = async (selectedPeriodo = null) => {
-  if (periodosList.length === 0) await loadPeriodosCatalog();
-
-  const periodoSelect = document.getElementById('sale-form-periodo');
-
-  if (periodoSelect) {
-    periodoSelect.innerHTML = '<option value="">-- Seleccionar Período --</option>';
-    periodosList.forEach(p => {
-      const isSel = selectedPeriodo && String(selectedPeriodo) === String(p.id) ? 'selected' : '';
-      let dateRangeInfo = '';
-      if (p.fechadesde && p.fechahasta) {
-        dateRangeInfo = ` (${p.fechadesde} a ${p.fechahasta})`;
-      }
-      periodoSelect.innerHTML += `<option value="${p.id}" ${isSel}>${escapeHtml(p.periodo || 'Período #' + p.id)}${escapeHtml(dateRangeInfo)}</option>`;
-    });
-  }
-};
-
 export const loadSales = async () => {
   const loadingEl = document.getElementById('sales-loading');
   const tableBody = document.getElementById('sales-table-body');
@@ -398,6 +442,7 @@ export const loadSales = async () => {
   if (modelosList.length === 0) await loadModelosCatalog();
   if (periodosList.length === 0) await loadPeriodosCatalog();
   if (productosList.length === 0) await loadProductosCatalog();
+  if (sucursalesList.length === 0) await loadSucursalesCatalog();
 
   const start = (salesPage - 1) * salesPageSize;
   const end = start + salesPageSize - 1;
@@ -454,12 +499,15 @@ export const loadSales = async () => {
           } catch(e) {}
         }
 
-        // Find modelo and periodo names
+        // Find modelo, periodo and sucursal names
         const modObj = modelosList.find(m => String(m.id) === String(s.modelo_id));
         const modeloName = modObj ? modObj.modelo : (s.modelo_id ? `Modelo #${s.modelo_id}` : '-');
 
         const perObj = periodosList.find(p => String(p.id) === String(s.periodo_id));
         const periodoName = perObj ? perObj.periodo : (s.periodo_id ? `Período #${s.periodo_id}` : '-');
+
+        const sucObj = sucursalesList.find(suc => String(suc.id) === String(s.sucursal_id));
+        const sucursalName = sucObj ? sucObj.nombre : (s.sucursal_id ? `Sucursal #${s.sucursal_id}` : '-');
 
         const canWrite = window.hasPermission('view-sales', 'escribir') || window.hasPermission('view-ventas', 'escribir');
 
@@ -511,6 +559,11 @@ export const loadSales = async () => {
               ${escapeHtml(periodoName)}
             </span>
           </td>
+          <td class="px-4 py-3">
+            <span class="inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+              ${escapeHtml(sucursalName)}
+            </span>
+          </td>
           <td class="px-4 py-3 font-semibold text-slate-900 dark:text-white">${escapeHtml(s.cliente || '-')}</td>
           <td class="px-4 py-3 text-center">
             <span class="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200">
@@ -518,6 +571,7 @@ export const loadSales = async () => {
             </span>
           </td>
           <td class="px-4 py-3 text-right font-semibold text-slate-900 dark:text-slate-100">${formatCurrency(s.precio_venta)}</td>
+          <td class="px-4 py-3 text-right font-medium text-slate-700 dark:text-slate-300 font-mono">${formatCurrency(s.costo_fob)}</td>
           <td class="px-4 py-3 text-slate-700 dark:text-slate-300">${escapeHtml(s.vendedor || '-')}</td>
           <td class="px-4 py-3 text-right font-semibold text-emerald-600 dark:text-emerald-400">${formatCurrency(s.comision_vendedor)}</td>
           <td class="px-4 py-3 text-xs text-slate-400">${fechaCreacion}</td>
@@ -577,15 +631,21 @@ export const openSaleModal = async (sale = null) => {
   const fechaInput = document.getElementById('sale-form-fecha');
   const nroFacturaInput = document.getElementById('sale-form-nro-factura');
   const precioVentaInput = document.getElementById('sale-form-precio-venta');
+  const costoFobInput = document.getElementById('sale-form-costo-fob');
   const clienteInput = document.getElementById('sale-form-cliente');
   const cantidadInput = document.getElementById('sale-form-cantidad');
   const vendedorInput = document.getElementById('sale-form-vendedor');
   const comisionInput = document.getElementById('sale-form-comision');
+  const comision2Input = document.getElementById('sale-form-comision2');
+  const revisionInput = document.getElementById('sale-form-revision');
+  const observacionInput = document.getElementById('sale-form-observacion');
 
   await Promise.all([
     loadModelosCatalog(),
     loadProductosCatalog(),
-    loadLineasCatalog()
+    loadLineasCatalog(),
+    loadPeriodosCatalog(),
+    loadModalidadesCatalog()
   ]);
 
   if (sale) {
@@ -594,21 +654,32 @@ export const openSaleModal = async (sale = null) => {
     if (fechaInput) fechaInput.value = sale.fecha || '';
     if (nroFacturaInput) nroFacturaInput.value = sale.nro_factura || '';
     if (precioVentaInput) precioVentaInput.value = sale.precio_venta ?? '';
+    if (costoFobInput) costoFobInput.value = sale.costo_fob ?? '';
     if (clienteInput) clienteInput.value = sale.cliente || '';
     if (cantidadInput) cantidadInput.value = sale.cantidad ?? 1;
     if (vendedorInput) vendedorInput.value = sale.vendedor || '';
     if (comisionInput) comisionInput.value = sale.comision_vendedor ?? '';
+    if (comision2Input) comision2Input.value = sale.comision_vendedro2 ?? '';
+    if (revisionInput) revisionInput.value = sale.revision || '';
+    if (observacionInput) observacionInput.value = sale.observcion || '';
 
     updateSelectedModelDisplay(sale.modelo_id);
-    await populateSaleSelects(sale.periodo_id);
+    await populateSaleSelects(sale.periodo_id, sale.modalidad_ventas_id, sale.sucursal_id);
   } else {
     title.textContent = 'Registrar Venta';
     if (idInput) idInput.value = '';
     if (nroFacturaInput) nroFacturaInput.value = '';
     if (precioVentaInput) precioVentaInput.value = '';
+    if (costoFobInput) costoFobInput.value = '';
     const today = new Date().toISOString().split('T')[0];
     if (fechaInput) fechaInput.value = today;
     if (cantidadInput) cantidadInput.value = 1;
+    if (clienteInput) clienteInput.value = '';
+    if (vendedorInput) vendedorInput.value = '';
+    if (comisionInput) comisionInput.value = '';
+    if (comision2Input) comision2Input.value = '';
+    if (revisionInput) revisionInput.value = '';
+    if (observacionInput) observacionInput.value = '';
 
     updateSelectedModelDisplay(null);
     await populateSaleSelects();
@@ -662,22 +733,34 @@ export const saveSale = async (e) => {
   const nroFacturaInput = document.getElementById('sale-form-nro-factura');
   const modeloHiddenInput = document.getElementById('sale-form-modelo');
   const periodoSelect = document.getElementById('sale-form-periodo');
+  const modalidadSelect = document.getElementById('sale-form-modalidad-venta');
+  const sucursalSelect = document.getElementById('sale-form-sucursal');
   const clienteInput = document.getElementById('sale-form-cliente');
   const cantidadInput = document.getElementById('sale-form-cantidad');
   const precioVentaInput = document.getElementById('sale-form-precio-venta');
+  const costoFobInput = document.getElementById('sale-form-costo-fob');
   const vendedorInput = document.getElementById('sale-form-vendedor');
   const comisionInput = document.getElementById('sale-form-comision');
+  const comision2Input = document.getElementById('sale-form-comision2');
+  const revisionInput = document.getElementById('sale-form-revision');
+  const observacionInput = document.getElementById('sale-form-observacion');
 
   const id = idInput?.value ? parseInt(idInput.value, 10) : null;
   const fecha = fechaInput?.value || new Date().toISOString().split('T')[0];
   const nro_factura = nroFacturaInput?.value?.trim() || null;
   const modelo_id = modeloHiddenInput?.value ? parseInt(modeloHiddenInput.value, 10) : null;
   let periodo_id = periodoSelect?.value ? parseInt(periodoSelect.value, 10) : null;
+  const modalidad_ventas_id = modalidadSelect?.value ? parseInt(modalidadSelect.value, 10) : null;
+  const sucursal_id = sucursalSelect?.value ? parseInt(sucursalSelect.value, 10) : null;
   const cliente = clienteInput?.value?.trim();
   const cantidad = cantidadInput?.value ? parseInt(cantidadInput.value, 10) : 1;
   const precio_venta = precioVentaInput?.value ? parseFloat(precioVentaInput.value) : null;
+  const costo_fob = costoFobInput?.value ? parseFloat(costoFobInput.value) : null;
   const vendedor = vendedorInput?.value?.trim() || null;
   const comision_vendedor = comisionInput?.value ? parseFloat(comisionInput.value) : null;
+  const comision_vendedro2 = comision2Input?.value ? parseFloat(comision2Input.value) : null;
+  const revision = revisionInput?.value?.trim() || null;
+  const observcion = observacionInput?.value?.trim() || null;
 
   if (!periodo_id && fecha) {
     periodo_id = findPeriodForDate(fecha);
@@ -703,11 +786,17 @@ export const saveSale = async (e) => {
     nro_factura,
     modelo_id,
     periodo_id,
+    modalidad_ventas_id,
+    sucursal_id,
     cliente,
     cantidad,
     precio_venta,
+    costo_fob,
     vendedor,
-    comision_vendedor
+    comision_vendedor,
+    comision_vendedro2,
+    revision,
+    observcion
   };
 
   const saveBtn = document.getElementById('btn-save-sale');
@@ -790,6 +879,8 @@ export const deleteSale = (id) => {
 export const downloadSalesCsvTemplate = async () => {
   if (modelosList.length === 0) await loadModelosCatalog();
   if (periodosList.length === 0) await loadPeriodosCatalog();
+  if (modalidadesList.length === 0) await loadModalidadesCatalog();
+  if (sucursalesList.length === 0) await loadSucursalesCatalog();
 
   const headers = [
     'fecha',
@@ -798,22 +889,32 @@ export const downloadSalesCsvTemplate = async () => {
     'linea',
     'familia',
     'periodo',
+    'sucursal',
+    'modalidad_venta',
     'cliente',
     'cantidad',
     'precio_venta',
+    'costo_fob',
     'vendedor',
-    'comision_vendedor'
+    'comision_vendedor1',
+    'comision_vendedor2',
+    'revision',
+    'observaciones'
   ];
 
   const exModel1 = modelosList[0]?.modelo || 'ARENA SPORT MT';
   const exModel2 = modelosList[1]?.modelo || 'ARENA SPORT AT';
   const exPer = periodosList[0]?.periodo || 'feb-2026';
+  const exSuc1 = sucursalesList[0]?.nombre || 'JAC PORTUGUESA';
+  const exSuc2 = sucursalesList[1]?.nombre || 'JAC EL TIGRE';
+  const exMod1 = modalidadesList[0]?.nombre || 'Compra Directa';
+  const exMod2 = modalidadesList[1]?.nombre || 'Compra Directa Crédito';
 
   const rows = [
     headers.join(';'),
-    `2026-02-15;FAC-001024;${exModel1};CHERY;TIGGO;${exPer};Inversiones Los Andes, C.A.;1;22900.00;Carlos Pérez;150.00`,
-    `2026-02-20;FAC-001025;${exModel2};CHERY;TIGGO;${exPer};Distribuidora Central S.A.;2;24500.00;María González;300.00`,
-    `2026-02-22;FAC-001026;${exModel1};CHERY;TIGGO;;Constructora Horizonte;1;22900.00;Roberto Silva;150.00`
+    `2026-02-15;FAC-001024;${exModel1};CHERY;TIGGO;${exPer};${exSuc1};${exMod1};Inversiones Los Andes, C.A.;1;22900.00;18500.00;Carlos Pérez;150.00;50.00;Aprobado;Venta corporativa inicial`,
+    `2026-02-20;FAC-001025;${exModel2};CHERY;TIGGO;${exPer};${exSuc2};${exMod2};Distribuidora Central S.A.;2;24500.00;19800.00;María González;300.00;100.00;Auditado;Entrega inmediata aprobada`,
+    `2026-02-22;FAC-001026;${exModel1};CHERY;TIGGO;;${exSuc1};${exMod1};Constructora Horizonte;1;22900.00;18500.00;Roberto Silva;150.00;0.00;Pendiente;Validación de crédito`
   ];
 
   const csvContent = '\uFEFF' + rows.join('\r\n');
@@ -826,7 +927,160 @@ export const downloadSalesCsvTemplate = async () => {
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
-  showToast("Plantilla CSV descargada exitosamente.", true);
+  showToast("Plantilla CSV actualizada descargada exitosamente.", true);
+};
+
+// ─── EXPORTAR TODA LA DATA A EXCEL (CSV) ──────────────────────────────────────
+export const exportAllSalesToExcel = async () => {
+  const exportBtn = document.getElementById('btn-export-sales-excel');
+  const originalHtml = exportBtn ? exportBtn.innerHTML : '';
+  
+  if (exportBtn) {
+    exportBtn.disabled = true;
+    exportBtn.innerHTML = `
+      <svg class="animate-spin h-4 w-4 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <span>Exportando...</span>
+    `;
+  }
+
+  try {
+    if (!supabaseUrl || !supabaseKey) await loadEnv();
+    const h = getHeaders();
+
+    // Ensure all lookup catalogs are loaded
+    const promises = [];
+    if (modelosList.length === 0) promises.push(loadModelosCatalog());
+    if (periodosList.length === 0) promises.push(loadPeriodosCatalog());
+    if (productosList.length === 0) promises.push(loadProductosCatalog());
+    if (lineasList.length === 0) promises.push(loadLineasCatalog());
+    if (familiasList.length === 0) promises.push(loadFamiliasCatalog());
+    if (modalidadesList.length === 0) promises.push(loadModalidadesCatalog());
+    if (sucursalesList.length === 0) promises.push(loadSucursalesCatalog());
+    if (promises.length > 0) await Promise.all(promises);
+
+    // Fetch ALL sales records without pagination limits
+    const res = await fetch(`${supabaseUrl}ventas?order=fecha.desc,id.desc&limit=10000`, {
+      method: 'GET',
+      headers: h
+    });
+
+    if (!res.ok) throw new Error("Error al obtener el historial de ventas desde la base de datos.");
+    const allSalesData = await res.json();
+
+    if (!allSalesData || allSalesData.length === 0) {
+      showToast("No hay registros de ventas para exportar.", false);
+      return;
+    }
+
+    const headers = [
+      'ID Venta',
+      'Fecha',
+      'Nro. Factura',
+      'Producto / Servicio',
+      'Modelo',
+      'Línea',
+      'Familia',
+      'Período',
+      'Sucursal',
+      'Modalidad de Venta',
+      'Cliente',
+      'Cantidad',
+      'Precio Venta (USD)',
+      'Costo FOB (USD)',
+      'Total Venta (USD)',
+      'Vendedor',
+      'Comisión Vendedor 1 (USD)',
+      'Comisión Vendedor 2 (USD)',
+      'Revisión',
+      'Observaciones',
+      'Fecha Creación'
+    ];
+
+    const escapeCsvField = (val) => {
+      if (val === null || val === undefined) return '';
+      const str = String(val).trim();
+      if (str.includes(';') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    const csvRows = [headers.join(';')];
+
+    allSalesData.forEach(sale => {
+      const mod = modelosList.find(m => String(m.id) === String(sale.modelo_id));
+      const per = periodosList.find(p => String(p.id) === String(sale.periodo_id));
+      const prod = mod ? productosList.find(p => String(p.id) === String(mod.producto_id)) : null;
+      const modalidad = modalidadesList.find(m => String(m.id) === String(sale.modalidad_ventas_id));
+      const suc = sucursalesList.find(s => String(s.id) === String(sale.sucursal_id));
+
+      const modNombre = mod ? mod.modelo : (sale.modelo_id ? `Modelo #${sale.modelo_id}` : '');
+      const prodNombre = prod ? prod.nombre : (mod?.producto_id ? `Producto #${mod.producto_id}` : '');
+      const lineaNombre = mod?.linea ? `Línea ${mod.linea}` : '';
+      const familiaNombre = mod?.familia ? `Familia ${mod.familia}` : '';
+      const perNombre = per ? per.periodo : (sale.periodo_id ? `P#${sale.periodo_id}` : '');
+      const sucNombre = suc ? suc.nombre : (sale.sucursal_id ? `Sucursal #${sale.sucursal_id}` : '');
+      const modalidadNombre = modalidad ? modalidad.nombre : (sale.modalidad_ventas_id ? `Modalidad #${sale.modalidad_ventas_id}` : '');
+
+      const cant = parseInt(sale.cantidad, 10) || 1;
+      const precio = parseFloat(sale.precio_venta) || 0;
+      const costoFob = parseFloat(sale.costo_fob) || 0;
+      const totalVenta = cant * precio;
+      const comision1 = parseFloat(sale.comision_vendedor) || 0;
+      const comision2 = parseFloat(sale.comision_vendedro2) || 0;
+
+      const row = [
+        escapeCsvField(sale.id),
+        escapeCsvField(sale.fecha ? sale.fecha.split('T')[0] : ''),
+        escapeCsvField(sale.nro_factura || ''),
+        escapeCsvField(prodNombre),
+        escapeCsvField(modNombre),
+        escapeCsvField(lineaNombre),
+        escapeCsvField(familiaNombre),
+        escapeCsvField(perNombre),
+        escapeCsvField(sucNombre),
+        escapeCsvField(modalidadNombre),
+        escapeCsvField(sale.cliente || ''),
+        escapeCsvField(cant),
+        escapeCsvField(precio.toFixed(2)),
+        escapeCsvField(sale.costo_fob !== null && sale.costo_fob !== undefined ? costoFob.toFixed(2) : ''),
+        escapeCsvField(totalVenta.toFixed(2)),
+        escapeCsvField(sale.vendedor || ''),
+        escapeCsvField(comision1.toFixed(2)),
+        escapeCsvField(comision2.toFixed(2)),
+        escapeCsvField(sale.revision || ''),
+        escapeCsvField(sale.observcion || ''),
+        escapeCsvField(sale.created_at ? sale.created_at.split('T')[0] : '')
+      ];
+
+      csvRows.push(row.join(';'));
+    });
+
+    const csvContent = '\uFEFF' + csvRows.join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const today = new Date().toISOString().split('T')[0];
+    link.setAttribute('href', url);
+    link.setAttribute('download', `reporte_ventas_completo_${today}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    showToast(`Se exportaron exitosamente ${allSalesData.length} ventas a Excel.`, true);
+  } catch (err) {
+    console.error("Error exportando ventas a Excel:", err);
+    showToast(err.message || "Error al exportar las ventas a Excel.", false);
+  } finally {
+    if (exportBtn) {
+      exportBtn.disabled = false;
+      exportBtn.innerHTML = originalHtml;
+    }
+  }
 };
 
 // ─── IMPORTACIÓN CSV Y PARSER ────────────────────────────────────────────────
@@ -850,7 +1104,9 @@ export const openSalesImportModal = async () => {
     loadModelosCatalog(),
     loadPeriodosCatalog(),
     loadLineasCatalog(),
-    loadFamiliasCatalog()
+    loadFamiliasCatalog(),
+    loadModalidadesCatalog(),
+    loadSucursalesCatalog()
   ]);
 
   overlay.classList.remove('hidden');
@@ -967,11 +1223,17 @@ export const handleSalesCsvFile = (file) => {
       linea: rawHeaders.findIndex(h => h.includes('linea') || h.includes('line')),
       familia: rawHeaders.findIndex(h => h.includes('familia') || h.includes('family')),
       periodo: rawHeaders.findIndex(h => h.includes('periodo') || h.includes('period')),
+      sucursal: rawHeaders.findIndex(h => h.includes('sucursal') || h.includes('branch')),
+      modalidad: rawHeaders.findIndex(h => h.includes('modalidad') || h.includes('mod') || h.includes('tipo_venta') || h.includes('tipoventa')),
       cliente: rawHeaders.findIndex(h => h.includes('cliente') || h.includes('customer') || h.includes('razon')),
       cantidad: rawHeaders.findIndex(h => h.includes('cant') || h.includes('qty') || h.includes('unid')),
       precio_venta: rawHeaders.findIndex(h => h.includes('precio') || h.includes('price') || h.includes('monto')),
+      costo_fob: rawHeaders.findIndex(h => h.includes('costo_fob') || h.includes('costofob') || h === 'fob' || h.includes('costo')),
       vendedor: rawHeaders.findIndex(h => h.includes('vendedor') || h.includes('seller') || h.includes('asesor')),
-      comision: rawHeaders.findIndex(h => h.includes('comision') || h.includes('comm'))
+      comision1: rawHeaders.findIndex(h => (h.includes('comision') && (h.includes('1') || h.includes('vendedor1') || !h.includes('2'))) || h === 'comision_vendedor'),
+      comision2: rawHeaders.findIndex(h => (h.includes('comision') && (h.includes('2') || h.includes('vendedro2') || h.includes('vendedor2')))),
+      revision: rawHeaders.findIndex(h => h.includes('revision') || h.includes('revis') || h.includes('control') || h.includes('status')),
+      observacion: rawHeaders.findIndex(h => h.includes('observ') || h.includes('nota') || h.includes('comentario'))
     };
 
     parsedImportRows = [];
@@ -989,11 +1251,17 @@ export const handleSalesCsvFile = (file) => {
       let lineaRaw = colIdx.linea !== -1 ? r[colIdx.linea] : '';
       let familiaRaw = colIdx.familia !== -1 ? r[colIdx.familia] : '';
       let periodoRaw = colIdx.periodo !== -1 ? r[colIdx.periodo] : '';
+      let sucursalRaw = colIdx.sucursal !== -1 ? r[colIdx.sucursal] : '';
+      let modalidadRaw = colIdx.modalidad !== -1 ? r[colIdx.modalidad] : '';
       let clienteRaw = colIdx.cliente !== -1 ? r[colIdx.cliente] : '';
       let cantidadRaw = colIdx.cantidad !== -1 ? r[colIdx.cantidad] : '1';
       let precioRaw = colIdx.precio_venta !== -1 ? r[colIdx.precio_venta] : '';
+      let costoFobRaw = colIdx.costo_fob !== -1 ? r[colIdx.costo_fob] : '';
       let vendedorRaw = colIdx.vendedor !== -1 ? r[colIdx.vendedor] : '';
-      let comisionRaw = colIdx.comision !== -1 ? r[colIdx.comision] : '';
+      let comision1Raw = colIdx.comision1 !== -1 ? r[colIdx.comision1] : '';
+      let comision2Raw = colIdx.comision2 !== -1 ? r[colIdx.comision2] : '';
+      let revisionRaw = colIdx.revision !== -1 ? r[colIdx.revision] : '';
+      let observacionRaw = colIdx.observacion !== -1 ? r[colIdx.observacion] : '';
 
       let parsedFecha = '';
       if (fechaRaw) {
@@ -1044,6 +1312,40 @@ export const handleSalesCsvFile = (file) => {
         }
       }
 
+      let matchedModalidadId = null;
+      let modalidadMatchName = '-';
+      if (modalidadRaw) {
+        const cleanMod = modalidadRaw.toLowerCase().trim();
+        const foundM = modalidadesList.find(m => (m.nombre || '').toLowerCase().trim() === cleanMod || String(m.id) === cleanMod);
+        if (foundM) {
+          matchedModalidadId = foundM.id;
+          modalidadMatchName = foundM.nombre;
+        } else {
+          const foundSub = modalidadesList.find(m => (m.nombre || '').toLowerCase().includes(cleanMod) || cleanMod.includes((m.nombre || '').toLowerCase()));
+          if (foundSub) {
+            matchedModalidadId = foundSub.id;
+            modalidadMatchName = foundSub.nombre;
+          }
+        }
+      }
+
+      let matchedSucursalId = null;
+      let sucursalMatchName = '-';
+      if (sucursalRaw) {
+        const cleanSuc = sucursalRaw.toLowerCase().trim();
+        const foundS = sucursalesList.find(s => (s.nombre || '').toLowerCase().trim() === cleanSuc || String(s.id) === cleanSuc);
+        if (foundS) {
+          matchedSucursalId = foundS.id;
+          sucursalMatchName = foundS.nombre;
+        } else {
+          const foundSub = sucursalesList.find(s => (s.nombre || '').toLowerCase().includes(cleanSuc) || cleanSuc.includes((s.nombre || '').toLowerCase()));
+          if (foundSub) {
+            matchedSucursalId = foundSub.id;
+            sucursalMatchName = foundSub.nombre;
+          }
+        }
+      }
+
       let extendedLineaName = lineaRaw || '-';
       let extendedFamiliaName = familiaRaw || '-';
       if (matchedModel) {
@@ -1063,9 +1365,20 @@ export const handleSalesCsvFile = (file) => {
         finalPrecio = parseFloat(matchedModel.precio_sugerido);
       }
 
-      let finalComision = parseFloat(comisionRaw.replace(',', '.').replace(/[^0-9.]/g, ''));
-      if (isNaN(finalComision) && matchedModel && matchedModel.comision_vendedor1) {
-        finalComision = parseFloat(matchedModel.comision_vendedor1);
+      let finalCostoFob = parseFloat(costoFobRaw.replace(',', '.').replace(/[^0-9.]/g, ''));
+
+      let finalComision1 = parseFloat(comision1Raw.replace(',', '.').replace(/[^0-9.]/g, ''));
+      if (isNaN(finalComision1) && matchedModel && matchedModel.comision_vendedor1) {
+        if (matchedModel.regla_comision === '% sobre FOB' && !isNaN(finalCostoFob)) {
+          finalComision1 = finalCostoFob * (parseFloat(matchedModel.comision_vendedor1) / 100);
+        } else {
+          finalComision1 = parseFloat(matchedModel.comision_vendedor1);
+        }
+      }
+
+      let finalComision2 = parseFloat(comision2Raw.replace(',', '.').replace(/[^0-9.]/g, ''));
+      if (isNaN(finalComision2) && matchedModel && matchedModel.comision_vendedor2) {
+        finalComision2 = parseFloat(matchedModel.comision_vendedor2);
       }
 
       let status = 'valid';
@@ -1103,11 +1416,19 @@ export const handleSalesCsvFile = (file) => {
         familia_nombre: extendedFamiliaName,
         periodo_id: matchedPeriodId,
         periodo_nombre: periodMatchName || periodoRaw || '-',
+        sucursal_id: matchedSucursalId,
+        sucursal_nombre: sucursalMatchName,
+        modalidad_ventas_id: matchedModalidadId,
+        modalidad_nombre: modalidadMatchName,
         cliente: clienteRaw,
         cantidad: finalCantidad,
         precio_venta: !isNaN(finalPrecio) ? finalPrecio : null,
+        costo_fob: !isNaN(finalCostoFob) ? finalCostoFob : null,
         vendedor: vendedorRaw || null,
-        comision_vendedor: !isNaN(finalComision) ? finalComision : null
+        comision_vendedor: !isNaN(finalComision1) ? finalComision1 : null,
+        comision_vendedro2: !isNaN(finalComision2) ? finalComision2 : null,
+        revision: revisionRaw || null,
+        observcion: observacionRaw || null
       });
     }
 
@@ -1146,11 +1467,25 @@ export const handleSalesCsvFile = (file) => {
                 ${escapeHtml(r.periodo_nombre)}
               </span>
             </td>
+            <td class="px-3 py-2">
+              <span class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-medium">
+                ${escapeHtml(r.sucursal_nombre)}
+              </span>
+            </td>
+            <td class="px-3 py-2">
+              <span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 text-[10px] font-medium">
+                ${escapeHtml(r.modalidad_nombre)}
+              </span>
+            </td>
             <td class="px-3 py-2 font-medium text-slate-800 dark:text-slate-200">${escapeHtml(r.cliente || '-')}</td>
             <td class="px-3 py-2 text-center font-bold">${r.cantidad}</td>
             <td class="px-3 py-2 text-right font-semibold text-emerald-600 dark:text-emerald-400">${formatCurrency(r.precio_venta)}</td>
+            <td class="px-3 py-2 text-right font-medium text-slate-700 dark:text-slate-300">${formatCurrency(r.costo_fob)}</td>
             <td class="px-3 py-2 text-slate-700 dark:text-slate-300">${escapeHtml(r.vendedor || '-')}</td>
             <td class="px-3 py-2 text-right font-semibold text-amber-600 dark:text-amber-400">${formatCurrency(r.comision_vendedor)}</td>
+            <td class="px-3 py-2 text-right font-semibold text-indigo-600 dark:text-indigo-400">${formatCurrency(r.comision_vendedro2)}</td>
+            <td class="px-3 py-2 text-slate-600 dark:text-slate-400 text-[11px]">${escapeHtml(r.revision || '-')}</td>
+            <td class="px-3 py-2 text-slate-500 text-[11px] max-w-[150px] truncate" title="${escapeHtml(r.observcion || '')}">${escapeHtml(r.observcion || '-')}</td>
           </tr>
         `;
       });
@@ -1158,7 +1493,7 @@ export const handleSalesCsvFile = (file) => {
       if (parsedImportRows.length > 100) {
         previewBody.innerHTML += `
           <tr>
-            <td colspan="10" class="px-3 py-2 text-center text-slate-400 italic">
+            <td colspan="16" class="px-3 py-2 text-center text-slate-400 italic">
               Mostrando los primeros 100 registros de ${parsedImportRows.length}...
             </td>
           </tr>
@@ -1205,11 +1540,17 @@ export const processSalesImport = async () => {
     nro_factura: r.nro_factura,
     modelo_id: r.modelo_id,
     periodo_id: r.periodo_id,
+    modalidad_ventas_id: r.modalidad_ventas_id,
+    sucursal_id: r.sucursal_id,
     cliente: r.cliente,
     cantidad: r.cantidad,
     precio_venta: r.precio_venta,
+    costo_fob: r.costo_fob,
     vendedor: r.vendedor,
-    comision_vendedor: r.comision_vendedor
+    comision_vendedor: r.comision_vendedor,
+    comision_vendedro2: r.comision_vendedro2,
+    revision: r.revision,
+    observcion: r.observcion
   }));
 
   const chunkSize = 50;
@@ -1313,6 +1654,7 @@ export const initSalesModule = () => {
 
   // CSV Import/Export Buttons & Modal Elements
   const downloadTemplateBtn = document.getElementById('btn-download-sales-template');
+  const exportExcelBtn = document.getElementById('btn-export-sales-excel');
   const openImportBtn = document.getElementById('btn-import-sales-csv');
   const closeImportBtn = document.getElementById('btn-close-sales-import-modal');
   const cancelImportBtn = document.getElementById('btn-cancel-sales-import');
@@ -1322,6 +1664,7 @@ export const initSalesModule = () => {
   const processImportBtn = document.getElementById('btn-process-sales-import');
 
   if (downloadTemplateBtn) downloadTemplateBtn.addEventListener('click', downloadSalesCsvTemplate);
+  if (exportExcelBtn) exportExcelBtn.addEventListener('click', exportAllSalesToExcel);
   if (openImportBtn) openImportBtn.addEventListener('click', openSalesImportModal);
   if (closeImportBtn) closeImportBtn.addEventListener('click', closeSalesImportModal);
   if (cancelImportBtn) cancelImportBtn.addEventListener('click', closeSalesImportModal);

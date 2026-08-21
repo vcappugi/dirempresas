@@ -26,7 +26,7 @@
     </div>
 
     <!-- Interactive Filters Bar -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 pt-2">
+    <div id="sd-filters-bar" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-3 pt-2">
       <!-- Filtro Período -->
       <div>
         <label for="sd-filter-periodo" class="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Período</label>
@@ -56,6 +56,28 @@
         <label for="sd-filter-vendedor" class="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Vendedor</label>
         <select id="sd-filter-vendedor" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-brand focus:outline-none transition-all">
           <option value="">Todos los Vendedores</option>
+        </select>
+      </div>
+
+      <!-- Filtro Estado / EDO (Solo Admin) -->
+      <div id="sd-filter-edo-container" class="hidden">
+        <div class="flex items-center justify-between mb-1">
+          <label for="sd-filter-edo" class="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Estado (EDO)</label>
+          <span class="text-[9px] font-bold text-brand dark:text-brand-light bg-brand/10 dark:bg-brand/20 px-1 py-0.2 rounded">Admin</span>
+        </div>
+        <select id="sd-filter-edo" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-brand focus:outline-none transition-all">
+          <option value="">Todos los Estados</option>
+        </select>
+      </div>
+
+      <!-- Filtro Región (Solo Admin) -->
+      <div id="sd-filter-region-container" class="hidden">
+        <div class="flex items-center justify-between mb-1">
+          <label for="sd-filter-region" class="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Región</label>
+          <span class="text-[9px] font-bold text-brand dark:text-brand-light bg-brand/10 dark:bg-brand/20 px-1 py-0.2 rounded">Admin</span>
+        </div>
+        <select id="sd-filter-region" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-brand focus:outline-none transition-all">
+          <option value="">Todas las Regiones</option>
         </select>
       </div>
 

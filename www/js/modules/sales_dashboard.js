@@ -6,12 +6,28 @@ let allPeriodos = [];
 let allProductos = [];
 let allLineas = [];
 let allFamilias = [];
+let allSucursales = [];
+let allRegiones = [];
+let allEdos = [];
 let currentFilteredSales = [];
 
 let chartPeriodosInstance = null;
 let chartProductosInstance = null;
 let chartModelosInstance = null;
 let selectedModelSegment = 'all';
+
+// Helper to check if current logged-in user is Admin
+export const checkIsAdmin = () => {
+  if (window.isAdmin === true) return true;
+  try {
+    const profile = JSON.parse(localStorage.getItem('sb-profile') || '{}');
+    const roleName = profile.rol ? (typeof profile.rol === 'string' ? profile.rol.toLowerCase() : (profile.rol.nombre || '').toLowerCase()) : '';
+    const hasAdminRole = Array.isArray(profile.roles) && profile.roles.some(r => ((r.nombre || '').toLowerCase() === 'admin' || r.id === 1));
+    return roleName === 'admin' || (profile.rol && profile.rol.id === 1) || hasAdminRole;
+  } catch (e) {
+    return false;
+  }
+};
 
 // Product Colors Palette
 const productColors = [
@@ -52,13 +68,16 @@ export const loadSalesDashboard = async () => {
     if (!supabaseUrl || !supabaseKey) await loadEnv();
     const h = getHeaders();
 
-    const [salesRes, modRes, perRes, prodRes, linRes, famRes] = await Promise.all([
+    const [salesRes, modRes, perRes, prodRes, linRes, famRes, sucRes, regRes, edoRes] = await Promise.all([
       fetch(`${supabaseUrl}ventas?order=fecha.desc&limit=5000`, { headers: h }),
       fetch(`${supabaseUrl}modelos?order=modelo.asc&limit=1000`, { headers: h }),
       fetch(`${supabaseUrl}periodos?order=fechadesde.asc,id.desc&limit=200`, { headers: h }),
       fetch(`${supabaseUrl}producto?order=nombre.asc&limit=200`, { headers: h }),
       fetch(`${supabaseUrl}lineas?order=nombre.asc&limit=200`, { headers: h }),
-      fetch(`${supabaseUrl}familia?order=nombre.asc&limit=200`, { headers: h })
+      fetch(`${supabaseUrl}familia?order=nombre.asc&limit=200`, { headers: h }),
+      fetch(`${supabaseUrl}sucursales?order=nombre.asc&limit=1000`, { headers: h }),
+      fetch(`${supabaseUrl}region?order=nombre.asc&limit=500`, { headers: h }),
+      fetch(`${supabaseUrl}edo?order=nombre.asc&limit=100`, { headers: h })
     ]);
 
     allSales = salesRes.ok ? await salesRes.json() : [];
@@ -67,6 +86,9 @@ export const loadSalesDashboard = async () => {
     allProductos = prodRes.ok ? await prodRes.json() : [];
     allLineas = linRes.ok ? await linRes.json() : [];
     allFamilias = famRes.ok ? await famRes.json() : [];
+    allSucursales = sucRes.ok ? await sucRes.json() : [];
+    allRegiones = regRes.ok ? await regRes.json() : [];
+    allEdos = edoRes.ok ? await edoRes.json() : [];
 
     populateFilterDropdowns();
     applyDashboardFilters();
@@ -79,12 +101,47 @@ export const loadSalesDashboard = async () => {
   }
 };
 
+// Populate Region dropdown helper (optionally filtered by selected EDO)
+export const populateRegionDropdown = (selectedEdoId = '', preserveValue = true) => {
+  const filterRegion = document.getElementById('sd-filter-region');
+  if (!filterRegion) return;
+
+  const curVal = preserveValue ? filterRegion.value : '';
+  filterRegion.innerHTML = '<option value="">Todas las Regiones</option>';
+
+  let regionsToShow = allRegiones;
+  if (selectedEdoId) {
+    regionsToShow = allRegiones.filter(r => String(r.edo_id) === String(selectedEdoId));
+  }
+
+  regionsToShow.forEach(reg => {
+    const edoObj = allEdos.find(e => String(e.id) === String(reg.edo_id));
+    const label = (edoObj && !selectedEdoId) ? `${reg.nombre} (${edoObj.nombre})` : reg.nombre;
+    const isSel = (curVal && String(curVal) === String(reg.id)) ? 'selected' : '';
+    filterRegion.innerHTML += `<option value="${reg.id}" ${isSel}>${escapeHtml(label)}</option>`;
+  });
+};
+
 // Populate Filter Controls
 const populateFilterDropdowns = () => {
   const filterPeriodo = document.getElementById('sd-filter-periodo');
   const filterProducto = document.getElementById('sd-filter-producto');
   const filterModelo = document.getElementById('sd-filter-modelo');
   const filterVendedor = document.getElementById('sd-filter-vendedor');
+  const filterEdo = document.getElementById('sd-filter-edo');
+  const edoContainer = document.getElementById('sd-filter-edo-container');
+  const regionContainer = document.getElementById('sd-filter-region-container');
+
+  const isAdmin = checkIsAdmin();
+
+  // Control visibility of Admin-only filters
+  if (isAdmin) {
+    edoContainer?.classList.remove('hidden');
+    regionContainer?.classList.remove('hidden');
+  } else {
+    edoContainer?.classList.add('hidden');
+    regionContainer?.classList.add('hidden');
+  }
 
   if (filterPeriodo) {
     const curVal = filterPeriodo.value;
@@ -121,6 +178,19 @@ const populateFilterDropdowns = () => {
       filterVendedor.innerHTML += `<option value="${escapeHtml(v)}" ${curVal === v ? 'selected' : ''}>${escapeHtml(v)}</option>`;
     });
   }
+
+  // Populate Admin Filters if Admin
+  if (isAdmin) {
+    if (filterEdo) {
+      const curEdo = filterEdo.value;
+      filterEdo.innerHTML = '<option value="">Todos los Estados</option>';
+      allEdos.forEach(e => {
+        filterEdo.innerHTML += `<option value="${e.id}" ${curEdo == e.id ? 'selected' : ''}>${escapeHtml(e.nombre)}</option>`;
+      });
+    }
+
+    populateRegionDropdown(filterEdo?.value || '', true);
+  }
 };
 
 // Apply Current Filters & Re-render Visuals
@@ -131,6 +201,10 @@ export const applyDashboardFilters = () => {
   const fVendedor = document.getElementById('sd-filter-vendedor')?.value || '';
   const fDesde = document.getElementById('sd-filter-desde')?.value || '';
   const fHasta = document.getElementById('sd-filter-hasta')?.value || '';
+
+  const isAdmin = checkIsAdmin();
+  const fEdo = isAdmin ? (document.getElementById('sd-filter-edo')?.value || '') : '';
+  const fRegion = isAdmin ? (document.getElementById('sd-filter-region')?.value || '') : '';
 
   currentFilteredSales = allSales.filter(s => {
     if (fPeriodo && String(s.periodo_id) !== String(fPeriodo)) return false;
@@ -143,6 +217,18 @@ export const applyDashboardFilters = () => {
     }
 
     if (fVendedor && (s.vendedor || '').trim() !== fVendedor.trim()) return false;
+
+    // Admin filters: Región and Estado (EDO)
+    if (fRegion) {
+      const suc = allSucursales.find(su => String(su.id) === String(s.sucursal_id));
+      if (!suc || String(suc.region_id) !== String(fRegion)) return false;
+    }
+
+    if (fEdo) {
+      const suc = allSucursales.find(su => String(su.id) === String(s.sucursal_id));
+      const reg = allRegiones.find(r => String(r.id) === String(suc?.region_id));
+      if (!reg || String(reg.edo_id) !== String(fEdo)) return false;
+    }
 
     if (s.fecha) {
       const saleDate = s.fecha.split('T')[0];
@@ -1128,6 +1214,8 @@ export const initSalesDashboardModule = () => {
   const filterProducto = document.getElementById('sd-filter-producto');
   const filterModelo = document.getElementById('sd-filter-modelo');
   const filterVendedor = document.getElementById('sd-filter-vendedor');
+  const filterEdo = document.getElementById('sd-filter-edo');
+  const filterRegion = document.getElementById('sd-filter-region');
   const filterDesde = document.getElementById('sd-filter-desde');
   const filterHasta = document.getElementById('sd-filter-hasta');
   const resetBtn = document.getElementById('sd-btn-reset-filters');
@@ -1138,14 +1226,28 @@ export const initSalesDashboardModule = () => {
     }
   });
 
+  if (filterEdo) {
+    filterEdo.addEventListener('change', (e) => {
+      populateRegionDropdown(e.target.value, false);
+      applyDashboardFilters();
+    });
+  }
+
+  if (filterRegion) {
+    filterRegion.addEventListener('change', applyDashboardFilters);
+  }
+
   if (resetBtn) {
     resetBtn.addEventListener('click', () => {
       if (filterPeriodo) filterPeriodo.value = '';
       if (filterProducto) filterProducto.value = '';
       if (filterModelo) filterModelo.value = '';
       if (filterVendedor) filterVendedor.value = '';
+      if (filterEdo) filterEdo.value = '';
+      if (filterRegion) filterRegion.value = '';
       if (filterDesde) filterDesde.value = '';
       if (filterHasta) filterHasta.value = '';
+      populateRegionDropdown('', false);
       selectedModelSegment = 'all';
       applyDashboardFilters();
       showToast("Filtros restablecidos.", true);

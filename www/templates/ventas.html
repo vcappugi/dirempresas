@@ -1,10 +1,13 @@
 <!-- View: Ventas (Tab panel, initially hidden) -->
 <section id="view-sales" class="dashboard-view hidden space-y-6">
-  <div class="p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-4">
-    <div class="border-b border-slate-100 dark:border-slate-800/80 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+  <div
+    class="p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-4">
+    <div
+      class="border-b border-slate-100 dark:border-slate-800/80 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
       <div>
         <h2 class="font-display font-bold text-lg text-slate-800 dark:text-white">Listado de Ventas</h2>
-        <p class="text-xs text-slate-500 dark:text-slate-400">Control y registro de transacciones, facturas, clientes, modelos y comisiones.</p>
+        <p class="text-xs text-slate-500 dark:text-slate-400">Control y registro de transacciones, facturas, clientes,
+          modelos y comisiones.</p>
       </div>
     </div>
 
@@ -12,32 +15,57 @@
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div class="relative flex-1 max-w-md">
         <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
           </svg>
         </span>
-        <input type="text" id="sales-search" placeholder="Buscar por cliente, vendedor o nro. factura..." class="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+        <input type="text" id="sales-search" placeholder="Buscar por cliente, vendedor o nro. factura..."
+          class="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
       </div>
-      
+
       <div class="flex flex-wrap items-center gap-2.5">
         <!-- Descargar Plantilla CSV -->
-        <button id="btn-download-sales-template" class="inline-flex items-center gap-2 px-3.5 py-2.5 text-xs font-semibold rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all duration-200 shadow-sm" title="Descargar plantilla Excel / CSV con formato y ejemplos">
-          <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+        <button id="btn-download-sales-template"
+          class="inline-flex items-center gap-2 px-3.5 py-2.5 text-xs font-semibold rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all duration-200 shadow-sm"
+          title="Descargar plantilla Excel / CSV con formato y ejemplos">
+          <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
           </svg>
           <span>Descargar Plantilla CSV</span>
         </button>
 
         <!-- Importar CSV -->
-        <button id="btn-import-sales-csv" class="inline-flex items-center gap-2 px-3.5 py-2.5 text-xs font-semibold rounded-xl border border-emerald-500/40 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-all duration-200 shadow-sm" title="Importar archivo CSV de ventas">
-          <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+        <button id="btn-import-sales-csv"
+          class="inline-flex items-center gap-2 px-3.5 py-2.5 text-xs font-semibold rounded-xl border border-emerald-500/40 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-all duration-200 shadow-sm"
+          title="Importar archivo CSV de ventas">
+          <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
           </svg>
           <span>Importar Ventas CSV</span>
         </button>
 
+        <!-- Exportar a Excel -->
+        <button id="btn-export-sales-excel"
+          class="inline-flex items-center gap-2 px-3.5 py-2.5 text-xs font-semibold rounded-xl border border-emerald-600/30 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-700 dark:text-emerald-300 transition-all duration-200 shadow-sm"
+          title="Exportar toda la base de datos de ventas a Excel / CSV">
+          <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+            </path>
+          </svg>
+          <span>Exportar a Excel</span>
+        </button>
+
         <!-- Registrar Venta -->
-        <button id="btn-add-sale" class="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-brand hover:bg-brand-light rounded-xl shadow-lg shadow-brand/10 transition-all duration-300">
+        <button id="btn-add-sale"
+          class="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-brand hover:bg-brand-light rounded-xl shadow-lg shadow-brand/10 transition-all duration-300">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4.5v15m7.5-7.5h-15"></path>
           </svg>
@@ -45,20 +73,24 @@
         </button>
       </div>
     </div>
-    
+
     <!-- Sales Table -->
     <div class="overflow-x-auto relative rounded-2xl border border-slate-100 dark:border-slate-800">
-      
+
       <!-- Loading Indicator -->
-      <div id="sales-loading" class="absolute inset-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm z-10 flex items-center justify-center hidden">
+      <div id="sales-loading"
+        class="absolute inset-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm z-10 flex items-center justify-center hidden">
         <svg class="animate-spin h-8 w-8 text-brand" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          <path class="opacity-75" fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+          </path>
         </svg>
       </div>
 
       <table class="w-full text-sm text-left text-slate-500 dark:text-slate-400">
-        <thead class="text-xs text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-950 uppercase tracking-wider">
+        <thead
+          class="text-xs text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-950 uppercase tracking-wider">
           <tr>
             <th scope="col" class="px-4 py-3 min-w-[100px] text-left">Acciones</th>
             <th scope="col" class="px-4 py-3 min-w-[50px]">ID</th>
@@ -66,9 +98,11 @@
             <th scope="col" class="px-4 py-3 min-w-[120px]">Nro. Factura</th>
             <th scope="col" class="px-4 py-3 min-w-[160px]">Modelo</th>
             <th scope="col" class="px-4 py-3 min-w-[110px]">Período</th>
+            <th scope="col" class="px-4 py-3 min-w-[130px]">Sucursal</th>
             <th scope="col" class="px-4 py-3 min-w-[150px]">Cliente</th>
             <th scope="col" class="px-4 py-3 min-w-[70px] text-center">Cant.</th>
             <th scope="col" class="px-4 py-3 min-w-[120px] text-right">Precio Venta</th>
+            <th scope="col" class="px-4 py-3 min-w-[120px] text-right">Costo FOB</th>
             <th scope="col" class="px-4 py-3 min-w-[130px]">Vendedor</th>
             <th scope="col" class="px-4 py-3 min-w-[120px] text-right">Comisión Vend.</th>
             <th scope="col" class="px-4 py-3 min-w-[100px]">Creado</th>
@@ -81,23 +115,32 @@
 
       <!-- Empty State -->
       <div id="sales-empty" class="py-12 text-center hidden">
-        <svg class="w-12 h-12 text-slate-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+        <svg class="w-12 h-12 text-slate-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
         </svg>
         <p class="text-slate-500">No se encontraron ventas registradas.</p>
       </div>
 
       <!-- Sales Pagination Controls -->
-      <div id="sales-pagination" class="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50">
+      <div id="sales-pagination"
+        class="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50">
         <div class="text-xs text-slate-500">
-          Mostrando <span id="sales-range-start" class="font-semibold text-slate-700 dark:text-slate-300">0</span> a <span id="sales-range-end" class="font-semibold text-slate-700 dark:text-slate-300">0</span> de <span id="sales-total-count" class="font-semibold text-slate-700 dark:text-slate-300">0</span> registros
+          Mostrando <span id="sales-range-start" class="font-semibold text-slate-700 dark:text-slate-300">0</span> a
+          <span id="sales-range-end" class="font-semibold text-slate-700 dark:text-slate-300">0</span> de <span
+            id="sales-total-count" class="font-semibold text-slate-700 dark:text-slate-300">0</span> registros
         </div>
         <div class="flex items-center gap-2">
-          <button id="sales-btn-prev" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-semibold hover:bg-white dark:hover:bg-slate-850 disabled:opacity-50 disabled:pointer-events-none transition-all">
+          <button id="sales-btn-prev"
+            class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-semibold hover:bg-white dark:hover:bg-slate-850 disabled:opacity-50 disabled:pointer-events-none transition-all">
             Anterior
           </button>
-          <span class="text-xs text-slate-500">Pág. <span id="sales-current-page" class="font-semibold text-slate-700 dark:text-slate-300">1</span> de <span id="sales-total-pages" class="font-semibold text-slate-700 dark:text-slate-300">1</span></span>
-          <button id="sales-btn-next" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-semibold hover:bg-white dark:hover:bg-slate-850 disabled:opacity-50 disabled:pointer-events-none transition-all">
+          <span class="text-xs text-slate-500">Pág. <span id="sales-current-page"
+              class="font-semibold text-slate-700 dark:text-slate-300">1</span> de <span id="sales-total-pages"
+              class="font-semibold text-slate-700 dark:text-slate-300">1</span></span>
+          <button id="sales-btn-next"
+            class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-semibold hover:bg-white dark:hover:bg-slate-850 disabled:opacity-50 disabled:pointer-events-none transition-all">
             Siguiente
           </button>
         </div>
@@ -108,133 +151,301 @@
 </section>
 
 <!-- Sale Modal for Create/Edit -->
-<div id="sale-modal-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm hidden opacity-0 transition-all duration-300 p-4">
-  <div id="sale-modal-card" class="bg-white dark:bg-slate-900 w-full max-w-2xl p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl relative space-y-6 scale-95 opacity-0 transition-all duration-300 max-h-[90vh] overflow-y-auto">
-    
+<div id="sale-modal-overlay"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm hidden opacity-0 transition-all duration-300 p-4">
+  <div id="sale-modal-card"
+    class="bg-white dark:bg-slate-900 w-full max-w-4xl p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl relative space-y-6 scale-95 opacity-0 transition-all duration-300 max-h-[92vh] overflow-y-auto">
+
     <!-- Close Button -->
-    <button id="btn-close-sale-modal" class="absolute top-6 right-6 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+    <button id="btn-close-sale-modal"
+      class="absolute top-6 right-6 p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
       </svg>
     </button>
 
-    <div>
-      <h3 id="sale-modal-title" class="font-display font-bold text-xl text-slate-900 dark:text-white">Registrar Venta</h3>
-      <p class="text-xs text-slate-500 dark:text-slate-400">Complete todos los datos de la transacción, factura, modelo, período y vendedor.</p>
+    <!-- Modal Header -->
+    <div class="border-b border-slate-100 dark:border-slate-800 pb-4 pr-10">
+      <div class="flex items-center gap-3">
+        <div
+          class="w-10 h-10 rounded-2xl bg-brand/10 dark:bg-brand/20 flex items-center justify-center text-brand dark:text-brand-light flex-shrink-0">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+          </svg>
+        </div>
+        <div>
+          <h3 id="sale-modal-title" class="font-display font-bold text-xl text-slate-900 dark:text-white">Registrar
+            Venta</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Complete los datos de la transacción, factura, modelo,
+            período y vendedor.</p>
+        </div>
+      </div>
     </div>
 
-    <form id="sale-form" class="space-y-4">
+    <form id="sale-form" class="space-y-6">
       <input type="hidden" id="sale-form-id">
-      
-      <!-- Fila 1: Fecha, Nro. Factura y Período -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <!-- Fecha -->
-        <div>
-          <label for="sale-form-fecha" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Fecha de Venta *</label>
-          <input type="date" id="sale-form-fecha" required class="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+
+      <!-- SECCIÓN 1: Datos de Facturación y Período -->
+      <div
+        class="bg-slate-50/60 dark:bg-slate-950/40 p-4 sm:p-5 rounded-2xl border border-slate-100 dark:border-slate-800/80 space-y-3">
+        <div
+          class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+          <svg class="w-4 h-4 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          </svg>
+          <span>1. Información de Facturación y Operación</span>
         </div>
 
-        <!-- Nro. Factura -->
-        <div>
-          <label for="sale-form-nro-factura" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Nro. Factura</label>
-          <input type="text" id="sale-form-nro-factura" placeholder="Ej: FAC-001245" class="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
-        </div>
-
-        <!-- Período -->
-        <div>
-          <div class="flex items-center justify-between mb-1.5">
-            <label for="sale-form-periodo" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Período *</label>
-            <span class="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded">Auto</span>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 pt-1">
+          <!-- Fecha -->
+          <div>
+            <label for="sale-form-fecha"
+              class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Fecha
+              de Venta *</label>
+            <input type="date" id="sale-form-fecha" required
+              class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
           </div>
-          <select id="sale-form-periodo" required class="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
-            <option value="">-- Seleccionar Período --</option>
-          </select>
-        </div>
-      </div>
 
-      <!-- Fila 2: Modelo, Cantidad y Precio de Venta -->
-      <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <!-- Modelo (2 cols) con Selector y Modal de Búsqueda -->
-        <div class="sm:col-span-2">
-          <div class="flex items-center justify-between mb-1.5">
-            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Modelo *</label>
-            <button type="button" id="btn-open-model-picker" class="inline-flex items-center gap-1 text-[11px] font-semibold text-brand dark:text-brand-light hover:underline">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-              </svg>
-              Buscar Modelo
-            </button>
+          <!-- Nro. Factura -->
+          <div>
+            <label for="sale-form-nro-factura"
+              class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Nro.
+              Factura</label>
+            <input type="text" id="sale-form-nro-factura" placeholder="Ej: FAC-001245"
+              class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
           </div>
-          <input type="hidden" id="sale-form-modelo" required>
-          
-          <!-- Display Card for Selected Model -->
-          <div id="sale-form-model-selected-display" class="flex items-center justify-between p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950 cursor-pointer hover:border-brand transition-all">
-            <div class="flex items-center gap-2 overflow-hidden">
-              <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 flex items-center justify-center flex-shrink-0 text-xs font-bold" id="sale-form-model-id-badge">#--</div>
-              <div class="truncate">
-                <div class="text-xs font-bold text-slate-900 dark:text-white truncate" id="sale-form-model-name-display">Haga clic para buscar modelo...</div>
-                <div class="text-[10px] text-slate-400 truncate" id="sale-form-model-details-display">Búsqueda por código, nombre o producto</div>
-              </div>
+
+          <!-- Período -->
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label for="sale-form-periodo"
+                class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Período
+                *</label>
+              <span
+                class="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-1 py-0.2 rounded">Auto</span>
             </div>
-            <button type="button" id="btn-trigger-model-picker" class="px-2.5 py-1 rounded-lg text-xs font-semibold text-brand bg-brand/10 hover:bg-brand/20 transition-colors flex-shrink-0">
-              Buscar
-            </button>
+            <select id="sale-form-periodo" required
+              class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+              <option value="">-- Seleccionar Período --</option>
+            </select>
+          </div>
+
+          <!-- Sucursal -->
+          <div>
+            <label for="sale-form-sucursal"
+              class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Sucursal</label>
+            <select id="sale-form-sucursal"
+              class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+              <option value="">-- Seleccionar Sucursal/Concesionario --</option>
+            </select>
+          </div>
+
+          <!-- Modalidad de Venta -->
+          <div>
+            <label for="sale-form-modalidad-venta"
+              class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Modalidad</label>
+            <select id="sale-form-modalidad-venta"
+              class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+              <option value="">-- Seleccionar Modalidad --</option>
+            </select>
           </div>
         </div>
+      </div>
 
-        <!-- Cantidad (1 col) -->
-        <div>
-          <label for="sale-form-cantidad" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Cantidad *</label>
-          <input type="number" id="sale-form-cantidad" min="1" step="1" value="1" required class="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+      <!-- SECCIÓN 2: Modelo y Valores Económicos -->
+      <div
+        class="bg-slate-50/60 dark:bg-slate-950/40 p-4 sm:p-5 rounded-2xl border border-slate-100 dark:border-slate-800/80 space-y-3">
+        <div
+          class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+          <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+            </path>
+          </svg>
+          <span>2. Vehículo/Servicio y Condiciones Comerciales</span>
         </div>
 
-        <!-- Precio de Venta (1 col) -->
-        <div>
-          <label for="sale-form-precio-venta" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Precio Venta ($)</label>
-          <input type="number" step="0.01" id="sale-form-precio-venta" placeholder="0.00" class="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+        <div class="grid grid-cols-1 sm:grid-cols-12 gap-3.5 pt-1">
+          <!-- Modelo (6 cols) con Selector y Modal de Búsqueda -->
+          <div class="sm:col-span-6">
+            <div class="flex items-center justify-between mb-1.5">
+              <label
+                class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Modelo
+                *</label>
+              <button type="button" id="btn-open-model-picker"
+                class="inline-flex items-center gap-1 text-[11px] font-semibold text-brand dark:text-brand-light hover:underline">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                Buscar en Catálogo
+              </button>
+            </div>
+            <input type="hidden" id="sale-form-modelo" required>
+
+            <!-- Display Card for Selected Model -->
+            <div id="sale-form-model-selected-display"
+              class="flex items-center justify-between p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 cursor-pointer hover:border-brand transition-all">
+              <div class="flex items-center gap-2.5 overflow-hidden">
+                <div
+                  class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 flex items-center justify-center flex-shrink-0 text-xs font-bold"
+                  id="sale-form-model-id-badge">#--</div>
+                <div class="truncate">
+                  <div class="text-xs font-bold text-slate-900 dark:text-white truncate"
+                    id="sale-form-model-name-display">Haga clic para buscar modelo...</div>
+                  <div class="text-[10px] text-slate-400 truncate" id="sale-form-model-details-display">Búsqueda por
+                    código, nombre o producto</div>
+                </div>
+              </div>
+              <button type="button" id="btn-trigger-model-picker"
+                class="px-3 py-1 rounded-lg text-xs font-semibold text-brand bg-brand/10 hover:bg-brand/20 transition-colors flex-shrink-0">
+                Buscar
+              </button>
+            </div>
+          </div>
+
+          <!-- Cantidad (2 cols) -->
+          <div class="sm:col-span-2">
+            <label for="sale-form-cantidad"
+              class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Cantidad
+              *</label>
+            <input type="number" id="sale-form-cantidad" required min="1" value="1"
+              class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+          </div>
+
+          <!-- Precio Venta (2 cols) -->
+          <div class="sm:col-span-2">
+            <label for="sale-form-precio-venta"
+              class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Precio
+              Venta ($)</label>
+            <input type="number" step="0.01" id="sale-form-precio-venta" placeholder="0.00"
+              class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+          </div>
+
+          <!-- Costo FOB (2 cols) -->
+          <div class="sm:col-span-2">
+            <label for="sale-form-costo-fob"
+              class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Costo
+              FOB ($)</label>
+            <input type="number" step="0.01" id="sale-form-costo-fob" placeholder="0.00"
+              class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+          </div>
         </div>
       </div>
 
-      <!-- Fila 3: Cliente -->
-      <div>
-        <label for="sale-form-cliente" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Nombre del Cliente / Razón Social *</label>
-        <input type="text" id="sale-form-cliente" required placeholder="Ej: Inversiones Los Andes, C.A." class="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
-      </div>
-
-      <!-- Fila 4: Vendedor y Comisión Vendedor -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <!-- Vendedor -->
-        <div>
-          <label for="sale-form-vendedor" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Vendedor / Asesor</label>
-          <input type="text" id="sale-form-vendedor" placeholder="Ej: Carlos Pérez" class="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+      <!-- SECCIÓN 3: Cliente y Equipo Comercial -->
+      <div
+        class="bg-slate-50/60 dark:bg-slate-950/40 p-4 sm:p-5 rounded-2xl border border-slate-100 dark:border-slate-800/80 space-y-3">
+        <div
+          class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+          <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+            </path>
+          </svg>
+          <span>3. Cliente y Gestión de Asesores</span>
         </div>
 
-        <!-- Comisión Vendedor -->
-        <div>
-          <label for="sale-form-comision" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Comisión Vendedor ($)</label>
-          <input type="number" step="0.01" id="sale-form-comision" placeholder="0.00" class="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+        <div class="grid grid-cols-1 sm:grid-cols-12 gap-3.5 pt-1">
+          <!-- Cliente (5 cols) -->
+          <div class="sm:col-span-5">
+            <label for="sale-form-cliente"
+              class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Nombre
+              del Cliente / Razón Social *</label>
+            <input type="text" id="sale-form-cliente" required placeholder="Ej: Inversiones Los Andes, C.A."
+              class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+          </div>
+
+          <!-- Vendedor (3 cols) -->
+          <div class="sm:col-span-3">
+            <label for="sale-form-vendedor"
+              class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Vendedor</label>
+            <input type="text" id="sale-form-vendedor" placeholder="Ej: Carlos Pérez"
+              class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+          </div>
+
+          <!-- Comisión Vendedor 1 (2 cols) -->
+          <div class="sm:col-span-2">
+            <label for="sale-form-comision"
+              class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Comisión
+              1 ($)</label>
+            <input type="number" step="0.01" id="sale-form-comision" placeholder="0.00"
+              class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+          </div>
+
+          <!-- Comisión Vendedor 2 (2 cols) -->
+          <div class="sm:col-span-2">
+            <label for="sale-form-comision2"
+              class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Comisión
+              2 ($)</label>
+            <input type="number" step="0.01" id="sale-form-comision2" placeholder="0.00"
+              class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+          </div>
+        </div>
+      </div>
+
+      <!-- SECCIÓN 4: Revisión y Observaciones -->
+      <div
+        class="bg-slate-50/60 dark:bg-slate-950/40 p-4 sm:p-5 rounded-2xl border border-slate-100 dark:border-slate-800/80 space-y-3">
+        <div
+          class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+          <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+            </path>
+          </svg>
+          <span>4. Control, Auditoría y Observaciones</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-12 gap-3.5 pt-1">
+          <!-- Revisión (4 cols) -->
+          <div class="sm:col-span-4">
+            <label for="sale-form-revision"
+              class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Revisión
+              / Control</label>
+            <input type="text" id="sale-form-revision" placeholder="Ej: Aprobado, Pendiente, Auditado"
+              class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+          </div>
+
+          <!-- Observaciones (8 cols) -->
+          <div class="sm:col-span-8">
+            <label for="sale-form-observacion"
+              class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Observaciones
+              / Notas Adicionales</label>
+            <input type="text" id="sale-form-observacion"
+              placeholder="Notas, condiciones o comentarios adicionales de la venta..."
+              class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+          </div>
         </div>
       </div>
 
       <!-- Action Buttons -->
-      <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-        <button type="button" id="btn-cancel-sale" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+      <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+        <button type="button" id="btn-cancel-sale"
+          class="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
           Cancelar
         </button>
-        <button type="submit" id="btn-save-sale" class="px-5 py-2.5 rounded-xl text-xs font-semibold text-white bg-brand hover:bg-brand-light shadow-lg shadow-brand/20 transition-all duration-300">
+        <button type="submit" id="btn-save-sale"
+          class="px-6 py-2.5 rounded-xl text-xs font-semibold text-white bg-brand hover:bg-brand-light shadow-lg shadow-brand/20 transition-all duration-300">
           Guardar Venta
         </button>
       </div>
     </form>
+
   </div>
 </div>
 
 <!-- Modal de Importación Masiva CSV de Ventas -->
-<div id="sales-import-modal-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/65 backdrop-blur-sm hidden opacity-0 transition-all duration-300 p-4">
-  <div id="sales-import-modal-card" class="bg-white dark:bg-slate-900 w-full max-w-4xl p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl relative space-y-6 scale-95 opacity-0 transition-all duration-300 max-h-[92vh] flex flex-col">
-    
+<div id="sales-import-modal-overlay"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/65 backdrop-blur-sm hidden opacity-0 transition-all duration-300 p-4">
+  <div id="sales-import-modal-card"
+    class="bg-white dark:bg-slate-900 w-full max-w-4xl p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl relative space-y-6 scale-95 opacity-0 transition-all duration-300 max-h-[92vh] flex flex-col">
+
     <!-- Close Button -->
-    <button id="btn-close-sales-import-modal" class="absolute top-6 right-6 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+    <button id="btn-close-sales-import-modal"
+      class="absolute top-6 right-6 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
       </svg>
@@ -242,40 +453,52 @@
 
     <!-- Header -->
     <div class="border-b border-slate-100 dark:border-slate-800 pb-3">
-      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 mb-2">
+      <div
+        class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 mb-2">
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
         </svg>
         Migración de Datos
       </div>
       <h3 class="font-display font-bold text-xl text-slate-900 dark:text-white">Importar Ventas desde Archivo CSV</h3>
-      <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">El sistema relacionará automáticamente cada venta con su modelo, línea, familia y período correspondiente.</p>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">El sistema relacionará automáticamente cada venta con
+        su modelo, línea, familia y período correspondiente.</p>
     </div>
 
     <!-- Content Area (Scrollable) -->
     <div class="space-y-5 overflow-y-auto flex-1 pr-1">
-      
+
       <!-- Drag & Drop Zone -->
-      <div id="sales-dropzone" class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-brand dark:hover:border-brand rounded-2xl p-6 text-center cursor-pointer transition-all bg-slate-50/50 dark:bg-slate-950/50 group">
+      <div id="sales-dropzone"
+        class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-brand dark:hover:border-brand rounded-2xl p-6 text-center cursor-pointer transition-all bg-slate-50/50 dark:bg-slate-950/50 group">
         <input type="file" id="sales-csv-file-input" accept=".csv, .txt" class="hidden">
-        <div class="w-12 h-12 rounded-2xl bg-brand/10 text-brand dark:text-brand-light flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+        <div
+          class="w-12 h-12 rounded-2xl bg-brand/10 text-brand dark:text-brand-light flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+            </path>
           </svg>
         </div>
-        <p class="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-1">Haga clic o arrastre su archivo CSV aquí</p>
-        <p class="text-xs text-slate-500 dark:text-slate-400">Archivos delimitados por punto y coma (;) o coma (,). Codificación UTF-8 / ANSI.</p>
+        <p class="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-1">Haga clic o arrastre su archivo CSV
+          aquí</p>
+        <p class="text-xs text-slate-500 dark:text-slate-400">Archivos delimitados por punto y coma (;) o coma (,).
+          Codificación UTF-8 / ANSI.</p>
       </div>
 
       <!-- File Loaded Info & Parse Stats -->
-      <div id="sales-import-summary" class="hidden p-4 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 space-y-3">
+      <div id="sales-import-summary"
+        class="hidden p-4 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 space-y-3">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <div class="flex items-center gap-2">
-            <span class="font-semibold text-xs text-slate-800 dark:text-white" id="sales-import-filename">archivo.csv</span>
+            <span class="font-semibold text-xs text-slate-800 dark:text-white"
+              id="sales-import-filename">archivo.csv</span>
             <span class="text-[11px] text-slate-500 dark:text-slate-400" id="sales-import-filesize">(0 KB)</span>
           </div>
           <div class="flex items-center gap-3 text-xs">
-            <span class="text-emerald-600 dark:text-emerald-400 font-semibold" id="sales-import-valid-count">0 Válidas</span>
+            <span class="text-emerald-600 dark:text-emerald-400 font-semibold" id="sales-import-valid-count">0
+              Válidas</span>
             <span class="text-amber-500 font-semibold" id="sales-import-warning-count">0 Con Advertencias</span>
             <span class="text-red-500 font-semibold" id="sales-import-error-count">0 Errores</span>
           </div>
@@ -288,7 +511,8 @@
             <span id="sales-import-progress-pct">0%</span>
           </div>
           <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
-            <div id="sales-import-progress-bar" class="bg-brand h-2 rounded-full transition-all duration-200" style="width: 0%"></div>
+            <div id="sales-import-progress-bar" class="bg-brand h-2 rounded-full transition-all duration-200"
+              style="width: 0%"></div>
           </div>
         </div>
       </div>
@@ -296,23 +520,32 @@
       <!-- Preview Table Container -->
       <div id="sales-import-preview-section" class="hidden space-y-2">
         <div class="flex items-center justify-between">
-          <h4 class="font-display font-semibold text-xs text-slate-700 dark:text-slate-300 uppercase tracking-wider">Vista Previa de Registros a Migrar</h4>
+          <h4 class="font-display font-semibold text-xs text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+            Vista Previa de Registros a Migrar</h4>
           <span class="text-[11px] text-slate-400">Verifique los datos y relaciones detectadas</span>
         </div>
-        <div class="overflow-x-auto max-h-60 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
+        <div
+          class="overflow-x-auto max-h-60 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
           <table class="w-full text-xs text-left text-slate-600 dark:text-slate-400">
-            <thead class="text-[11px] uppercase bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 sticky top-0 border-b border-slate-200 dark:border-slate-800">
+            <thead
+              class="text-[11px] uppercase bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 sticky top-0 border-b border-slate-200 dark:border-slate-800">
               <tr>
                 <th class="px-3 py-2">Estado</th>
                 <th class="px-3 py-2">Fecha</th>
                 <th class="px-3 py-2">Factura</th>
                 <th class="px-3 py-2">Modelo Detectado</th>
                 <th class="px-3 py-2">Período</th>
+                <th class="px-3 py-2">Sucursal</th>
+                <th class="px-3 py-2">Modalidad</th>
                 <th class="px-3 py-2">Cliente</th>
                 <th class="px-3 py-2 text-center">Cant.</th>
                 <th class="px-3 py-2 text-right">Precio Venta</th>
+                <th class="px-3 py-2 text-right">Costo FOB</th>
                 <th class="px-3 py-2">Vendedor</th>
-                <th class="px-3 py-2 text-right">Comisión</th>
+                <th class="px-3 py-2 text-right">Comisión 1</th>
+                <th class="px-3 py-2 text-right">Comisión 2</th>
+                <th class="px-3 py-2">Revisión</th>
+                <th class="px-3 py-2">Observaciones</th>
               </tr>
             </thead>
             <tbody id="sales-import-preview-body" class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -326,10 +559,12 @@
 
     <!-- Modal Footer Actions -->
     <div class="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
-      <button type="button" id="btn-cancel-sales-import" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+      <button type="button" id="btn-cancel-sales-import"
+        class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
         Cancelar
       </button>
-      <button type="button" id="btn-process-sales-import" disabled class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold text-white bg-brand hover:bg-brand-light disabled:opacity-50 disabled:pointer-events-none shadow-lg shadow-brand/20 transition-all duration-300">
+      <button type="button" id="btn-process-sales-import" disabled
+        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold text-white bg-brand hover:bg-brand-light disabled:opacity-50 disabled:pointer-events-none shadow-lg shadow-brand/20 transition-all duration-300">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
         </svg>
@@ -341,11 +576,14 @@
 </div>
 
 <!-- Modal de Búsqueda y Selección de Modelos -->
-<div id="model-picker-modal-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm hidden opacity-0 transition-all duration-300 p-4">
-  <div id="model-picker-modal-card" class="bg-white dark:bg-slate-900 w-full max-w-4xl p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl relative space-y-5 scale-95 opacity-0 transition-all duration-300 max-h-[90vh] flex flex-col">
-    
+<div id="model-picker-modal-overlay"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm hidden opacity-0 transition-all duration-300 p-4">
+  <div id="model-picker-modal-card"
+    class="bg-white dark:bg-slate-900 w-full max-w-4xl p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl relative space-y-5 scale-95 opacity-0 transition-all duration-300 max-h-[90vh] flex flex-col">
+
     <!-- Close Button -->
-    <button id="btn-close-model-picker" class="absolute top-6 right-6 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+    <button id="btn-close-model-picker"
+      class="absolute top-6 right-6 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
       </svg>
@@ -353,14 +591,18 @@
 
     <!-- Header -->
     <div class="border-b border-slate-100 dark:border-slate-800 pb-3">
-      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-brand/10 text-brand dark:text-brand-light mb-1.5">
+      <div
+        class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-brand/10 text-brand dark:text-brand-light mb-1.5">
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+          </path>
         </svg>
         Catálogo de Modelos
       </div>
       <h3 class="font-display font-bold text-xl text-slate-900 dark:text-white">Seleccionar Modelo para Venta</h3>
-      <p class="text-xs text-slate-500 dark:text-slate-400">Busque de forma instantánea por código ID, nombre del modelo, producto, línea o familia.</p>
+      <p class="text-xs text-slate-500 dark:text-slate-400">Busque de forma instantánea por código ID, nombre del
+        modelo, producto, línea o familia.</p>
     </div>
 
     <!-- Search & Filter Bar -->
@@ -369,15 +611,19 @@
       <div class="relative flex-1 w-full">
         <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
           <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
           </svg>
         </span>
-        <input type="text" id="model-picker-search-input" placeholder="Buscar por código (#12), nombre de modelo, producto..." class="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+        <input type="text" id="model-picker-search-input"
+          placeholder="Buscar por código (#12), nombre de modelo, producto..."
+          class="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
       </div>
 
       <!-- Filter by Product -->
       <div class="w-full sm:w-56">
-        <select id="model-picker-product-filter" class="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
+        <select id="model-picker-product-filter"
+          class="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all">
           <option value="">Todos los Productos</option>
         </select>
       </div>
@@ -390,9 +636,11 @@
     </div>
 
     <!-- Table of Models (Scrollable) -->
-    <div class="overflow-y-auto max-h-[50vh] flex-1 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-inner">
+    <div
+      class="overflow-y-auto max-h-[50vh] flex-1 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-inner">
       <table class="w-full text-xs text-left text-slate-600 dark:text-slate-400">
-        <thead class="text-[11px] uppercase bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 sticky top-0 z-10 border-b border-slate-200 dark:border-slate-800 shadow-sm">
+        <thead
+          class="text-[11px] uppercase bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 sticky top-0 z-10 border-b border-slate-200 dark:border-slate-800 shadow-sm">
           <tr>
             <th class="px-4 py-2.5 min-w-[70px]">Código</th>
             <th class="px-4 py-2.5 min-w-[200px]">Nombre del Modelo</th>
@@ -410,8 +658,11 @@
 
       <!-- Empty State -->
       <div id="model-picker-empty" class="py-12 text-center hidden">
-        <svg class="w-12 h-12 text-slate-400 mx-auto mb-2 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+        <svg class="w-12 h-12 text-slate-400 mx-auto mb-2 opacity-60" fill="none" stroke="currentColor"
+          viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+          </path>
         </svg>
         <p class="text-xs text-slate-500">No se encontraron modelos con los criterios de búsqueda.</p>
       </div>
@@ -419,12 +670,14 @@
 
     <!-- Modal Footer -->
     <div class="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
-      <span class="text-slate-400">Presione <kbd class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[10px]">Esc</kbd> para cerrar</span>
-      <button type="button" id="btn-cancel-model-picker" class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+      <span class="text-slate-400">Presione <kbd
+          class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[10px]">Esc</kbd>
+        para cerrar</span>
+      <button type="button" id="btn-cancel-model-picker"
+        class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
         Cerrar
       </button>
     </div>
 
   </div>
 </div>
-
